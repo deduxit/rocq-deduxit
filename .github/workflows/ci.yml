@@ -1,0 +1,44 @@
+# linlog © Fabian Lukas Grubmüller 2026
+# Licensed under the EUPL
+
+# Everything runs through the flake, so CI checks exactly what `nix flake
+# check` checks locally, with the Rocq and the tools flake.lock pins.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # Weekly: the pinned inputs' sources are fetched again, so a vanished one
+  # shows.
+  schedule:
+    - cron: "41 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: nix flake check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1
+        with:
+          # Fetching the `github:` inputs anonymously runs into rate limits.
+          github_access_token: ${{ github.token }}
+      - uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
+        with:
+          name: linlog-prover
+          # Only what `main` builds is uploaded, and only once the
+          # repository has the secret; without it the job only downloads.
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          skipPush: ${{ github.ref != 'refs/heads/main' }}
+      - run: nix flake check --print-build-logs --keep-going

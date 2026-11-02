@@ -1,0 +1,16 @@
+# linlog © Fabian Lukas Grubmüller 2026
+# Licensed under the EUPL
+
+# The `typos' check (modules/conventions.nix).
+[files]
+# The licence's text is the European Commission's.
+extend-exclude = ["LICENSE"]
+
+# Words of the domain that look like misspellings.
+[default.extend-words]
+# Rocq's name of the false proposition.
+falso = "falso"
+# Rocq's `Arguments f x : clear implicits`.
+implicits = "implicits"
+# The intuitionistic tensor, named as in Yalla.
+itens = "itens"

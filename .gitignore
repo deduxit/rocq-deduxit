@@ -1,0 +1,30 @@
+# Rocq's compiled library and the makefile `rocq makefile' generates
+*.vo
+*.vos
+*.vok
+*.glob
+.*.aux
+.lia.cache
+.nia.cache
+RocqMakefile
+RocqMakefile.conf
+.RocqMakefile.d
+
+# Python's bytecode of the hooks' shared module
+__pycache__/
+
+# nix
+result*
+.direnv/
+
+# Tracked even where a global ignore excludes .envrc files.
+!.envrc
+
+# Emacs auto-save files (#file#), lock files (.#file) and backups (file~)
+\#*\#
+.\#*
+*~
+
+# Claude Code: personal, per-machine overrides
+.claude/settings.local.json
+CLAUDE.local.md
