@@ -18,12 +18,30 @@ rules `core-export.md`), beside the NanoYalla export, which it leaves as
 it was; linlog's flake compiles them against this library, taken as a
 pinned input. Paths of the form `core/…` below are linlog's.
 
+- **linlog re-exports this check.** linlog's flake check
+  `rocq-linlog-library` is this repository's `checks.SYSTEM.rocq-linlog`
+  through its pinned input, so a commit whose check fails here fails
+  linlog's `nix flake check` once linlog's lock moves to it; linlog's own
+  check `rocq-linlog` compiles the exporter's certificates against
+  `packages.rocq-linlog` and requires each `certificate`'s assumptions
+  closed.
+- **The Rocq versions.** The opam file admits Rocq 9.0 to 9.3
+  (`rocq-core {>= "9.0" & < "9.4~"}`) and bounds `rocq-stdlib` below
+  only, since the standard library's versions do not follow Rocq's (9.3
+  takes stdlib 9.2.0, 9.0 and 9.1 take 9.0.0); `modules/rocq-linlog.nix`
+  checks each admitted version through nixpkgs' `rocqPackages_9_N`, and a
+  new Rocq is a line of `admitted` and a raised bound together. On 9.2
+  and 9.3 the theories compile with the deprecation of `Notation` for an
+  abbreviation; its replacement `Abbreviation` exists only from 9.2, so
+  it waits until 9.0 and 9.1 are dropped. `scripts/opam-install.sh`
+  installs the package as opam users do, into a fresh switch per
+  version, outside any check since it needs the network.
 - **Layout.** `_RocqProject` (`-R theories Linlog`, every file listed),
   `Makefile` (the reference manual's wrapper: it generates `RocqMakefile`
   from `_RocqProject` with `rocq makefile` and hands it every target, so
   `make` builds and `make install` installs under `COQLIBINSTALL`),
   `rocq-linlog.opam` (the archive's name for the library; the flake reads
-  its `version:`), `README.md` (the library's front page, linlog's logo by
+  its `version:`, which equals linlog's `export::rocq::LINLOG`), `README.md` (the library's front page, linlog's logo by
   URL from the site, as linlog's README has it; no logo file is in the
   repository), `theories/` (the library, logical path `Linlog`) and
   `tests/` (certificates the check compiles against the installed library,

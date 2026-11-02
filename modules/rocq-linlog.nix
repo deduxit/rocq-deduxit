@@ -17,14 +17,20 @@
     { config, pkgs, ... }:
     let
       inherit (pkgs) lib;
-      rocq = pkgs.rocq-core;
-      stdlib = pkgs.rocqPackages.stdlib;
-      userContrib = "lib/coq/${rocq.rocq-version}/user-contrib";
 
       # The library's version is the opam file's.
       version = builtins.head (
         builtins.match ''.*version: "([0-9.]+)".*'' (builtins.readFile ../rocq-linlog.opam)
       );
+
+      # Every Rocq the opam file's bounds admit, by nixpkgs' package set of
+      # each minor version; `rocqPackages' is one of them, the default.
+      admitted = {
+        "9_0" = pkgs.rocqPackages_9_0;
+        "9_1" = pkgs.rocqPackages_9_1;
+        "9_2" = pkgs.rocqPackages_9_2;
+        "9_3" = pkgs.rocqPackages_9_3;
+      };
 
       library = lib.fileset.toSource {
         root = ../.;
@@ -39,10 +45,11 @@
         root = ../tests;
         fileset = lib.fileset.fileFilter (file: file.hasExt "v") ../tests;
       };
-    in
-    {
-      packages = {
-        rocq-linlog = pkgs.rocqPackages.mkRocqDerivation {
+
+      # The library built with one Rocq, as nixpkgs builds a Rocq library.
+      packageFor =
+        rocqPackages:
+        rocqPackages.mkRocqDerivation {
           pname = "linlog";
           opam-name = "rocq-linlog";
           inherit version;
@@ -52,25 +59,32 @@
             src = library;
             hash = "";
           };
-          propagatedBuildInputs = [ stdlib ];
+          propagatedBuildInputs = [ rocqPackages.stdlib ];
           meta = {
             description = "The Rocq library of linlog: linear logic, proof terms, their checker and its soundness";
             homepage = "https://github.com/linlog-prover/rocq-linlog";
             license = lib.licenses.eupl12;
           };
         };
-        default = config.packages.rocq-linlog;
-      };
 
-      checks.rocq-linlog =
-        pkgs.runCommand "check-rocq-linlog"
+      # The certificates under tests/ compiled against that build, and the
+      # theorems' assumptions closed.
+      checkFor =
+        rocqPackages:
+        let
+          rocq = rocqPackages.rocq-core;
+          inherit (rocqPackages) stdlib;
+          package = packageFor rocqPackages;
+          userContrib = "lib/coq/${rocq.rocq-version}/user-contrib";
+        in
+        pkgs.runCommand "check-rocq-linlog-${rocq.rocq-version}"
           {
             nativeBuildInputs = [
               rocq
               stdlib
-              config.packages.rocq-linlog
+              package
             ];
-            ROCQPATH = "${stdlib}/${userContrib}:${config.packages.rocq-linlog}/${userContrib}";
+            ROCQPATH = "${stdlib}/${userContrib}:${package}/${userContrib}";
           }
           ''
             export HOME=$TMPDIR
@@ -93,14 +107,38 @@
               diff - assumptions
             touch $out
           '';
+    in
+    {
+      packages = {
+        rocq-linlog = packageFor pkgs.rocqPackages;
+        default = config.packages.rocq-linlog;
+      };
+
+      # `rocq-linlog' with the default Rocq (linlog re-exports it), and
+      # `rocq-linlog-9_N' with each other one the bounds admit.
+      checks = {
+        rocq-linlog = checkFor pkgs.rocqPackages;
+      }
+      //
+        lib.mapAttrs'
+          (minor: rocqPackages: lib.nameValuePair "rocq-linlog-${minor}" (checkFor rocqPackages))
+          (
+            lib.filterAttrs (
+              _: rocqPackages: rocqPackages.rocq-core.version != pkgs.rocqPackages.rocq-core.version
+            ) admitted
+          );
 
       # `make' in the repository builds the library with this Rocq.
-      devShells.default = pkgs.mkShell {
-        packages = [
-          rocq
-          stdlib
-        ];
-        ROCQPATH = "${stdlib}/${userContrib}";
-      };
+      devShells.default =
+        let
+          inherit (pkgs.rocqPackages) rocq-core stdlib;
+        in
+        pkgs.mkShell {
+          packages = [
+            rocq-core
+            stdlib
+          ];
+          ROCQPATH = "${stdlib}/lib/coq/${rocq-core.rocq-version}/user-contrib";
+        };
     };
 }
