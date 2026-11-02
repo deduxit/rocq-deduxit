@@ -41,9 +41,13 @@ once the release is there, or meanwhile from its tag:
 opam repo add rocq-released https://rocq-prover.org/opam/released   # once
 opam install rocq-linlog                                             # from the archive
 opam pin add rocq-linlog https://github.com/linlog-prover/rocq-linlog.git#v0.2.0   # or from the tag
-opam upgrade rocq-linlog                                             # later: a newer release
+opam upgrade rocq-linlog                                             # later: a newer release from the archive
 opam remove rocq-linlog                                              # and to remove it
 ```
+
+A package pinned to a tag stays at that tag: `opam pin add` with the
+next tag moves it, and `opam unpin rocq-linlog` before `opam install`
+takes the archive's instead.
 
 **With Nix**, the flake's default package is the library built against
 nixpkgs' Rocq 9.1 (flakes enabled):
