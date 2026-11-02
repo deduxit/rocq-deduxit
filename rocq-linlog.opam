@@ -2,7 +2,7 @@
 # Licensed under the EUPL
 
 opam-version: "2.0"
-version: "0.1.0"
+version: "0.2.0"
 synopsis: "The Rocq library of linlog, a linear logic suite"
 description: """
 Certificates for the proofs that linlog, a prover of classical and
@@ -20,6 +20,7 @@ license: "EUPL-1.2"
 homepage: "https://github.com/linlog-prover/rocq-linlog"
 bug-reports: "https://github.com/linlog-prover/rocq-linlog/issues"
 dev-repo: "git+https://github.com/linlog-prover/rocq-linlog.git"
+doc: "https://linlog-prover.github.io/rocq-linlog/"
 tags: [
   "logpath:Linlog"
   "category:Mathematics/Logic"
@@ -27,8 +28,8 @@ tags: [
   "keyword:sequent calculus"
 ]
 depends: [
-  "rocq-core" {>= "9.0" & < "9.2~"}
-  "rocq-stdlib" {>= "9.0" & < "9.2~"}
+  "rocq-core" {>= "9.0" & < "9.4~"}
+  "rocq-stdlib" {>= "9.0"}
 ]
 build: [make "-j%{jobs}%"]
 install: [make "install"]

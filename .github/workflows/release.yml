@@ -1,0 +1,111 @@
+# linlog © Fabian Lukas Grubmüller 2026
+# Licensed under the EUPL
+
+# A tag `vX.Y.Z' releases version X.Y.Z: the flake's checks again, a
+# GitHub release with the changelog's section as its notes and the
+# SHA-512 of the tag's source archive, which the Rocq opam archive's file
+# names, and the documentation on the repository's Pages site.
+name: Release
+
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  check:
+    name: tag, changelog and nix flake check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The tag names the version the opam file and the citation file
+      # state, and the changelog has its section, dated.
+      - name: The tag, the opam file and the changelog agree
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version=${TAG#v}
+          if ! grep -q "^version: \"$version\"$" rocq-linlog.opam; then
+            echo "rocq-linlog.opam does not state version $version" >&2
+            exit 1
+          fi
+          if ! grep -Eq "^## \[$version\] - [0-9]{4}-[0-9]{2}-[0-9]{2}$" CHANGELOG.md; then
+            echo "CHANGELOG.md has no dated section for $version" >&2
+            exit 1
+          fi
+          if ! grep -q "^version: $version$" CITATION.cff; then
+            echo "CITATION.cff does not state version $version" >&2
+            exit 1
+          fi
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1
+        with:
+          github_access_token: ${{ github.token }}
+      - uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
+        with:
+          name: linlog-prover
+          # A tag's builds are `main`'s.
+          skipPush: true
+      - run: nix flake check --print-build-logs --keep-going
+      - run: nix build --print-build-logs .#doc
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: result/share/doc/rocq-linlog
+
+  release:
+    name: GitHub release
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The notes are the changelog's section, and the checksum of the
+      # archive GitHub serves for the tag, which an opam file's `url'
+      # names.
+      - name: The release, with the changelog's section as its notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          version=${TAG#v}
+          awk -v head="## [$version]" '
+            index($0, head) == 1 { on = 1; next }
+            on && /^## \[/ { exit }
+            on && /^\[[^]]*\]: / { exit }
+            on { print }
+          ' CHANGELOG.md >notes.md
+          url="https://github.com/$REPOSITORY/archive/refs/tags/$TAG.tar.gz"
+          curl --silent --fail --location --output source.tar.gz "$url"
+          sum=$(sha512sum source.tar.gz | cut -d ' ' -f 1)
+          {
+            echo
+            echo "The source archive for opam: \`$url\`, \`sha512=$sum\`."
+          } >>notes.md
+          gh release create "$TAG" --title "rocq-linlog $version" --notes-file notes.md \
+            --verify-tag
+
+  # The Pages site's source must be "GitHub Actions" (the repository's
+  # settings); it holds the documentation of the latest release.
+  docs:
+    name: documentation on Pages
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

@@ -12,8 +12,8 @@ and its affine variant as inductives, linlog's proof terms as
 datatypes, checkers as functions and the theorems that a term they
 accept proves its sequent, the invariants every derivation keeps (the
 refutations), the reduction of Mix to `?(⊥⊗⊥)`, and a first-order
-development beside the propositional one. Rocq 9.0 or 9.1 with its
-standard library and nothing else. It lived under `rocq/` of linlog's
+development beside the propositional one. Rocq 9.0 to 9.3 with its
+standard library and nothing else, each tested by the flake. It lived under `rocq/` of linlog's
 repository until 2026-11-02; its history up to then is linlog's.
 
 - `theories/` the library, `_RocqProject` and `Makefile` its build,
@@ -53,12 +53,15 @@ library with `ROCQPATH` set.
 make                                    # the library, in place
 nix build                               # the package rocq-linlog, as nixpkgs builds a Rocq library
 nix flake check                         # everything below
-nix build .#checks.x86_64-linux.rocq-linlog    # the library, every certificate under tests/, the theorems' assumptions closed
+nix build .#checks.x86_64-linux.rocq-linlog    # the library, every certificate under tests/, the theorems' assumptions closed (nixpkgs' default Rocq)
+nix build .#checks.x86_64-linux.rocq-linlog-9_0   # the same with Rocq 9.0 (and -9_2, -9_3: every version the opam file admits)
+nix build .#doc                         # rocq doc's pages of every module, result/share/doc/rocq-linlog
+nix develop .#opam -c scripts/opam-install.sh 9.0.1 9.1.1 9.2.0 9.3.0   # opam lint, then the package installed from its opam file into a fresh switch per Rocq (network, about an hour)
 nix build .#checks.x86_64-linux.rocq-bridges   # the bridges against the pinned nanoll.v and nanoill.v, and their assumptions
 nix fmt                                 # nixfmt, taplo, shfmt, shellcheck, ruff-format (a hook runs it on each file changed with Write or Edit)
 ```
 
-`nix flake check` runs `rocq-linlog`, `rocq-bridges`, `treefmt`,
+`nix flake check` runs `rocq-linlog` and `rocq-linlog-9_N`, `rocq-bridges`, `treefmt`,
 `conventions` (the licence header on every source, no comment naming
 the plan of linlog's sessions), `typos` (`typos.toml`), `deadnix`,
 `actionlint` (the workflow) and `claude-hooks` (the guards under
@@ -73,7 +76,9 @@ Dendritic flake-parts, as linlog's: `flake.nix` only declares inputs,
 and import-tree loads every `.nix` file under `modules/` (a path
 segment starting with `_` skipped) as a flake-parts module, one aspect
 per file; no file is ever added to an imports list. `rocq-linlog.nix`
-is the package, its check and the devshell; `rocq-bridges.nix` the
+is the package, its check per admitted Rocq and the devshell; `doc.nix`
+the documentation; `opam.nix` the shell `scripts/opam-install.sh` runs
+in; `rocq-bridges.nix` the
 bridges' check; `conventions.nix`, `treefmt.nix`, `claude-hooks.nix`
 and `systems.nix` what their names say. The inputs are pinned as
 linlog pins them (the same nixpkgs channel tarball, NanoYalla and Yalla
@@ -91,6 +96,14 @@ to add; until then it only downloads. Every action is pinned to a full
 commit SHA with the release as a comment (the organization requires
 it); Dependabot proposes the bumps (`.github/dependabot.yml`).
 `permissions: contents: read`, `persist-credentials: false`.
+`.github/workflows/release.yml` releases a tag `vX.Y.Z`: the tag must
+equal the opam file's and the citation file's version and the changelog
+must have its dated section, then `nix flake check`, a GitHub release
+with the changelog's section and the SHA-512 of the tag's source archive
+(what the Rocq opam archive's file needs), and the documentation on
+Pages, whose source the author sets to "GitHub Actions" before the
+first tag. The tag, the release's date and the opam-repository pull
+request are the author's.
 
 ## Version control: jj only
 

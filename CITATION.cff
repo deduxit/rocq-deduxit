@@ -1,0 +1,46 @@
+# linlog © Fabian Lukas Grubmüller 2026
+# Licensed under the EUPL
+
+cff-version: 1.2.0
+message: "If you use rocq-linlog in your work, please cite it as below."
+type: software
+title: rocq-linlog
+abstract: >-
+  The Rocq library of linlog, a linear logic suite: the one-sided sequent
+  calculus of linear logic with Mix, weakening and cut as parameters, the
+  two-sided calculus of intuitionistic linear logic and its affine
+  variant, and their first-order versions, as inductives; linlog's proof
+  terms as datatypes, their checkers as functions and the theorems that a
+  term a checker accepts proves its sequent, against which the
+  certificates linlog writes are checked; the invariants every
+  derivation keeps, which give certificates that a sequent is not
+  derivable; and the reduction of Mix to ?(⊥⊗⊥). Its definitions,
+  proofs, tests and documentation were written with substantial AI
+  assistance, by Anthropic's Claude models in Claude Code, in steps the
+  author planned, directed and accepted, and the author is responsible
+  for them. Rocq's kernel checks every proof, and no theorem rests on an
+  axiom: each one's assumptions are closed under the global context.
+authors:
+  - given-names: Fabian Lukas
+    family-names: Grubmüller
+version: 0.2.0
+license: EUPL-1.2
+repository-code: "https://github.com/linlog-prover/rocq-linlog"
+url: "https://linlog-prover.github.io/rocq-linlog/"
+references:
+  - type: software
+    title: linlog
+    abstract: >-
+      The linear logic suite whose certificates the library checks.
+    authors:
+      - given-names: Fabian Lukas
+        family-names: Grubmüller
+    license: EUPL-1.2
+    repository-code: "https://github.com/linlog-prover/linlog"
+    doi: 10.5281/zenodo.23448588
+keywords:
+  - linear logic
+  - intuitionistic linear logic
+  - sequent calculus
+  - Rocq
+  - proof certificates

@@ -29,19 +29,78 @@ their checkers and the same theorems in every mode.
   and Yalla's `nanoill.v`, compiled against the files the repository's
   flake pins, never copied.
 
-Build it with `make` (Rocq 9.0 or 9.1 and its standard library on the
-path; `nix develop` gives both), or with `nix build`, and compile a
-certificate with the theories on the load path:
+## Install
+
+The library needs Rocq 9.0, 9.1, 9.2 or 9.3 and its standard library; it
+is tested with each.
+
+**With opam**, from the [Rocq opam archive](https://rocq-prover.org/docs/using-opam)
+once the release is there, or meanwhile from its tag:
+
+```sh
+opam repo add rocq-released https://rocq-prover.org/opam/released   # once
+opam install rocq-linlog                                             # from the archive
+opam pin add rocq-linlog https://github.com/linlog-prover/rocq-linlog.git#v0.2.0   # or from the tag
+opam upgrade rocq-linlog                                             # later: a newer release
+opam remove rocq-linlog                                              # and to remove it
+```
+
+**With Nix**, the flake's default package is the library built against
+nixpkgs' Rocq 9.1 (flakes enabled):
+
+```sh
+nix build github:linlog-prover/rocq-linlog/v0.2.0    # result/lib/coq/9.1/user-contrib/Linlog
+```
+
+In a flake of your own, take it as an input
+(`inputs.rocq-linlog.url = "github:linlog-prover/rocq-linlog/v0.2.0"`)
+and put `rocq-linlog.packages.${system}.default` beside
+`rocqPackages.rocq-core` and `rocqPackages.stdlib` in a shell's
+packages; nixpkgs' Rocq setup hook puts it on the load path.
+
+**From the source**, `make` builds it in place with Rocq and its
+standard library on the path (`nix develop` gives both) and `make
+install` installs it into Rocq's `user-contrib`.
+
+Then compile a certificate that linlog writes:
 
 ```console
 $ linlog prove --mix --format rocq --standalone --output mix.v "A, B |- A, B"
-$ rocq compile -R path/to/rocq-linlog/theories Linlog mix.v
+$ rocq compile mix.v                                                  # installed
+$ rocq compile -R path/to/rocq-linlog/theories Linlog mix.v           # built in place
 ```
 
-`nix flake check` builds the library, compiles every certificate under
-`tests/` and the bridges, and requires every theorem's assumptions to be
-closed under the global context. linlog's own flake takes this one as an
-input and compiles the certificates its exporter writes against it.
+The documentation of every module is at
+[linlog-prover.github.io/rocq-linlog](https://linlog-prover.github.io/rocq-linlog/)
+(`nix build .#doc` builds it).
+
+## What it covers, and what not
+
+Every certificate linlog 0.2.0 writes for `--kernel linlog` compiles
+against this library and rests on its theorems, whose assumptions are
+closed: proofs of classical, Mix, affine and intuitionistic linear
+logic and its affine variant, with or without cut, propositional and
+first-order, and refutations by the classical reading, an atom's
+balance and the count equation, one-sided and two-sided. It has no
+theorem for linlog's other refutations, so linlog writes no certificate
+for them: a count of one sign under an exponential, a Petri net's state
+equation, a saturated set of the inverse method, and any refutation of
+a first-order sequent; nor for the ordered (cyclic) calculus, whose
+sequents keep their order. It proves no cut elimination: balance and
+the count equation are stated for the calculi without cut, the ones
+linlog's refutations are about. On Rocq 9.2 and 9.3 it compiles with
+deprecation warnings (`Notation` for an abbreviation, whose replacement
+9.0 and 9.1 lack).
+
+## Checks
+
+`nix flake check` builds the library with every Rocq it admits,
+compiles every certificate under `tests/` and the bridges, and requires
+every theorem's assumptions to be closed under the global context.
+linlog's own flake takes this one as an input and compiles the
+certificates its exporter writes against it.
+`scripts/opam-install.sh` installs the package from its opam file into a
+fresh opam switch per Rocq version, as a user of opam would.
 
 The library was part of linlog's repository until it moved here; its
 history up to the move is linlog's (`CHANGELOG.md`). It is licensed
