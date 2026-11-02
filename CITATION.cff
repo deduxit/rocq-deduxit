@@ -24,7 +24,7 @@ authors:
   - given-names: Fabian Lukas
     family-names: Grubmüller
 version: 0.2.0
-date-released: "2026-11-03"
+date-released: "2026-11-02"
 license: EUPL-1.2
 repository-code: "https://github.com/linlog-prover/rocq-linlog"
 url: "https://linlog-prover.github.io/rocq-linlog/"

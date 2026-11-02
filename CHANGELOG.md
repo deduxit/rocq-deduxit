@@ -7,7 +7,7 @@ versions follow [Semantic Versioning](https://semver.org/). The library's
 version is linlog's: a certificate that linlog writes for `--kernel
 linlog` compiles against the library of the same version.
 
-## [0.2.0] - 2026-11-03
+## [0.2.0] - 2026-11-02
 
 The library's first release, beside linlog 0.2.0, whose certificates
 for `--kernel linlog` it checks. Its history up to 2026-11-02 is that
