@@ -1,5 +1,7 @@
 # <picture><source media="(prefers-color-scheme: dark)" srcset="https://linlog-prover.github.io/logo/wordmark-dark.svg"><img alt="linlog" src="https://linlog-prover.github.io/logo/wordmark-light.svg" height="80"></picture> in Rocq
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23899109.svg)](https://doi.org/10.5281/zenodo.23899109)
+
 `rocq-linlog`, logical path `Linlog`: the Rocq library of
 [linlog](https://github.com/linlog-prover/linlog), a prover of classical
 and intuitionistic linear logic, on Rocq 9 and its standard library
@@ -110,3 +112,14 @@ The library was part of linlog's repository until it moved here; its
 history up to the move is linlog's (`CHANGELOG.md`). It is licensed
 under the EUPL-1.2, as linlog is. The logo above is linlog's, under
 CC BY 4.0, served from linlog's site.
+
+## Citing
+
+Each release is archived on Zenodo. To cite the library, use the DOI
+[10.5281/zenodo.23899109](https://doi.org/10.5281/zenodo.23899109),
+which always resolves to the latest version, or the DOI of the version
+you used, which its Zenodo record gives (0.2.0's is
+[10.5281/zenodo.23899110](https://doi.org/10.5281/zenodo.23899110)).
+[`CITATION.cff`](CITATION.cff) holds the entry, and GitHub's "Cite this
+repository" writes it as BibTeX or APA. linlog has a DOI of its own,
+[10.5281/zenodo.23448588](https://doi.org/10.5281/zenodo.23448588).
