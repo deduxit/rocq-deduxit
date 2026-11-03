@@ -147,6 +147,8 @@ before every command.
 repositories, with its cases in `modules/claude-hooks.nix`), the
 formatter hook `format.sh`, the SessionStart note `session-jj-state.sh`,
 the permission rules in `settings.json` and the rules file `rocq.md`.
-The hooks fail open, read the payload's `cwd`, and are plain Python or
+`settings.json` also sets `attribution.sessionUrl` to `false` (the
+author, 2026-11-03, for privacy), so no commit gets a `Claude-Session:`
+link to its claude.ai session, as in linlog. The hooks fail open, read the payload's `cwd`, and are plain Python or
 shell; `jq` is not installed on this machine. When the repository
 changes shape, amend `.claude/` and this file in the same change.
