@@ -1,9 +1,9 @@
-# <picture><source media="(prefers-color-scheme: dark)" srcset="https://linlog-prover.github.io/logo/wordmark-dark.svg"><img alt="linlog" src="https://linlog-prover.github.io/logo/wordmark-light.svg" height="80"></picture> in Rocq
+# <picture><source media="(prefers-color-scheme: dark)" srcset="https://sequentium.github.io/logo/wordmark-dark.svg"><img alt="linlog" src="https://sequentium.github.io/logo/wordmark-light.svg" height="80"></picture> in Rocq
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23899109.svg)](https://doi.org/10.5281/zenodo.23899109)
 
 `rocq-linlog`, logical path `Linlog`: the Rocq library of
-[linlog](https://github.com/linlog-prover/linlog), a prover of classical
+[linlog](https://github.com/sequentium/sequentium), a prover of classical
 and intuitionistic linear logic, on Rocq 9 and its standard library
 alone. It holds the one-sided sequent calculus of linear logic, with Mix,
 weakening and cut as parameters, and the two-sided calculus of
@@ -42,7 +42,7 @@ once the release is there, or meanwhile from its tag:
 ```sh
 opam repo add rocq-released https://rocq-prover.org/opam/released   # once
 opam install rocq-linlog                                             # from the archive
-opam pin add rocq-linlog https://github.com/linlog-prover/rocq-linlog.git#v0.2.0   # or from the tag
+opam pin add rocq-linlog https://github.com/sequentium/rocq-linlog.git#v0.2.0   # or from the tag
 opam upgrade rocq-linlog                                             # later: a newer release from the archive
 opam remove rocq-linlog                                              # and to remove it
 ```
@@ -55,11 +55,11 @@ takes the archive's instead.
 nixpkgs' Rocq 9.1 (flakes enabled):
 
 ```sh
-nix build github:linlog-prover/rocq-linlog/v0.2.0    # result/lib/coq/9.1/user-contrib/Linlog
+nix build github:sequentium/rocq-linlog/v0.2.0    # result/lib/coq/9.1/user-contrib/Linlog
 ```
 
 In a flake of your own, take it as an input
-(`inputs.rocq-linlog.url = "github:linlog-prover/rocq-linlog/v0.2.0"`)
+(`inputs.rocq-linlog.url = "github:sequentium/rocq-linlog/v0.2.0"`)
 and put `rocq-linlog.packages.${system}.default` beside
 `rocqPackages.rocq-core` and `rocqPackages.stdlib` in a shell's
 packages; nixpkgs' Rocq setup hook puts it on the load path.
@@ -77,7 +77,7 @@ $ rocq compile -R path/to/rocq-linlog/theories Linlog mix.v           # built in
 ```
 
 The documentation of every module is at
-[linlog-prover.github.io/rocq-linlog](https://linlog-prover.github.io/rocq-linlog/)
+[sequentium.github.io/rocq-linlog](https://sequentium.github.io/rocq-linlog/)
 (`nix build .#doc` builds it).
 
 ## What it covers, and what not

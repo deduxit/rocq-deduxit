@@ -28,8 +28,8 @@ date-released: "2026-11-02"
 # The DOI of every version, which resolves to the latest.
 doi: 10.5281/zenodo.23899109
 license: EUPL-1.2
-repository-code: "https://github.com/linlog-prover/rocq-linlog"
-url: "https://linlog-prover.github.io/rocq-linlog/"
+repository-code: "https://github.com/sequentium/rocq-linlog"
+url: "https://sequentium.github.io/rocq-linlog/"
 references:
   - type: software
     title: linlog
@@ -39,7 +39,7 @@ references:
       - given-names: Fabian Lukas
         family-names: Grubmüller
     license: EUPL-1.2
-    repository-code: "https://github.com/linlog-prover/linlog"
+    repository-code: "https://github.com/sequentium/sequentium"
     doi: 10.5281/zenodo.23448588
 keywords:
   - linear logic
