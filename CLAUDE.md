@@ -115,14 +115,21 @@ remote `origin` (`github.com/linlog-prover/rocq-linlog`) keep working.
 `.claude/hooks/block-git.py` enforce it. Commit thematically, without
 being asked, with `jj commit -m`; never `jj new -m` (a hook blocks it);
 `jj squash` into a described parent needs `--use-destination-message`
-or `-m`. Run `jj st` right before every commit, and after creating a
+or `-m` (in a Claude session jj's editor is `false`, so a command that
+wants a description fails at once). Run `jj st` right before every commit, and after creating a
 file before a `nix` command that must see it (nix sees only files in
 the git tree). Subjects are short, imperative and capitalised. jj
-signs every commit; when the key's passphrase is no longer cached,
-every jj command that writes fails: finish what needs no commit and ask
-the author. Pushing is outward-facing and the author's or the planning
-session's (linlog's `plan/push-main.sh --rocq REV`); the GitHub CLI asks
-before every command.
+writes commits unsigned (the machine's jj config): a global hook signs
+a session's new commits right after the jj command that made them and
+reports their new commit ids, and the push signs any still unsigned. A
+lapsed passphrase cache stops no jj command and no commit: the hook
+says which commits wait, and the first jj command after the author
+unlocks, or the push, signs them; it does stop the push. Cite change
+ids, or the commit ids the hook reported; never pass `--config
+signing.behavior=…`. Pushing is outward-facing and the author's or the planning
+session's (linlog's `plan/push-main.sh --rocq REV`, which checks
+`main@origin` by change id, since the push's signing gives commits new
+ids); the GitHub CLI asks before every command.
 
 ## Conventions
 
