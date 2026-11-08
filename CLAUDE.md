@@ -64,8 +64,10 @@ nix fmt                                 # nixfmt, taplo, shfmt, shellcheck, ruff
 `nix flake check` runs `rocq-linlog` and `rocq-linlog-9_N`, `rocq-bridges`, `treefmt`,
 `conventions` (the licence header on every source, no comment naming
 the plan of linlog's sessions), `typos` (`typos.toml`), `deadnix`,
-`actionlint` (the workflow) and `claude-hooks` (the guards under
-`.claude/hooks`, their cases in `modules/claude-hooks.nix`). On this
+`actionlint` (the workflow), `claude-hooks` (the guards under
+`.claude/hooks`, their cases in `modules/claude-hooks.nix`) and
+`claude-worktree-hook` (the worktree hook against a throwaway colocated
+repository, `modules/claude-worktree-hook-test.py`). On this
 machine, run it under the machine lock with few jobs: `flock -o
 /tmp/linlog-machine.lock nix flake check --max-jobs 2 --cores 6`.
 Every change that touches the library, a test or a bridge passes it.
@@ -146,9 +148,26 @@ before every command.
 `command_line.py` (copies of linlog's; a change to one belongs in both
 repositories, with its cases in `modules/claude-hooks.nix`), the
 formatter hook `format.sh`, the SessionStart note `session-jj-state.sh`,
-the permission rules in `settings.json` and the rules file `rocq.md`.
+the worktree hook `jj-worktree.py` (a copy of linlog's as well, its test
+`modules/claude-worktree-hook-test.py`), the permission rules in
+`settings.json` and the rules file `rocq.md`.
 `settings.json` also sets `attribution.sessionUrl` to `false` (the
 author, 2026-11-03, for privacy), so no commit gets a `Claude-Session:`
 link to its claude.ai session, as in linlog. The hooks fail open, read the payload's `cwd`, and are plain Python or
 shell; `jq` is not installed on this machine. When the repository
 changes shape, amend `.claude/` and this file in the same change.
+
+`jj-worktree.py` runs for `WorktreeCreate` and `WorktreeRemove` in place
+of Claude Code's git worktrees (a sub-agent's `isolation: "worktree"`,
+`--worktree`, a background session, a workflow agent): in this colocated
+repository a git worktree under `.claude/worktrees/` is one jj does not
+know, and a jj command there acts on the main workspace. It makes a jj
+workspace `wt-NAME` in `../rocq-linlog-wt-NAME` on `@-` of the session's
+workspace (committed work only, as git's HEAD), copies what
+`.worktreeinclude` names, and on removal deletes only a workspace it made
+whose `@` is empty, exiting 1 otherwise, since Claude Code's check for
+uncommitted work reads git and sees nothing there. It alone fails
+closed: a creation that goes wrong exits 1 and Claude Code makes no
+worktree, the safe side. Claude Code keeps the workspaces of sub-agents
+and workflow agents and never asks to remove them: once their commits
+are taken, `.claude/hooks/jj-worktree.py prune` removes every empty one.
