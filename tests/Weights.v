@@ -21,8 +21,8 @@ Lemma one_sided_two_sided :
       [ioc (ivar "d"); ioc (ilmap (itens (ivar "c") (itens (ivar "d") (ivar "d"))) ione)]
       (itens (ivar "c") (ivar "c")).
 Proof.
-  apply (iweighted_refutation (weight_of String.eqb [("c", 1%Z)]) (fun a => existsb (String.eqb a) [])
-    intuitionistic).
+  apply (iweighted_refutation (weight_of String.eqb [("c", 1%Z)])
+    (fun a => existsb (String.eqb a) []) true intuitionistic).
   vm_compute. reflexivity.
 Qed.
 
@@ -32,8 +32,8 @@ Lemma one_sided_mix :
       [tens (var "c") (var "c"); wn (covar "d");
        wn (tens (tens (var "c") (tens (var "d") (var "d"))) bot)].
 Proof.
-  apply (weighted_refutation (weight_of String.eqb [("c", 1%Z)]) (fun a => existsb (String.eqb a) [])
-    _).
+  apply (weighted_refutation (weight_of String.eqb [("c", 1%Z)])
+    (fun a => existsb (String.eqb a) []) true _).
   vm_compute. reflexivity.
 Qed.
 
@@ -44,7 +44,7 @@ Lemma one_sided_negative :
       [tens (covar "a") (covar "a"); wn (tens (covar "a") (var "b")); covar "b"].
 Proof.
   apply (weighted_refutation (weight_of String.eqb [("a", (-1)%Z)])
-    (fun a => existsb (String.eqb a) []) classical).
+    (fun a => existsb (String.eqb a) []) true classical).
   vm_compute. reflexivity.
 Qed.
 
@@ -58,7 +58,21 @@ Lemma state_equation_dead :
       (itens (ivar "a") (ivar "b")).
 Proof.
   apply (iweighted_refutation (weight_of String.eqb [("a", 1%Z); ("b", 2%Z)])
-    (fun a => existsb (String.eqb a) ["c"]) intuitionistic).
+    (fun a => existsb (String.eqb a) ["c"]) true intuitionistic).
+  vm_compute. reflexivity.
+Qed.
+
+(** The same with the bodies negative, as a classical one-sided Horn
+    program may write them: [⊢ a, ?(~a ⊗ (a ⅋ a)), ?((~a ⊗ ~c) ⊗ b), ~b],
+    the weights negated and [c] dead in the negative sign, so that the
+    clause that never fires contributes nothing. *)
+Lemma state_equation_negative_bodies :
+  ~ ll (atom := string) classical
+      [var "a"; wn (tens (covar "a") (parr (var "a") (var "a")));
+       wn (tens (tens (covar "a") (covar "c")) (var "b")); covar "b"].
+Proof.
+  apply (weighted_refutation (weight_of String.eqb [("b", (-1)%Z)])
+    (fun a => existsb (String.eqb a) ["c"]) false classical).
   vm_compute. reflexivity.
 Qed.
 
@@ -89,7 +103,7 @@ Qed.
 (** Without the dead atom the copies of the second clause lower the
     count without bound. *)
 Lemma state_equation_needs_dead :
-  overweight (atom := string) (weight_of String.eqb [("a", 1%Z); ("b", 2%Z)]) (fun _ => false)
+  overweight (atom := string) (weight_of String.eqb [("a", 1%Z); ("b", 2%Z)]) (fun _ => false) true
     (lrules intuitionistic)
     (one_sided
       [ivar "a"; ioc (ilmap (itens (ivar "a") (ivar "a")) (ivar "b"));
@@ -97,22 +111,31 @@ Lemma state_equation_needs_dead :
       (itens (ivar "a") (ivar "b"))) = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** With the dead sign wrong, the clause that never fires absorbs and
+    the test refuses. *)
+Lemma negative_bodies_wrong_sign :
+  overweight (atom := string) (weight_of String.eqb [("b", (-1)%Z)])
+    (fun a => existsb (String.eqb a) ["c"]) true classical
+    [var "a"; wn (tens (covar "a") (parr (var "a") (var "a")));
+     wn (tens (tens (covar "a") (covar "c")) (var "b")); covar "b"] = false.
+Proof. vm_compute. reflexivity. Qed.
+
 (** A derivable sequent, [a, !(a ⊸ b) ⊢ b], is refuted by no weights. *)
 Lemma derivable_not_overweight :
-  overweight (atom := string) (weight_of String.eqb [("a", 1%Z); ("b", 1%Z)]) (fun _ => false)
+  overweight (atom := string) (weight_of String.eqb [("a", 1%Z); ("b", 1%Z)]) (fun _ => false) true
     (lrules intuitionistic)
     (one_sided [ivar "a"; ioc (ilmap (ivar "a") (ivar "b"))] (ivar "b")) = false.
 Proof. vm_compute. reflexivity. Qed.
 
 (** A [⊤] absorbs: [⊢ ⊤, c ⊗ c] is derivable. *)
 Lemma top_not_overweight :
-  overweight (atom := string) (weight_of String.eqb [("c", 1%Z)]) (fun _ => false) classical
+  overweight (atom := string) (weight_of String.eqb [("c", 1%Z)]) (fun _ => false) true classical
     [top; tens (var "c") (var "c")] = false.
 Proof. vm_compute. reflexivity. Qed.
 
 (** The test without drops refuses a calculus with weakening. *)
 Lemma weakening_not_overweight :
-  overweight (atom := string) (weight_of String.eqb [("a", 2%Z); ("b", 1%Z)]) (fun _ => false)
+  overweight (atom := string) (weight_of String.eqb [("a", 2%Z); ("b", 1%Z)]) (fun _ => false) true
     (lrules affine)
     (one_sided [ivar "a"; ilmap (ivar "a") (itens (ivar "b") (ivar "b"))]
       (itens (ivar "b") (itens (ivar "b") (ivar "b")))) = false.

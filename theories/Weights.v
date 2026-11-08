@@ -13,8 +13,9 @@
       none included, and a [!A] contributes nothing, since a promotion's
       context is all [?] formulas, which may take none;
     - an atom declared dead contributes nothing a sum can cancel: its
-      positive literal is [dead], as [0] is, and its negative literal
-      absorbs, as [⊤] does, so an axiom on it still balances;
+      literal of the sign [p] names is [dead], as [0] is, and its other
+      literal absorbs, as [⊤] does, so an axiom on it still balances
+      (for a Horn program [p] is the bodies' sign);
     - [⊗] proves its sides apart, so a [⊤] on one side does not absorb a
       [dead] on the other.
 
@@ -29,7 +30,8 @@
     literals of one sign, which is the one-sided count. With the weights
     of a Petri net's places that no transition raises and the target asks
     raised (a Farkas certificate of a Horn program's state equation), and
-    the atoms no firing can reach declared dead, the test says that the
+    the atoms no firing can reach declared dead in the bodies' sign, the
+    test says that the
     state equation of the transitions that can fire has no solution.
 
     With weakening a derivation may drop formulas, and the count holds
@@ -209,6 +211,11 @@ Fixpoint weight_of (atom_eqb : atom -> atom -> bool) (table : list (atom * Z)) (
 Variable y : atom -> Z.
 Variable d : atom -> bool.
 
+(** The sign of a dead atom's literal that contributes nothing, [true]
+    for the positive one: a Horn program's bodies' sign, whose literals
+    are the outputs. The other literal of a dead atom absorbs. *)
+Variable p : bool.
+
 (** ** What a formula can contribute *)
 
 Section Contributions.
@@ -220,8 +227,10 @@ Variable drop : formula -> bool.
 (** [out A o]: [A] can contribute [o], over its additive alternatives and
     the copies of its [?] subformulas. *)
 Inductive out : formula -> outcome -> Prop :=
-| out_var : forall b, out (var b) (if d b then dead else num (y b))
-| out_covar : forall b, out (covar b) (if d b then absorb else num (- y b))
+| out_var : forall b,
+    out (var b) (if d b then (if p then dead else absorb) else num (y b))
+| out_covar : forall b,
+    out (covar b) (if d b then (if p then absorb else dead) else num (- y b))
 | out_one : out one (num 0)
 | out_bot : out bot (num 0)
 | out_top : out top absorb
@@ -311,7 +320,8 @@ Fixpoint least (A : formula) : low :=
 (** Whether [A] may absorb. *)
 Fixpoint absorbs (A : formula) : bool :=
   match A with
-  | covar b => d b
+  | var b => d b && negb p
+  | covar b => d b && p
   | top => true
   | tens A B =>
       absorbs A && reach (absorbs B) (least B) || absorbs B && reach (absorbs A) (least A)
@@ -337,11 +347,11 @@ Proof.
   intros A o H. induction H as [b|b| | | | |A B a b _ [IA NA] _ [IB NB]
     |A B a b _ [IA NA] _ [IB NB]|A B a _ [IA NA]|A B b _ [IB NB]|A B a _ [IA NA]
     |A B b _ [IB NB]|A|A|A a o _ [IA NA] _ [IO NO]|A D]; cbn [absorbs least] in *.
-  - split; [intros E; destruct (d b); discriminate |].
-    intros n E'. apply below_keep. destruct (d b); [discriminate |].
+  - split; [intros E; destruct (d b), p; cbn in *; congruence |].
+    intros n E'. apply below_keep. destruct (d b); [destruct p; discriminate |].
     injection E' as <-. cbn; lia.
-  - split; [intros E; destruct (d b); [reflexivity | discriminate] |].
-    intros n E'. apply below_keep. destruct (d b); [discriminate |].
+  - split; [intros E; destruct (d b), p; cbn in *; congruence |].
+    intros n E'. apply below_keep. destruct (d b); [destruct p; discriminate |].
     injection E' as <-. cbn; lia.
   - split; [discriminate |]. intros n E. apply below_keep. injection E as <-. cbn; lia.
   - split; [discriminate |]. intros n E. apply below_keep. injection E as <-. cbn; lia.
@@ -418,7 +428,7 @@ Theorem weighted_balance : forall R l, ll R l -> weakening R = false -> cut R = 
 Proof.
   intros R l H W K. induction H.
   - eexists. split; [repeat constructor |].
-    destruct (d a); cbn; [reflexivity | apply Z.eqb_eq; lia].
+    destruct (d a), p; cbn; first [reflexivity | apply Z.eqb_eq; lia].
   - destruct IHll as [o [Ho S]]. exists o. split; [eapply outs_perm |]; eassumption.
   - eexists. split; [repeat constructor | reflexivity].
   - destruct IHll as [o [Ho S]]. exists (opar (num 0) o).
@@ -492,14 +502,10 @@ Qed.
 
 Section Outputs.
 
-(** Whether the positive literals are the outputs, else the negative
-    ones. *)
-Variable p : bool.
-
-(** The outputs of a formula: one for a literal of the output sign, a
-    [1], a [⊤] and a [!] formula, none for the other literals, [⊥], [0]
-    and a [?] formula; a [⊗] has one fewer than its sides, a [⅋] as many,
-    an additive the more of its sides'. *)
+(** The outputs of a formula, [p] naming the outputs' sign: one for a
+    literal of that sign, a [1], a [⊤] and a [!] formula, none for the
+    other literals, [⊥], [0] and a [?] formula; a [⊗] has one fewer than
+    its sides, a [⅋] as many, an additive the more of its sides'. *)
 Fixpoint outputs (A : formula) : Z :=
   match A with
   | var _ => if p then 1 else 0
@@ -574,7 +580,7 @@ Theorem affine_balance : forall R l, ll R l -> cut R = false -> forallb shaped l
 Proof.
   intros R l H K. induction H; intro F; cbn [outputs_all outputs] in *.
   - split; [destruct p; lia |]. intros _. eexists. split; [repeat constructor |].
-    destruct (d a); cbn; [reflexivity | apply Z.eqb_eq; lia].
+    destruct (d a), p; cbn; first [reflexivity | apply Z.eqb_eq; lia].
   - rewrite <- (forallb_shaped_perm _ _ H0) in F. destruct (IHll F) as [Q E].
     rewrite <- (outputs_all_perm _ _ H0). split; [exact Q |]. intros E1.
     destruct (E E1) as [o [Ho S]]. exists o. split; [eapply outs_perm |]; eassumption.
@@ -673,10 +679,10 @@ End Outputs.
 
 (** Weights that the test accepts of the translation refute a two-sided
     sequent, with weakening or without. *)
-Theorem iaffine_refutation : forall p R G C,
-  overweight_affine p (lrules R) (one_sided G C) = true -> ~ ill R G C.
+Theorem iaffine_refutation : forall R G C,
+  overweight_affine (lrules R) (one_sided G C) = true -> ~ ill R G C.
 Proof.
-  intros p R G C T H. exact (affine_refutation p _ _ T (ill_ll R G C H)).
+  intros R G C T H. exact (affine_refutation _ _ T (ill_ll R G C H)).
 Qed.
 
 End Weights.

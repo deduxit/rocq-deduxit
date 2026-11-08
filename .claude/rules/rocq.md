@@ -293,8 +293,13 @@ pinned input. Paths of the form `core/…` below are linlog's.
   cannot absorb the other's `0`) and `opar` for `⅋` and for formulas
   side by side (absorb wins). `?A` contributes the sum of any number of
   `A`'s contributions, `!A` zero (a promotion's context is all `?`,
-  each taking none). A dead atom's positive literal is `dead`, its
-  negative literal `absorb`, so its axiom still settles; that makes the
+  each taking none). A dead atom's literal of the sign `p` names is
+  `dead`, its other literal `absorb`, so its axiom still settles; `p`
+  must be a Horn program's bodies' sign, or a clause that never fires
+  has an absorbing body literal and the test refuses (the review's
+  witness, `tests/Weights.v`'s `negative_bodies_wrong_sign`); `p` is a
+  parameter of every theorem of the file, and with weakening it also
+  names the outputs' sign, which for a Horn program is the same; that makes the
   invariant hold for every weight function `y` and dead set `d`, and
   dead atoms are how a Horn program's transitions that can never fire
   drop out: their bodies hold a dead literal, so their copies contribute
