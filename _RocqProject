@@ -9,6 +9,7 @@ theories/Intuitionistic.v
 theories/IntuitionisticCheck.v
 theories/Mix.v
 theories/Refutations.v
+theories/Weights.v
 theories/Terms.v
 theories/TermsCheck.v
 theories/FirstOrderFormulas.v
@@ -18,3 +19,4 @@ theories/FirstOrderCheck.v
 theories/FirstOrderSoundness.v
 theories/FirstOrderIntuitionistic.v
 theories/FirstOrderIntuitionisticCheck.v
+theories/FirstOrderWeights.v

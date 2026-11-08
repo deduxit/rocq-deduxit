@@ -283,11 +283,61 @@ pinned input. Paths of the form `core/…` below are linlog's.
   `excesses`, `excess`, `weights` and the like (`cbn [...]`), since a
   full `cbn` turns `add (Some (0, 0)) x` and `1 + x` into matches no
   lemma rewrites. Certificates of non-derivability are in
-  `tests/Refutations.v` and, from the exporter, in
-  `core/tests/snapshots/linlog/`; a OneSided count (copies of one sign)
-  or a state equation has no lemma yet: `bang` would keep a one-sided
-  interval for the first, and the second needs Horn programs' proofs as
-  firing sequences.
+  `tests/Refutations.v`, `tests/Weights.v`, `tests/FirstOrderWeights.v` and, from the exporter, in
+  `core/tests/snapshots/linlog/`; the OneSided count (copies of one
+  sign) and the state equation are `Weights.v`'s (below).
+- **`Weights.v`** (in the package, exporting `Refutations`): what a
+  formula can contribute to a weighted count (`out`, an inductive
+  relation; `outcome` is `num z`, `dead` or `absorb`), with `otimes`
+  for `⊗` (dead wins: the sides are proved apart, so one side's `⊤`
+  cannot absorb the other's `0`) and `opar` for `⅋` and for formulas
+  side by side (absorb wins). `?A` contributes the sum of any number of
+  `A`'s contributions, `!A` zero (a promotion's context is all `?`,
+  each taking none). A dead atom's positive literal is `dead`, its
+  negative literal `absorb`, so its axiom still settles; that makes the
+  invariant hold for every weight function `y` and dead set `d`, and
+  dead atoms are how a Horn program's transitions that can never fire
+  drop out: their bodies hold a dead literal, so their copies contribute
+  only zero. `weighted_balance`: without weakening and cut, Mix allowed,
+  every derivable sequent can contribute `num 0` or `absorb`; `least`
+  and `absorbs` bound every contribution (`out_bound`), so `overweight`
+  (no formula may absorb, the bound of the sequent above zero, or no
+  numeric contribution at all) refutes (`weighted_refutation`,
+  `iweighted_refutation`). The one-sided count is the weight `1` (or
+  `-1` for copies of the negative literal) on one atom and no dead atom;
+  the state equation is the Farkas weights of the atoms (the ticket
+  weights of clauses used once are not needed: the test sums those
+  clauses' own literals, which the ticket inequality bounds) and the
+  atoms outside the closure of the initial marking declared dead. Every
+  refutation the Rust test states passes `overweight`: its lower bound
+  is at least the Rust interval's (`0` gives `never`, at least any
+  number; an exponential's row is `0` either way).
+- **With weakening the count needs outputs** (`affine_balance`): a
+  weakening may drop any formula, so the test keeps only formulas with
+  no output droppable (`droppable`, contributing zero), where `outputs`
+  counts one for a literal of the output sign `p`, `1`, `⊤` and `!A`,
+  none for the other literals, `⊥`, `0`, `?A`, `⊗` one fewer than its
+  sides, `⅋` the sum, additives the larger. `shaped` asks every
+  subformula's count to be at least zero and every `?A` to have `A`
+  with none: then every derivable sequent has at least one output, and
+  one with exactly one (a Horn program's goal; `overweight_affine` asks
+  `outputs_all = 1`) settles with drops of formulas without an output
+  only. Mix makes two outputs, so it needs no case. A Horn program with
+  bodies written negative takes `p := false`.
+- **`FirstOrderWeights.v`** (in the package; it imports the outcomes and
+  bounds of `Weights` by name, `Import Weights(outcome(..), …)`, since
+  the first-order files share the propositional names): the same
+  without weakening and without dead atoms, `value p ts` the weight of
+  a literal (`table p ts` for a predicate `fixed p`, `weight p` for the
+  others), `pinned` asking every literal of a fixed predicate closed so
+  that no instance changes it (`subst_pinned`); `out (fall A)` is any
+  instance's contribution, and `out_exists` goes by `size`, which
+  substitution keeps. Linlog's counts group an atom with its predicate
+  where some atom of the predicate has a bound variable and count it
+  alone otherwise: the first is `weight`, the second `fixed` with the
+  table. `ill_ll` here embeds the first-order two-sided calculus
+  (`Refutations.lrules`), whose quantifier cases need `itr_isubst`,
+  `dual_subst` and `fresh_one_sided`.
 - **Balance and the count equation are cut-free.** A cut formula is no
   subformula of the conclusion, so neither invariant of the premises
   gives the conclusion's (an exponential cut formula has no interval, a

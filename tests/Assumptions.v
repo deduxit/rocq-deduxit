@@ -8,8 +8,8 @@
     share their names with the propositional ones and are named by their
     files. *)
 
-From Linlog Require Import Soundness IntuitionisticCheck Mix Refutations.
-From Linlog Require FirstOrderSoundness FirstOrderIntuitionisticCheck.
+From Linlog Require Import Soundness IntuitionisticCheck Mix Refutations Weights.
+From Linlog Require FirstOrderSoundness FirstOrderIntuitionisticCheck FirstOrderWeights.
 
 Print Assumptions soundness.
 Print Assumptions soundness_classical.
@@ -29,8 +29,18 @@ Print Assumptions ill_tautology.
 Print Assumptions iclassical_refutation.
 Print Assumptions iunbalanced_refutation.
 Print Assumptions iequation_refutation.
+Print Assumptions weighted_balance.
+Print Assumptions weighted_refutation.
+Print Assumptions iweighted_refutation.
+Print Assumptions affine_balance.
+Print Assumptions affine_refutation.
+Print Assumptions iaffine_refutation.
 Print Assumptions FirstOrderSoundness.soundness.
 Print Assumptions FirstOrderSoundness.soundness_classical.
 Print Assumptions FirstOrderSoundness.soundness_mix.
 Print Assumptions FirstOrderSoundness.soundness_affine.
 Print Assumptions FirstOrderIntuitionisticCheck.soundness_ill.
+Print Assumptions FirstOrderWeights.weighted_balance.
+Print Assumptions FirstOrderWeights.weighted_refutation.
+Print Assumptions FirstOrderWeights.ill_ll.
+Print Assumptions FirstOrderWeights.iweighted_refutation.

@@ -14,7 +14,9 @@ mode the theorem that a term the checker accepts proves its sequent. A
 certificate that linlog writes (`linlog prove --format rocq --kernel
 linlog`) is the sequent, the term and one computation. The invariants
 every derivation keeps (the classical reading, an atom's balance, the
-count equation) give certificates that a sequent is not derivable. A
+count equation, and weighted counts where copies add literals of one
+sign or a Horn program's state equation fails) give certificates that
+a sequent is not derivable. A
 first-order development stands beside the propositional one: terms with
 de Bruijn indices and eigenvariables, both calculi with the quantifier
 rules and the eigenvariable condition, the first-order proof terms,
