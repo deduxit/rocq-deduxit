@@ -1,18 +1,5 @@
 {
   "nodes": {
-    "nixpkgs": {
-      "locked": {
-        "lastModified": 1792506237,
-        "narHash": "sha256-hVMDyAXU0kxRuG3GygbZkzf5x+aBNEC0NYEJ6KwHtD4=",
-        "rev": "5adc50831c259f87faeb09ddf930d43597197473",
-        "type": "tarball",
-        "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1097770.5adc50831c25/nixexprs.tar.zst"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst"
-      }
-    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": [
@@ -20,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790898470,
-        "narHash": "sha256-zTwuwezD0w3hpga6a6P8emidzAZFyWqlNeRBlpWOOl8=",
+        "lastModified": 1793576659,
+        "narHash": "sha256-V1h85lUaJBQoHFrB2vpXZOE0Ju1MYSnIpsehoVZYlDo=",
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "024633cd702b10285db5cb19b40ad48d2399ba60",
+        "rev": "ea2630b7470978622c7689a1ff75d2b389175399",
         "type": "github"
       },
       "original": {
@@ -48,6 +35,46 @@
         "type": "github"
       }
     },
+    "nanoyalla": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1744023336,
+        "narHash": "sha256-r8VqJAoVCmRkHopZHC8NmANna9LFqZ4d/N3gQL+fTj4=",
+        "owner": "ComputerAidedLL",
+        "repo": "click-and-collect",
+        "rev": "6b1c25ff30a1c1dbfccdc0c1cebc272a67ab0137",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ComputerAidedLL",
+        "repo": "click-and-collect",
+        "rev": "6b1c25ff30a1c1dbfccdc0c1cebc272a67ab0137",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1793977579,
+        "narHash": "sha256-4/Yzr1fWTh/zBAR1tR84ZQ1Zhmor8AXwgD4AS7sPn60=",
+        "rev": "4fe25e12eb9f4c744966dd3de5a05246cf098601",
+        "type": "tarball",
+        "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1109744.4fe25e12eb9f/nixexprs.tar.zst"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst"
+      }
+    },
+    "root": {
+      "inputs": {
+        "flake-parts": "flake-parts",
+        "import-tree": "import-tree",
+        "nanoyalla": "nanoyalla",
+        "nixpkgs": "nixpkgs",
+        "treefmt-nix": "treefmt-nix",
+        "yalla": "yalla"
+      }
+    },
     "treefmt-nix": {
       "inputs": {
         "nixpkgs": [
@@ -68,23 +95,6 @@
         "type": "github"
       }
     },
-    "nanoyalla": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1744023336,
-        "narHash": "sha256-r8VqJAoVCmRkHopZHC8NmANna9LFqZ4d/N3gQL+fTj4=",
-        "owner": "ComputerAidedLL",
-        "repo": "click-and-collect",
-        "rev": "6b1c25ff30a1c1dbfccdc0c1cebc272a67ab0137",
-        "type": "github"
-      },
-      "original": {
-        "owner": "ComputerAidedLL",
-        "repo": "click-and-collect",
-        "rev": "6b1c25ff30a1c1dbfccdc0c1cebc272a67ab0137",
-        "type": "github"
-      }
-    },
     "yalla": {
       "flake": false,
       "locked": {
@@ -100,16 +110,6 @@
         "repo": "yalla",
         "rev": "a138437625f5bb39221cd6171b7dc464e15bbf8b",
         "type": "github"
-      }
-    },
-    "root": {
-      "inputs": {
-        "nixpkgs": "nixpkgs",
-        "flake-parts": "flake-parts",
-        "import-tree": "import-tree",
-        "treefmt-nix": "treefmt-nix",
-        "nanoyalla": "nanoyalla",
-        "yalla": "yalla"
       }
     }
   },
