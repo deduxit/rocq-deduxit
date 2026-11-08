@@ -2,7 +2,7 @@
 # Licensed under the EUPL
 
 opam-version: "2.0"
-version: "0.2.0"
+version: "0.3.0"
 synopsis: "The Rocq library of linlog, a linear logic suite"
 description: """
 Certificates for the proofs that linlog, a prover of classical and

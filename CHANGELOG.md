@@ -7,6 +7,36 @@ versions follow [Semantic Versioning](https://semver.org/). The library's
 version is linlog's: a certificate that linlog writes for `--kernel
 linlog` compiles against the library of the same version.
 
+## [0.3.0] - unreleased
+
+Certificates of non-derivability where copies add literals, beside
+linlog 0.3.0, whose certificates for `--kernel linlog` it checks.
+
+### Added
+
+- Weighted counts (`Weights.v`): an integer weight per atom, and atoms
+  declared dead, whose positive literal contributes nothing a sum can
+  cancel and whose negative literal absorbs. Without weakening and
+  without cut, Mix allowed, every derivable sequent can contribute zero
+  to the weighted count or absorb, copies of `?` formulas included
+  (`weighted_balance`), so weights that the test `overweight` accepts by
+  computation refute a sequent (`weighted_refutation`, and two-sided
+  `iweighted_refutation`). With the weight `1` on one atom this is the
+  one-sided count, where every literal of the atom below an exponential
+  has one sign; with a Farkas certificate of a Horn program's state
+  equation and the atoms no firing reaches declared dead, it is the
+  state equation's refutation.
+- The same with weakening (`affine_balance`, `overweight_affine`,
+  `affine_refutation`, `iaffine_refutation`) for sequents whose
+  formulas have outputs as a Horn program's do (`outputs`, `shaped`):
+  a derivation then drops only formulas without an output.
+- The weighted count of first-order sequents without weakening
+  (`FirstOrderWeights.v`), each literal weighed by its predicate or, for
+  a predicate whose literals are all closed, by the literal; and the
+  embedding of the first-order two-sided calculus in the one-sided one
+  (`FirstOrderWeights.ill_ll`).
+- `weight_of`, the weight a table gives an atom, for certificates.
+
 ## [0.2.0] - 2026-11-02
 
 The library's first release, beside linlog 0.2.0, whose certificates
