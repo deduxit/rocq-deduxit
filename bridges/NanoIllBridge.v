@@ -4,27 +4,33 @@
 (** * The bridge to Yalla's standalone kernel of intuitionistic linear logic
 
     [ill intuitionistic] derives exactly the sequents that Yalla's
-    [nanoill.ill] derives, over [nanoill.v]'s own definitions, imported
+    [nanoill.ill] derives. [nanoill.v]'s definitions are imported
     unchanged. Its atoms are [nat], so the statements are about
-    [iformula nat]; the library's calculus is the same at every atom
-    type. The two formula types have the same constructors and the
-    translations below map each to its namesake, so they are inverse
-    bijections. [nanoill.v]'s derivations are data (an inductive declared
-    in [Type], which Rocq lowers to [Set]) and [ill] is in [Prop], so the
-    statements say that a derivation of [nanoill.ill] exists, with
-    [inhabited]: they equate derivability, not derivations. Exchange is one [Permutation]
-    rule here and a transposition of neighbours there, which is the only
-    difference between the two calculi. Neither has cut
-    ([intuitionistic] sets [icut := false]): relating a calculus with cut
-    to [nanoill.v] would need cut elimination, which is not proved
-    here. *)
+    [iformula nat]; the library's calculus is the same for every atom
+    type.
+
+    The two formula types have the same constructors, and the
+    translations below map each constructor to its namesake, so they
+    are inverse bijections. The equivalence alone does not show this:
+    it would also hold for a translation that swapped the arguments of
+    [iplus] everywhere. Read [to_nanoill] to check it.
+
+    [nanoill.v]'s derivations are data (an inductive declared in
+    [Type], which Rocq lowers to [Set]), while [ill] is in [Prop]. So
+    the statements say, with [inhabited], that a derivation of
+    [nanoill.ill] exists: they equate derivability, not derivations.
+    The only difference between the two calculi is exchange: one
+    [Permutation] rule here, a swap of neighbours there. Neither has
+    cut ([intuitionistic] sets [icut := false]); relating a calculus
+    with cut to [nanoill.v] would need cut elimination, which this
+    library does not prove. *)
 
 From Stdlib Require Import List Permutation.
 From Deduxit.Linear Require Import Intuitionistic.
 From Yalla.MicroYalla Require nanoill.
 Import ListNotations.
 
-(** A formula of this library as [nanoill.v]'s. *)
+(** A formula of this library as a formula of [nanoill.v]. *)
 Fixpoint to_nanoill (A : iformula nat) : nanoill.iformula :=
   match A with
   | ivar a => nanoill.ivar a
@@ -38,7 +44,7 @@ Fixpoint to_nanoill (A : iformula nat) : nanoill.iformula :=
   | ioc A => nanoill.ioc (to_nanoill A)
   end.
 
-(** A formula of [nanoill.v] as this library's. *)
+(** A formula of [nanoill.v] as a formula of this library. *)
 Fixpoint of_nanoill (A : nanoill.iformula) : iformula nat :=
   match A with
   | nanoill.ivar a => ivar a
@@ -73,7 +79,7 @@ Lemma of_nanoill_oc : forall l,
   map of_nanoill (nanoill.map nanoill.ioc l) = map ioc (map of_nanoill l).
 Proof. induction l; cbn; congruence. Qed.
 
-(** [nanoill.v]'s exchange of neighbours gives any permutation. *)
+(** [nanoill.v]'s swaps of neighbours give any permutation. *)
 Lemma nanoill_ex : forall l1 l2, Permutation l1 l2 ->
   forall pre C, nanoill.ill (pre ++ l1) C -> inhabited (nanoill.ill (pre ++ l2) C).
 Proof.
@@ -116,8 +122,8 @@ Proof.
   - apply inhabits; eapply nanoill.co_ilr; eassumption.
 Qed.
 
-(** The derivations of [nanoill.ill] are derivations of [ill R], in
-    every calculus. *)
+(** The derivations of [nanoill.ill] are derivations of [ill R], for
+    every [R]. *)
 Lemma of_nanoill_ill : forall R l D,
   nanoill.ill l D -> ill R (map of_nanoill l) (of_nanoill D).
 Proof.

@@ -1,9 +1,9 @@
 (* deduxit © Fabian Lukas Grubmüller 2026 *)
 (* Licensed under the EUPL *)
 
-(** What the bridges rest on: nothing beyond the definitions of the two
-    sides. Rocq answers "Closed under the global context" for each,
-    which the flake's check requires. *)
+(** The bridges rest on no axiom, only on the definitions of both
+    sides: Rocq answers "Closed under the global context" for each, and
+    the flake's check requires that answer. *)
 
 From Deduxit.Linear.Bridges Require NanoYallaBridge NanoIllBridge.
 

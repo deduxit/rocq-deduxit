@@ -4,26 +4,33 @@
 (** * The bridge to NanoYalla
 
     [ll classical] derives exactly the sequents that NanoYalla's kernel
-    [nanoll.ll] derives, over NanoYalla's own definitions, imported
+    [nanoll.ll] derives. NanoYalla's definitions are imported
     unchanged. Its atoms are [nat], so the statements are about
-    [formula nat]; the library's calculus is the same at every atom type.
-    The two formula types have the same constructors and the
-    translations below map each to its namesake, so they are inverse
-    bijections. NanoYalla's derivations are data (an inductive declared
-    in [Type], which Rocq lowers to [Set]) and [ll] is in [Prop], so the
-    statements say that a NanoYalla derivation exists, with
-    [inhabited]: they equate derivability, not derivations. Exchange is one [Permutation]
-    rule here and a transposition of neighbours there, which is the only
-    difference between the two calculi. Neither has cut ([classical]
-    sets [cut := false]): relating a calculus with cut to [nanoll.v]
-    would need cut elimination, which is not proved here. *)
+    [formula nat]; the library's calculus is the same for every atom
+    type.
+
+    The two formula types have the same constructors, and the
+    translations below map each constructor to its namesake, so they
+    are inverse bijections. The equivalence alone does not show this:
+    it would also hold for a translation that swapped [var] and [covar]
+    everywhere, or the arguments of [aplus]. Read [to_nanoyalla] to
+    check it.
+
+    NanoYalla's derivations are data (an inductive declared in [Type],
+    which Rocq lowers to [Set]), while [ll] is in [Prop]. So the
+    statements say, with [inhabited], that a NanoYalla derivation
+    exists: they equate derivability, not derivations. The only
+    difference between the two calculi is exchange: one [Permutation]
+    rule here, a swap of neighbours there. Neither has cut ([classical]
+    sets [cut := false]); relating a calculus with cut to [nanoll.v]
+    would need cut elimination, which this library does not prove. *)
 
 From Stdlib Require Import List Permutation.
 From Deduxit.Linear Require Import Calculus.
 From NanoYalla Require nanoll.
 Import ListNotations.
 
-(** A formula of this library as NanoYalla's. *)
+(** A formula of this library as a NanoYalla formula. *)
 Fixpoint to_nanoyalla (A : formula nat) : nanoll.formula :=
   match A with
   | var a => nanoll.var a
@@ -40,7 +47,7 @@ Fixpoint to_nanoyalla (A : formula nat) : nanoll.formula :=
   | wn A => nanoll.wn (to_nanoyalla A)
   end.
 
-(** A formula of NanoYalla as this library's. *)
+(** A NanoYalla formula as a formula of this library. *)
 Fixpoint of_nanoyalla (A : nanoll.formula) : formula nat :=
   match A with
   | nanoll.var a => var a
@@ -90,7 +97,7 @@ Proof.
   - apply co_r; assumption.
 Qed.
 
-(** NanoYalla's exchange of neighbours gives any permutation. *)
+(** NanoYalla's swaps of neighbours give any permutation. *)
 Lemma nanoll_ex : forall l1 l2, Permutation l1 l2 ->
   forall pre, nanoll.ll (pre ++ l1) -> inhabited (nanoll.ll (pre ++ l2)).
 Proof.
