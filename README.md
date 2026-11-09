@@ -41,7 +41,7 @@ From Deduxit.Linear Require Import Soundness.
   the files the repository's flake pins, never copied.
 
 Up to 0.2.0 the library was `rocq-linlog`, with the logical path
-`Linlog`, in the repository `deduxit/rocq-linlog`; its modules are the
+`Linlog`, in the repository `linlog-prover/rocq-linlog`; its modules are the
 same, under `Deduxit.Linear`, so `From Linlog Require Import Soundness.`
 becomes `From Deduxit.Linear Require Import Soundness.`.
 
