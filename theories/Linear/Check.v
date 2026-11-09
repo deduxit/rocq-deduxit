@@ -13,7 +13,7 @@
     proves that a term the checker accepts yields a derivation. *)
 
 From Stdlib Require Import Bool List.
-From Linlog Require Export Calculus Proofs.
+From Deduxit.Linear Require Export Calculus Proofs.
 Import ListNotations.
 
 (** Sequencing of partial computations: [k] runs on the value of [e], and

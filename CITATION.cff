@@ -2,17 +2,18 @@
 # Licensed under the EUPL
 
 cff-version: 1.2.0
-message: "If you use rocq-linlog in your work, please cite it as below."
+message: "If you use rocq-deduxit in your work, please cite it as below."
 type: software
-title: rocq-linlog
+title: rocq-deduxit
 abstract: >-
-  The Rocq library of linlog, a linear logic suite: the one-sided sequent
+  The Rocq library of deduxit, a collection of logic suites: the
+  one-sided sequent
   calculus of linear logic with Mix, weakening and cut as parameters, the
   two-sided calculus of intuitionistic linear logic and its affine
-  variant, and their first-order versions, as inductives; linlog's proof
+  variant, and their first-order versions, as inductives; deduxit's proof
   terms as datatypes, their checkers as functions and the theorems that a
   term a checker accepts proves its sequent, against which the
-  certificates linlog writes are checked; the invariants every
+  certificates deduxit writes are checked; the invariants every
   derivation keeps, which give certificates that a sequent is not
   derivable; and the reduction of Mix to ?(⊥⊗⊥). Its definitions,
   proofs, tests and documentation were written with substantial AI
@@ -28,13 +29,14 @@ date-released: "2026-11-02"
 # The DOI of every version, which resolves to the latest.
 doi: 10.5281/zenodo.23899109
 license: EUPL-1.2
-repository-code: "https://github.com/deduxit/rocq-linlog"
-url: "https://deduxit.github.io/rocq-linlog/"
+repository-code: "https://github.com/deduxit/rocq-deduxit"
+url: "https://deduxit.github.io/rocq-deduxit/"
 references:
   - type: software
-    title: linlog
+    title: deduxit
     abstract: >-
-      The linear logic suite whose certificates the library checks.
+      The collection of logic suites whose certificates the library
+      checks.
     authors:
       - given-names: Fabian Lukas
         family-names: Grubmüller

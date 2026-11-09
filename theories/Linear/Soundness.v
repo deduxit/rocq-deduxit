@@ -11,7 +11,7 @@
     for are derivable, and the root's state gives the sequent. *)
 
 From Stdlib Require Import Bool List Permutation Lia.
-From Linlog Require Export Check.
+From Deduxit.Linear Require Export Check.
 Import ListNotations.
 
 Section Soundness.

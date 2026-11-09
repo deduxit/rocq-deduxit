@@ -7,8 +7,8 @@
     lemmas pin what the test rejects. *)
 
 From Stdlib Require Import List String ZArith.
-From Linlog Require Calculus Intuitionistic TermsCheck.
-From Linlog Require Import FirstOrderCalculus FirstOrderIntuitionistic FirstOrderWeights.
+From Deduxit.Linear Require Calculus Intuitionistic TermsCheck.
+From Deduxit.Linear Require Import FirstOrderCalculus FirstOrderIntuitionistic FirstOrderWeights.
 Import ListNotations.
 Open Scope string_scope.
 

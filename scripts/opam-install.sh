@@ -30,7 +30,7 @@ fi
 export OPAMROOT="$root/opam" OPAMYES=1 OPAMCOLOR=never
 jobs=${OPAM_JOBS:-4}
 
-opam lint "$repo/rocq-linlog.opam"
+opam lint "$repo/rocq-deduxit.opam"
 
 opam init --bare --no-setup --disable-sandboxing \
   default https://opam.ocaml.org
@@ -39,7 +39,9 @@ opam repository add --dont-select rocq-released https://rocq-prover.org/opam/rel
 # shell, not from a system package manager opam would call.
 opam option --global depext=false
 
-modules=$(sed -n 's|^theories/\(.*\)\.v$|\1|p' "$repo/_RocqProject" | tr '\n' ' ')
+# Every module by its path under the root, `Linear.Calculus' for
+# theories/Linear/Calculus.v.
+modules=$(sed -n 's|^theories/\(.*\)\.v$|\1|p' "$repo/_RocqProject" | tr '/\n' '. ')
 
 for version in "$@"; do
   switch="rocq-$version"
@@ -47,14 +49,14 @@ for version in "$@"; do
   opam switch create "$switch" --repositories=default,rocq-released \
     --packages=ocaml-system --jobs="$jobs"
   opam install --switch="$switch" --jobs="$jobs" "rocq-core.$version" rocq-stdlib
-  opam pin add --switch="$switch" --kind=path --no-action rocq-linlog "$repo"
-  opam install --switch="$switch" --jobs="$jobs" rocq-linlog
+  opam pin add --switch="$switch" --kind=path --no-action rocq-deduxit "$repo"
+  opam install --switch="$switch" --jobs="$jobs" rocq-deduxit
   opam list --switch="$switch" --installed --columns=name,version \
-    rocq-core rocq-stdlib rocq-linlog
+    rocq-core rocq-stdlib rocq-deduxit
   work=$(mktemp -d)
-  echo "From Linlog Require $modules." >"$work/Everything.v"
+  echo "From Deduxit Require $modules." >"$work/Everything.v"
   (cd "$work" && opam exec --switch="$switch" -- rocq compile Everything.v)
   rm -rf "$work"
-  opam remove --switch="$switch" rocq-linlog
+  opam remove --switch="$switch" rocq-deduxit
   echo "== Rocq $version: installed, imported and removed"
 done

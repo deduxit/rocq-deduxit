@@ -8,7 +8,7 @@
     rejects. *)
 
 From Stdlib Require Import List String.
-From Linlog Require Import IntuitionisticCheck.
+From Deduxit.Linear Require Import IntuitionisticCheck.
 Import ListNotations.
 Open Scope string_scope.
 

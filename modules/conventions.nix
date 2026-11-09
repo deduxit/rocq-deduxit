@@ -3,7 +3,7 @@
 
 # The repository's conventions as checks, so that they never regress:
 # `conventions' (every source file starts with the licence header, and no
-# comment names the plan of linlog's sessions that organised the work),
+# comment names the plan of deduxit's sessions that organised the work),
 # `typos' (spelling, configured by typos.toml), `deadnix' and `actionlint'
 # (the workflows, which no local run exercises otherwise; nixpkgs'
 # actionlint runs shellcheck on their `run' scripts).

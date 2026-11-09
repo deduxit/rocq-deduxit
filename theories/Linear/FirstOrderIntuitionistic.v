@@ -21,8 +21,8 @@
     [Prop]: [ill R Γ C] says that one exists. *)
 
 From Stdlib Require Import List Permutation.
-From Linlog Require Intuitionistic.
-From Linlog Require Export Terms.
+From Deduxit.Linear Require Intuitionistic.
+From Deduxit.Linear Require Export Terms.
 Import ListNotations.
 
 Section Formulas.

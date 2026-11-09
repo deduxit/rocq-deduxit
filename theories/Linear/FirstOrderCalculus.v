@@ -20,8 +20,8 @@
     derivations live in [Prop]: [ll R Γ] says that one exists. *)
 
 From Stdlib Require Import List Permutation.
-From Linlog Require Calculus.
-From Linlog Require Export FirstOrderFormulas.
+From Deduxit.Linear Require Calculus.
+From Deduxit.Linear Require Export FirstOrderFormulas.
 Import ListNotations.
 
 Section Calculus.

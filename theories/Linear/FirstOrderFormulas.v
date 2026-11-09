@@ -6,7 +6,7 @@
     The formulas of [Formulas], with predicates applied to terms
     ([Terms]) in place of atoms and the two quantifiers [∀] and [∃],
     over a type of symbols that stays abstract (predicate and function
-    symbols share it, as linlog's sequents do). A quantifier binds the
+    symbols share it, as deduxit's sequents do). A quantifier binds the
     bound variable [0] of its body, and the variables of the quantifiers
     around it from [1] on. Negation is the function [dual], so every
     formula is in negation normal form by construction. This development
@@ -14,7 +14,7 @@
     file that needs both requires them without importing one. *)
 
 From Stdlib Require Import List.
-From Linlog Require Export Terms.
+From Deduxit.Linear Require Export Terms.
 Import ListNotations.
 
 Section Formulas.

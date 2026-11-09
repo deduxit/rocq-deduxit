@@ -10,7 +10,7 @@
     lemmas pin what the tests reject. *)
 
 From Stdlib Require Import List String ZArith.
-From Linlog Require Import Weights.
+From Deduxit.Linear Require Import Weights.
 Import ListNotations.
 Open Scope string_scope.
 

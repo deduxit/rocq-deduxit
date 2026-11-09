@@ -20,8 +20,8 @@
     avoids. *)
 
 From Stdlib Require Import Bool List Permutation Lia.
-From Linlog Require Calculus.
-From Linlog Require Export FirstOrderCheck.
+From Deduxit.Linear Require Calculus.
+From Deduxit.Linear Require Export FirstOrderCheck.
 Import ListNotations.
 
 Section Soundness.

@@ -5,30 +5,33 @@ paths:
   - "bridges/**"
   - "_RocqProject"
   - "Makefile"
-  - "rocq-linlog.opam"
+  - "rocq-deduxit.opam"
 ---
 
 # The Rocq library
 
 Loaded when a file of the library, its tests, its bridges or its build is
-read or changed. `modules/rocq-linlog.nix` builds and checks it
-(CLAUDE.md). linlog's exporter writes certificates for it as its second
-kernel (in linlog's repository `core/src/export/rocq/linlog.rs` and its
-rules `core-export.md`), beside the NanoYalla export, which it leaves as
-it was; linlog's flake compiles them against this library, taken as a
-pinned input. Paths of the form `core/…` below are linlog's.
+read or changed. `modules/rocq-deduxit.nix` builds and checks it
+(CLAUDE.md). deduxit's exporter writes certificates for it as its second
+kernel (in deduxit's repository, the checkout `../linlog`,
+`core/src/export/rocq/linlog.rs` and its rules `core-export.md`), beside
+the NanoYalla export, which it leaves as it was; deduxit's flake compiles
+them against this library, taken as a pinned input. Paths of the form
+`core/…` below are deduxit's, as they stood before its own rename.
 
-- **linlog re-exports this check.** linlog's flake check
-  `rocq-linlog-library` is this repository's `checks.SYSTEM.rocq-linlog`
-  through its pinned input, so a commit whose check fails here fails
-  linlog's `nix flake check` once linlog's lock moves to it; linlog's own
-  check `rocq-linlog` compiles the exporter's certificates against
-  `packages.rocq-linlog` and requires each `certificate`'s assumptions
-  closed.
+- **deduxit re-exports this check.** deduxit's flake check
+  `rocq-linlog-library` (named so until its rename) is this repository's
+  `checks.SYSTEM.rocq-deduxit` through its pinned input, so a commit
+  whose check fails here fails deduxit's `nix flake check` once its lock
+  moves to it; its own check `rocq-linlog` compiles the exporter's
+  certificates against `packages.rocq-deduxit` and requires each
+  `certificate`'s assumptions closed. Before the rename these were
+  `checks.SYSTEM.rocq-linlog` and `packages.rocq-linlog`; the lock
+  pins such a commit until deduxit's rename moves it with its own names.
 - **The Rocq versions.** The opam file admits Rocq 9.0 to 9.3
   (`rocq-core {>= "9.0" & < "9.4~"}`) and bounds `rocq-stdlib` below
   only, since the standard library's versions do not follow Rocq's (9.3
-  takes stdlib 9.2.0, 9.0 and 9.1 take 9.0.0); `modules/rocq-linlog.nix`
+  takes stdlib 9.2.0, 9.0 and 9.1 take 9.0.0); `modules/rocq-deduxit.nix`
   checks each admitted version through nixpkgs' `rocqPackages_9_N`, and a
   new Rocq is a line of `admitted` and a raised bound together. On 9.2
   and 9.3 the theories compile with the deprecation of `Notation` for an
@@ -36,14 +39,35 @@ pinned input. Paths of the form `core/…` below are linlog's.
   it waits until 9.0 and 9.1 are dropped. `scripts/opam-install.sh`
   installs the package as opam users do, into a fresh switch per
   version, outside any check since it needs the network.
-- **Layout.** `_RocqProject` (`-R theories Linlog`, every file listed),
+- **Logical paths.** One root, `Deduxit`, mapped by `-Q theories
+  Deduxit`: `-Q` because Rocq loads an installed library so, and every
+  `Require` here names its path with `From`, which the reference
+  manual encourages, so the build sees exactly the paths a user sees. A
+  calculus is a directory under `theories/` and a namespace under the
+  root (`theories/Linear/` is `Deduxit.Linear`); a new one is a new
+  directory and its files in `_RocqProject`, and connecting theorems go
+  to `Deduxit.Embeddings`, shared lemmas to `Deduxit.Base` once two
+  calculi need one. The tests compile as `Deduxit.Linear.Tests` (`-Q .
+  Deduxit.Linear.Tests` in the check) and the bridges as
+  `Deduxit.Linear.Bridges`, in the namespace of the calculus they
+  test. A test file named as a theory (`Refutations.v`, `Weights.v`)
+  does not shadow it: `From Deduxit.Linear Require Refutations` takes
+  the exact path `Deduxit.Linear.Refutations` before the test's
+  `Deduxit.Linear.Tests.Refutations` (tried on Rocq 9.1). The package
+  installs into `user-contrib/Deduxit/Linear`. `tests/Assumptions.v` and
+  `bridges/Assumptions.v` name every theorem by its full path, so the
+  list the check counts shows where each one lives.
+- **Layout.** `_RocqProject` (`-Q theories Deduxit`, every file listed),
   `Makefile` (the reference manual's wrapper: it generates `RocqMakefile`
   from `_RocqProject` with `rocq makefile` and hands it every target, so
   `make` builds and `make install` installs under `COQLIBINSTALL`),
-  `rocq-linlog.opam` (the archive's name for the library; the flake reads
-  its `version:`, which equals linlog's `export::rocq::LINLOG`), `README.md` (the library's front page, linlog's logo by
-  URL from the site, as linlog's README has it; no logo file is in the
-  repository), `theories/` (the library, logical path `Linlog`) and
+  `rocq-deduxit.opam` (the archive's name for the library; the flake
+  reads its `version:`, which equals deduxit's `export::rocq::LINLOG`,
+  a name its rename may change), `README.md` (the library's front page:
+  deduxit's word mark by URL from the site,
+  `https://deduxit.github.io/logo/wordmark-{light,dark}.svg`, under CC
+  BY 4.0, and the dictionary line under it; no logo file is in the
+  repository), `theories/` (the library, logical root `Deduxit`) and
   `tests/` (certificates the check compiles against the installed library,
   not part of it) and `bridges/` (the equivalences with NanoYalla and
   `nanoill.v`, not part of the package either, compiled by the check
@@ -172,20 +196,20 @@ pinned input. Paths of the form `core/…` below are linlog's.
   Intuitionistic.iweakening := …; Intuitionistic.icut := true |}`, with
   `(symbol := string)` where the propositional ones write `(atom :=
   string)`. File names must stay distinct from the propositional ones:
-  `From Linlog Require Formulas` would be ambiguous with a
-  `Linlog.FirstOrder.Formulas`. The proof constructor `Forall` shadows
+  `From Deduxit.Linear Require Formulas` would be ambiguous with a
+  `Deduxit.Linear.FirstOrder.Formulas`. The proof constructor `Forall` shadows
   `List.Forall` in these files: write `List.Forall`.
-- **The first-order checker mirrors linlog's two passes over explicit
+- **The first-order checker mirrors deduxit's two passes over explicit
   formulas.** Every formula a node names is an instance with its frame's
   terms substituted (the exporter substitutes them), so no frame is
   computed: pass 1 (`introduced`) collects the eigenvariables the `∀`
   steps introduce and fails where one is introduced again *above its own
-  step*, which is linlog's `Reintroduced` as the unfolded tree can see it
+  step*, which is deduxit's `Reintroduced` as the unfolded tree can see it
   (copies of a shared node are never on one path; two steps with one
   eigenvariable in disjoint branches are accepted, sound by the
   calculus); pass 2 (`derive`) carries `eigens` to the root: an `∃`
   step adds its witness's (`teigens`), a cut its formula's (`feigens`,
-  linlog's "a cut on an instance adds its frame's"), a `∀` step removes
+  deduxit's "a cut on an instance adds its frame's"), a `∀` step removes
   its own; at the root no introduced eigenvariable may be in the set or
   in the sequent, and one no step introduces is a constant (the
   author's decision of 2026-10-30: `∀x.p(x) ⊢ ∃y.p(y)` is provable). The
@@ -210,7 +234,7 @@ pinned input. Paths of the form `core/…` below are linlog's.
   some open sequents the de Bruijn reading would not (the review's note:
   `⊢ ∃x.p(#1)⊥, p(#1)`); replacing every loose index by an unused
   eigenvariable maps any derivation to a locally closed one, so the
-  closed sequents derivable are the textbook's, and linlog never writes
+  closed sequents derivable are the textbook's, and deduxit never writes
   a loose index.
 - **Proof-writing pitfalls met here**: `apply iff` in a hypothesis may
   take the iff backwards when both sides match (`fresh_wn_iff` looped in
@@ -236,9 +260,9 @@ pinned input. Paths of the form `core/…` below are linlog's.
   `tests/FirstOrderTwoSided.v` by hand, the last two with lemmas
   `check … = false` for a wrong witness, an eigenvariable escaping its
   step, one introduced again above its step, one the sequent names and
-  an open witness, `tests/FromLinlog.v` from the command's
-  proofs; the exporter's own in linlog's `core/tests/snapshots/linlog/`,
-  the first-order ones `first_order_*.v`; linlog's flake check also writes
+  an open witness, `tests/FromCommand.v` from the command's
+  proofs; the exporter's own in deduxit's `core/tests/snapshots/linlog/`,
+  the first-order ones `first_order_*.v`; deduxit's flake check also writes
   first-order certificates with the command, one from a session's open
   witness, and requires a certificate with a wrong witness planted by
   `sed` to be refused): `apply
@@ -337,7 +361,7 @@ pinned input. Paths of the form `core/…` below are linlog's.
   others), `pinned` asking every literal of a fixed predicate closed so
   that no instance changes it (`subst_pinned`); `out (fall A)` is any
   instance's contribution, and `out_exists` goes by `size`, which
-  substitution keeps. Linlog's counts group an atom with its predicate
+  substitution keeps. deduxit's counts group an atom with its predicate
   where some atom of the predicate has a bound variable and count it
   alone otherwise: the first is `weight`, the second `fixed` with the
   table. `ill_ll` here embeds the first-order two-sided calculus
@@ -384,7 +408,8 @@ pinned input. Paths of the form `core/…` below are linlog's.
   are LGPL: never copy them into the repository; to compile a bridge by
   hand, copy `nanoll.v` and `nanoill.v` from the inputs' store paths into
   a scratch directory and pass `-R nanoyalla NanoYalla -R microyalla
-  Yalla.MicroYalla -R bridges LinlogBridges` as the check does. A bridge
+  Yalla.MicroYalla -Q bridges Deduxit.Linear.Bridges` as the check
+  does. A bridge
   to another calculus (the Mix or affine ones) has no upstream kernel to
   state it against in either file.
 - **`ll` is in `Prop`** ("a derivation exists"), as a textbook reads it,
@@ -409,7 +434,7 @@ pinned input. Paths of the form `core/…` below are linlog's.
 - **Where things plug in.** A new rule is a constructor of `ll`, a
   constructor of `proof`, an arm of `derive` and a case of `derive_sound`,
   nothing redone, as cut was; an optional one is also a field of `rules`
-  (every record literal here and linlog's exporter's gains it) and a
+  (every record literal here and deduxit's exporter's gains it) and a
   case of every induction on `ll` (`Mix.v`, `Refutations.v`, the
   bridges). A new calculus is a `rules` value and an instance of
   `soundness`. The first-order development (above) takes a new rule

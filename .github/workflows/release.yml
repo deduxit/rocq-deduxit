@@ -32,8 +32,8 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           version=${TAG#v}
-          if ! grep -q "^version: \"$version\"$" rocq-linlog.opam; then
-            echo "rocq-linlog.opam does not state version $version" >&2
+          if ! grep -q "^version: \"$version\"$" rocq-deduxit.opam; then
+            echo "rocq-deduxit.opam does not state version $version" >&2
             exit 1
           fi
           if ! grep -Eq "^## \[$version\] - [0-9]{4}-[0-9]{2}-[0-9]{2}$" CHANGELOG.md; then
@@ -56,7 +56,7 @@ jobs:
       - run: nix build --print-build-logs .#doc
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
-          path: result/share/doc/rocq-linlog
+          path: result/share/doc/rocq-deduxit
 
   release:
     name: GitHub release
@@ -91,7 +91,7 @@ jobs:
             echo
             echo "The source archive for opam: \`$url\`, \`sha512=$sum\`."
           } >>notes.md
-          gh release create "$TAG" --title "rocq-linlog $version" --notes-file notes.md \
+          gh release create "$TAG" --title "rocq-deduxit $version" --notes-file notes.md \
             --verify-tag
 
   # The Pages site's source must be "GitHub Actions" (the repository's

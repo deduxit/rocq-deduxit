@@ -5,7 +5,7 @@
 
     [check symbol_eqb R p Γ] computes whether the proof term [p] proves
     the sequent [⊢ Γ] in the first-order calculus [R], in two passes, as
-    linlog's checker does. The first, [introduced], collects the
+    deduxit's checker does. The first, [introduced], collects the
     eigenvariables the [∀] steps introduce and fails where a [∀] step's
     eigenvariable is introduced again above it. The second, [derive], is
     the propositional checker's pass ([Check]) over first-order formulas,
@@ -19,7 +19,7 @@
     yields a derivation, the condition on eigenvariables included. *)
 
 From Stdlib Require Import Bool List.
-From Linlog Require Export TermsCheck FirstOrderCalculus FirstOrderProofs.
+From Deduxit.Linear Require Export TermsCheck FirstOrderCalculus FirstOrderProofs.
 Import ListNotations.
 
 (** Sequencing of partial computations: [k] runs on the value of [e], and

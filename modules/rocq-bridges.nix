@@ -9,8 +9,8 @@
 # inputs and compiles them unchanged, judged by their exit status. Each
 # bridge must compile in silence, and `Assumptions.v' must print `Closed
 # under the global context' once per `Print Assumptions' line and nothing
-# else. No certificate needs a bridge, so the package `rocq-linlog' leaves
-# them out.
+# else. No certificate needs a bridge, so the package `rocq-deduxit' leaves
+# them out. The bridges' logical path is `Deduxit.Linear.Bridges'.
 { inputs, ... }:
 {
   perSystem =
@@ -33,9 +33,9 @@
             nativeBuildInputs = [
               rocq
               stdlib
-              config.packages.rocq-linlog
+              config.packages.rocq-deduxit
             ];
-            ROCQPATH = "${stdlib}/${userContrib}:${config.packages.rocq-linlog}/${userContrib}";
+            ROCQPATH = "${stdlib}/${userContrib}:${config.packages.rocq-deduxit}/${userContrib}";
           }
           ''
             export HOME=$TMPDIR
@@ -53,7 +53,7 @@
               { cat kernel.log; exit 1; }
             rocq compile -R microyalla Yalla.MicroYalla microyalla/nanoill.v >kernel.log 2>&1 ||
               { cat kernel.log; exit 1; }
-            flags="-R nanoyalla NanoYalla -R microyalla Yalla.MicroYalla -R bridges LinlogBridges"
+            flags="-R nanoyalla NanoYalla -R microyalla Yalla.MicroYalla -Q bridges Deduxit.Linear.Bridges"
             for file in bridges/*.v; do
               [ "$file" = bridges/Assumptions.v ] && continue
               rocq compile $flags "$file" 2>&1 | tee log

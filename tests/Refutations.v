@@ -7,7 +7,7 @@
     by computation. The last lemmas pin what the tests reject. *)
 
 From Stdlib Require Import List String.
-From Linlog Require Import Refutations.
+From Deduxit.Linear Require Import Refutations.
 Import ListNotations.
 Open Scope string_scope.
 

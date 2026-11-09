@@ -19,11 +19,11 @@
     would need cut elimination, which is not proved here. *)
 
 From Stdlib Require Import List Permutation.
-From Linlog Require Import Calculus.
+From Deduxit.Linear Require Import Calculus.
 From NanoYalla Require nanoll.
 Import ListNotations.
 
-(** A formula of linlog's library as NanoYalla's. *)
+(** A formula of this library as NanoYalla's. *)
 Fixpoint to_nanoyalla (A : formula nat) : nanoll.formula :=
   match A with
   | var a => nanoll.var a
@@ -40,7 +40,7 @@ Fixpoint to_nanoyalla (A : formula nat) : nanoll.formula :=
   | wn A => nanoll.wn (to_nanoyalla A)
   end.
 
-(** A formula of NanoYalla as linlog's library's. *)
+(** A formula of NanoYalla as this library's. *)
 Fixpoint of_nanoyalla (A : nanoll.formula) : formula nat :=
   match A with
   | nanoll.var a => var a

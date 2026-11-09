@@ -11,7 +11,7 @@
     a cost in time. *)
 
 From Stdlib Require Import List String.
-From Linlog Require Import Soundness.
+From Deduxit.Linear Require Import Soundness.
 Import ListNotations.
 Open Scope string_scope.
 

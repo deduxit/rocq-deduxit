@@ -5,7 +5,7 @@
 # flake-parts module (paths with a `_' segment are skipped), so this file only
 # declares the inputs.
 {
-  description = "rocq-linlog: linear logic in Rocq, the certificates of the linlog prover";
+  description = "rocq-deduxit: logic in Rocq, the certificates of the deduxit prover";
 
   inputs = {
     # The channel tarball: the same Hydra-tested revision as the GitHub

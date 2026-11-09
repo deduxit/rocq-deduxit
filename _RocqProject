@@ -1,22 +1,22 @@
--R theories Linlog
+-Q theories Deduxit
 
-theories/Formulas.v
-theories/Calculus.v
-theories/Proofs.v
-theories/Check.v
-theories/Soundness.v
-theories/Intuitionistic.v
-theories/IntuitionisticCheck.v
-theories/Mix.v
-theories/Refutations.v
-theories/Weights.v
-theories/Terms.v
-theories/TermsCheck.v
-theories/FirstOrderFormulas.v
-theories/FirstOrderCalculus.v
-theories/FirstOrderProofs.v
-theories/FirstOrderCheck.v
-theories/FirstOrderSoundness.v
-theories/FirstOrderIntuitionistic.v
-theories/FirstOrderIntuitionisticCheck.v
-theories/FirstOrderWeights.v
+theories/Linear/Formulas.v
+theories/Linear/Calculus.v
+theories/Linear/Proofs.v
+theories/Linear/Check.v
+theories/Linear/Soundness.v
+theories/Linear/Intuitionistic.v
+theories/Linear/IntuitionisticCheck.v
+theories/Linear/Mix.v
+theories/Linear/Refutations.v
+theories/Linear/Weights.v
+theories/Linear/Terms.v
+theories/Linear/TermsCheck.v
+theories/Linear/FirstOrderFormulas.v
+theories/Linear/FirstOrderCalculus.v
+theories/Linear/FirstOrderProofs.v
+theories/Linear/FirstOrderCheck.v
+theories/Linear/FirstOrderSoundness.v
+theories/Linear/FirstOrderIntuitionistic.v
+theories/Linear/FirstOrderIntuitionisticCheck.v
+theories/Linear/FirstOrderWeights.v

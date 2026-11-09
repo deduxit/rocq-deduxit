@@ -9,8 +9,8 @@
     refused. *)
 
 From Stdlib Require Import List String.
-From Linlog Require Intuitionistic.
-From Linlog Require Import FirstOrderIntuitionisticCheck.
+From Deduxit.Linear Require Intuitionistic.
+From Deduxit.Linear Require Import FirstOrderIntuitionisticCheck.
 Import ListNotations.
 Open Scope string_scope.
 

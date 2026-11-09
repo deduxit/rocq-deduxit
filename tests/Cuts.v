@@ -9,7 +9,7 @@
     that a cut is refused in a calculus without it. *)
 
 From Stdlib Require Import List String.
-From Linlog Require Import Soundness IntuitionisticCheck.
+From Deduxit.Linear Require Import Soundness IntuitionisticCheck.
 Import ListNotations.
 Open Scope string_scope.
 

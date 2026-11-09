@@ -20,11 +20,11 @@
     here. *)
 
 From Stdlib Require Import List Permutation.
-From Linlog Require Import Intuitionistic.
+From Deduxit.Linear Require Import Intuitionistic.
 From Yalla.MicroYalla Require nanoill.
 Import ListNotations.
 
-(** A formula of linlog's library as [nanoill.v]'s. *)
+(** A formula of this library as [nanoill.v]'s. *)
 Fixpoint to_nanoill (A : iformula nat) : nanoill.iformula :=
   match A with
   | ivar a => nanoill.ivar a
@@ -38,7 +38,7 @@ Fixpoint to_nanoill (A : iformula nat) : nanoill.iformula :=
   | ioc A => nanoill.ioc (to_nanoill A)
   end.
 
-(** A formula of [nanoill.v] as linlog's library's. *)
+(** A formula of [nanoill.v] as this library's. *)
 Fixpoint of_nanoill (A : nanoill.iformula) : iformula nat :=
   match A with
   | nanoill.ivar a => ivar a

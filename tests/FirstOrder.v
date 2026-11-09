@@ -11,8 +11,8 @@
     variable. *)
 
 From Stdlib Require Import List String.
-From Linlog Require Calculus.
-From Linlog Require Import FirstOrderSoundness.
+From Deduxit.Linear Require Calculus.
+From Deduxit.Linear Require Import FirstOrderSoundness.
 Import ListNotations.
 Open Scope string_scope.
 

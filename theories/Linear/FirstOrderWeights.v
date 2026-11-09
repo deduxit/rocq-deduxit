@@ -23,12 +23,12 @@
     are propositional. The outcomes and bounds are those of [Weights]. *)
 
 From Stdlib Require Import Bool List Permutation ZArith Lia.
-From Linlog Require Calculus Intuitionistic TermsCheck.
-From Linlog Require Weights.
+From Deduxit.Linear Require Calculus Intuitionistic TermsCheck.
+From Deduxit.Linear Require Weights.
 Import Weights(outcome(..), otimes, opar, settled, opar_comm, opar_assoc, opar_zero_l,
   opar_zero_r, settled_opar, settled_tensor, low(..), lsum, lmin, lstar, below, positive,
   reach, below_lsum, below_lmin_l, below_lmin_r, below_lstar_zero, below_lstar, reach_below).
-From Linlog Require Import FirstOrderCalculus FirstOrderIntuitionistic.
+From Deduxit.Linear Require Import FirstOrderCalculus FirstOrderIntuitionistic.
 Import ListNotations.
 
 Section Weights.

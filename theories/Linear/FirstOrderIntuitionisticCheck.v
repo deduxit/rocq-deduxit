@@ -9,7 +9,7 @@
     eigenvariable they introduce, [IExR] and [IAllL] with their witness.
     Every formula a node names is an instance, the terms of the
     quantifiers below substituted for their variables. [icheck] runs in
-    two passes, as linlog's checker does: [iintroduced] collects the
+    two passes, as deduxit's checker does: [iintroduced] collects the
     eigenvariables the [∀R] and [∃L] steps introduce and fails where one
     is introduced again above its step; [iderive] computes every node's
     sequent bottom-up and carries a set of eigenvariables to the root,
@@ -20,8 +20,8 @@
     [ill], the condition on eigenvariables included. *)
 
 From Stdlib Require Import Bool List Permutation Lia.
-From Linlog Require Intuitionistic.
-From Linlog Require Export TermsCheck FirstOrderIntuitionistic.
+From Deduxit.Linear Require Intuitionistic.
+From Deduxit.Linear Require Export TermsCheck FirstOrderIntuitionistic.
 Import ListNotations.
 
 Section Formulas.

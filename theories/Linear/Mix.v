@@ -13,7 +13,7 @@
     ([ll_fragments.v]) for the binary case. *)
 
 From Stdlib Require Import List Permutation.
-From Linlog Require Export Calculus.
+From Deduxit.Linear Require Export Calculus.
 Import ListNotations.
 
 Section Mix.

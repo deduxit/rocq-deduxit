@@ -32,8 +32,8 @@
     their hypotheses only, which [vm_compute] discharges. *)
 
 From Stdlib Require Import Bool List Permutation ZArith Lia.
-From Linlog Require Export Calculus.
-From Linlog Require Export Intuitionistic.
+From Deduxit.Linear Require Export Calculus.
+From Deduxit.Linear Require Export Intuitionistic.
 Import ListNotations.
 
 Section Refutations.

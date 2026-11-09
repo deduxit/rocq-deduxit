@@ -46,7 +46,7 @@
     translation ([Refutations.ill_ll]). *)
 
 From Stdlib Require Import Bool List Permutation ZArith Lia.
-From Linlog Require Export Refutations.
+From Deduxit.Linear Require Export Refutations.
 Import ListNotations.
 
 (** ** Outcomes *)

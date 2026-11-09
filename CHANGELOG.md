@@ -1,16 +1,37 @@
 # Changelog
 
-Every release of the Rocq library `rocq-linlog` (logical path `Linlog`),
+Every release of the Rocq library `rocq-deduxit` (logical root
+`Deduxit`), named `rocq-linlog` (logical path `Linlog`) up to 0.2.0,
 newest first. The form is that of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 versions follow [Semantic Versioning](https://semver.org/). The library's
-version is linlog's: a certificate that linlog writes for `--kernel
-linlog` compiles against the library of the same version.
+version is deduxit's: a certificate that deduxit writes for `--kernel
+deduxit` (linlog for `--kernel linlog` up to 0.2.0) compiles against the
+library of the same version.
 
 ## [0.3.0] - unreleased
 
-Certificates of non-derivability where copies add literals, beside
-linlog 0.3.0, whose certificates for `--kernel linlog` it checks.
+The library renamed `rocq-deduxit`, under the logical root `Deduxit`,
+and certificates of non-derivability where copies add literals, beside
+deduxit 0.3.0 (linlog renamed), whose certificates for `--kernel
+deduxit` it checks.
+
+### Changed
+
+- **Breaking:** the package is `rocq-deduxit`, the repository
+  `github.com/deduxit/rocq-deduxit` and the documentation
+  `https://deduxit.github.io/rocq-deduxit/`. The library has one logical
+  root, `Deduxit`, with a namespace per calculus, and every module of
+  0.2.0 is now under `Deduxit.Linear`: `From Linlog Require Import
+  Soundness.` becomes `From Deduxit.Linear Require Import Soundness.`,
+  and `Linlog.Calculus.ll` is `Deduxit.Linear.Calculus.ll`. No module,
+  definition or theorem changed its own name; the files moved from
+  `theories/` to `theories/Linear/`, and the package installs into
+  `user-contrib/Deduxit/Linear`. The tests and the bridges to NanoYalla
+  and Yalla, which are not installed, take the paths
+  `Deduxit.Linear.Tests` and `Deduxit.Linear.Bridges`.
+- `_RocqProject` maps `theories` with `-Q` instead of `-R`, as Rocq
+  loads an installed library, so the build sees the paths a user sees.
 
 ### Added
 

@@ -13,7 +13,7 @@
     The derivations live in [Prop]: [ll R Γ] says that one exists. *)
 
 From Stdlib Require Import List Permutation.
-From Linlog Require Export Formulas.
+From Deduxit.Linear Require Export Formulas.
 Import ListNotations.
 
 (** The optional rules of a calculus: classical linear logic has none,

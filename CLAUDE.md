@@ -4,44 +4,64 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-`rocq-linlog` (logical path `Linlog`) is the Rocq library of linlog,
-the linear logic prover of `github.com/deduxit/deduxit`: the
+`rocq-deduxit` (logical root `Deduxit`) is the Rocq library of deduxit,
+the collection of logic suites of `github.com/deduxit/deduxit` (named
+linlog, the linear suite, until 0.3.0; the library was `rocq-linlog`,
+logical path `Linlog`, up to 0.2.0). Each calculus has a namespace
+under the root; today's, `Deduxit.Linear`, holds the
 one-sided calculus of linear logic with Mix, weakening and cut as
 parameters and the two-sided calculus of intuitionistic linear logic
-and its affine variant as inductives, linlog's proof terms as
+and its affine variant as inductives, deduxit's proof terms as
 datatypes, checkers as functions and the theorems that a term they
 accept proves its sequent, the invariants every derivation keeps (the
 refutations), the reduction of Mix to `?(⊥⊗⊥)`, and a first-order
 development beside the propositional one. Rocq 9.0 to 9.3 with its
-standard library and nothing else, each tested by the flake. It lived under `rocq/` of linlog's
-repository until 2026-11-02; its history up to then is linlog's.
+standard library and nothing else, each tested by the flake. It lived under `rocq/` of deduxit's
+repository until 2026-11-02; its history up to then is that repository's.
+The local directory keeps the name `rocq-linlog`.
 
-- `theories/` the library, `_RocqProject` and `Makefile` its build,
-  `rocq-linlog.opam` its package (the flake reads its `version:`).
+The library's shape (the author, 2026-11-09): one logical root, a
+namespace per calculus (`Deduxit.Linear` now, `Deduxit.Intuitionistic`
+and `Deduxit.Modal` when those calculi come), each with its own formulas
+and rules; theorems that connect calculi in a namespace of their own
+(`Deduxit.Embeddings`); `Deduxit.Base` only once two calculi share a
+lemma. One opam package, split into packages under the same root only
+when a calculus brings a heavy dependency or a long build, or users want
+one part alone, so that no path ever changes.
+
+- `theories/` the library (`theories/Linear/` is `Deduxit.Linear`),
+  `_RocqProject` and `Makefile` its build, `rocq-deduxit.opam` its
+  package (the flake reads its `version:`).
 - `tests/` certificates the check compiles against the installed
-  library, `Assumptions.v` the theorems whose assumptions must be closed.
-- `bridges/` the equivalences with NanoYalla's `nanoll.v` and Yalla's
+  library, as `Deduxit.Linear.Tests`, `Assumptions.v` the theorems
+  whose assumptions must be closed, each by its full name.
+- `bridges/` (`Deduxit.Linear.Bridges`) the equivalences with NanoYalla's `nanoll.v` and Yalla's
   `nanoill.v`, compiled against the flake inputs `nanoyalla` and
   `yalla`, never copied (LGPL); not part of the package.
 
 `.claude/rules/rocq.md` loads for any of these files and holds the
 library's invariants: its trusted base, the modules, how the checker
-reads linlog's Rust algorithm, the certificates, where a rule or a
+reads deduxit's Rust algorithm, the certificates, where a rule or a
 calculus plugs in. Read it before changing the library, and record
 there, one point per bullet, what a later session must know and cannot
 see in the code.
 
-## linlog depends on this repository
+## deduxit depends on this repository
 
-linlog's flake takes this one as the input `rocq-linlog`, pinned by its
-lock to a commit of `main` (its nixpkgs following linlog's, so one
-Rocq builds both), and compiles against `packages.rocq-linlog` every
-certificate its exporter writes for `--kernel linlog` (its snapshots
-`core/tests/snapshots/linlog/` and some the command writes). Its
-constant `export::rocq::LINLOG` must equal the opam file's version, an
-assertion of linlog's flake. So a change of a statement, a rule, a
-record field or a proof term's constructor breaks linlog's certificates
-at linlog's next lock update: change the exporter there in the same
+deduxit's flake (the checkout `../linlog`) takes this one as a pinned
+input, locked to a commit of `main` (its nixpkgs following deduxit's,
+so one Rocq builds both), and compiles against this flake's package
+every certificate its exporter writes for its kernel of this library
+(its snapshots `core/tests/snapshots/linlog/` and some the command
+writes). Until deduxit's own rename moves it, that flake names the
+input `rocq-linlog`, the package and check `rocq-linlog` of a commit
+before the rename, the kernel `--kernel linlog` and the constant
+`export::rocq::LINLOG`, whose value must equal the opam file's version,
+an assertion of that flake; its rename makes them `rocq-deduxit`,
+`--kernel deduxit` and preludes `From Deduxit.Linear Require …`. So a
+change of a statement, a rule, a record field, a proof term's
+constructor or a path breaks deduxit's certificates at its next lock
+update: change the exporter there in the same
 step, and raise the version when the library is released.
 
 ## Commands
@@ -51,19 +71,19 @@ library with `ROCQPATH` set.
 
 ```sh
 make                                    # the library, in place
-nix build                               # the package rocq-linlog, as nixpkgs builds a Rocq library
+nix build                               # the package rocq-deduxit, as nixpkgs builds a Rocq library (result/lib/coq/9.1/user-contrib/Deduxit)
 nix flake check                         # everything below
-nix build .#checks.x86_64-linux.rocq-linlog    # the library, every certificate under tests/, the theorems' assumptions closed (nixpkgs' default Rocq)
-nix build .#checks.x86_64-linux.rocq-linlog-9_0   # the same with Rocq 9.0 (and -9_2, -9_3: every version the opam file admits)
-nix build .#doc                         # rocq doc's pages of every module, result/share/doc/rocq-linlog
+nix build .#checks.x86_64-linux.rocq-deduxit   # the library, every certificate under tests/, the theorems' assumptions closed (nixpkgs' default Rocq)
+nix build .#checks.x86_64-linux.rocq-deduxit-9_0  # the same with Rocq 9.0 (and -9_2, -9_3: every version the opam file admits)
+nix build .#doc                         # rocq doc's pages of every module, result/share/doc/rocq-deduxit
 nix develop .#opam -c scripts/opam-install.sh 9.0.1 9.1.1 9.2.0 9.3.0   # opam lint, then the package installed from its opam file into a fresh switch per Rocq (network, about an hour)
 nix build .#checks.x86_64-linux.rocq-bridges   # the bridges against the pinned nanoll.v and nanoill.v, and their assumptions
 nix fmt                                 # nixfmt, taplo, shfmt, shellcheck, ruff-format (a hook runs it on each file changed with Write or Edit)
 ```
 
-`nix flake check` runs `rocq-linlog` and `rocq-linlog-9_N`, `rocq-bridges`, `treefmt`,
+`nix flake check` runs `rocq-deduxit` and `rocq-deduxit-9_N`, `rocq-bridges`, `treefmt`,
 `conventions` (the licence header on every source, no comment naming
-the plan of linlog's sessions), `typos` (`typos.toml`), `deadnix`,
+the plan of deduxit's sessions), `typos` (`typos.toml`), `deadnix`,
 `actionlint` (the workflow), `claude-hooks` (the guards under
 `.claude/hooks`, their cases in `modules/claude-hooks.nix`) and
 `claude-worktree-hook` (the worktree hook against a throwaway colocated
@@ -74,16 +94,16 @@ Every change that touches the library, a test or a bridge passes it.
 
 ## The flake
 
-Dendritic flake-parts, as linlog's: `flake.nix` only declares inputs,
+Dendritic flake-parts, as deduxit's: `flake.nix` only declares inputs,
 and import-tree loads every `.nix` file under `modules/` (a path
 segment starting with `_` skipped) as a flake-parts module, one aspect
-per file; no file is ever added to an imports list. `rocq-linlog.nix`
+per file; no file is ever added to an imports list. `rocq-deduxit.nix`
 is the package, its check per admitted Rocq and the devshell; `doc.nix`
 the documentation; `opam.nix` the shell `scripts/opam-install.sh` runs
 in; `rocq-bridges.nix` the
 bridges' check; `conventions.nix`, `treefmt.nix`, `claude-hooks.nix`
 and `systems.nix` what their names say. The inputs are pinned as
-linlog pins them (the same nixpkgs channel tarball, NanoYalla and Yalla
+deduxit pins them (the same nixpkgs channel tarball, NanoYalla and Yalla
 at the same commits); a lock bump is a change of its own,
 "flake.lock: Update".
 
@@ -110,7 +130,9 @@ request are the author's.
 ## Version control: jj only
 
 A jj repository, colocated with git only so that nix and the GitHub
-remote `origin` (`github.com/deduxit/rocq-linlog`) keep working.
+remote `origin` (`github.com/deduxit/rocq-deduxit`, renamed from
+`deduxit/rocq-linlog` on 2026-11-09; GitHub redirects the old address)
+keep working.
 **Never run git, not even to read**; the `Bash(git *)` deny rule and
 `.claude/hooks/block-git.py` enforce it. Commit thematically, without
 being asked, with `jj commit -m`; never `jj new -m` (a hook blocks it);
@@ -127,7 +149,7 @@ says which commits wait, and the first jj command after the author
 unlocks, or the push, signs them; it does stop the push. Cite change
 ids, or the commit ids the hook reported; never pass `--config
 signing.behavior=…`. Pushing is outward-facing and the author's or the planning
-session's (linlog's `plan/push-main.sh --rocq REV`, which checks
+session's (deduxit's `plan/push-main.sh --rocq REV`, which checks
 `main@origin` by change id, since the push's signing gives commits new
 ids); the GitHub CLI asks before every command.
 
@@ -141,7 +163,8 @@ ids); the GitHub CLI asks before every command.
   (* Licensed under the EUPL *)
   ```
   Markdown, JSON, `.gitignore`, `LICENSE` and the lock carry none. The
-  library is EUPL-1.2, as linlog is.
+  library is EUPL-1.2, as deduxit is. The header keeps the word
+  `linlog`, as deduxit's own files do, and the check looks for it.
 - Comments are short, say why or what the code cannot, and are
   self-contained: no reference to sessions, prompts or the plan that
   organised the work.
@@ -150,17 +173,17 @@ ids); the GitHub CLI asks before every command.
 
 ## Claude Code setup
 
-`.claude/` is checked in, as linlog's: the guards `block-git.py` and
+`.claude/` is checked in, as deduxit's: the guards `block-git.py` and
 `block-jj-new-message.py` with their shared reading of a command line
-`command_line.py` (copies of linlog's; a change to one belongs in both
+`command_line.py` (copies of deduxit's; a change to one belongs in both
 repositories, with its cases in `modules/claude-hooks.nix`), the
 formatter hook `format.sh`, the SessionStart note `session-jj-state.sh`,
-the worktree hook `jj-worktree.py` (a copy of linlog's as well, its test
+the worktree hook `jj-worktree.py` (a copy of deduxit's as well, its test
 `modules/claude-worktree-hook-test.py`), the permission rules in
 `settings.json` and the rules file `rocq.md`.
 `settings.json` also sets `attribution.sessionUrl` to `false` (the
 author, 2026-11-03, for privacy), so no commit gets a `Claude-Session:`
-link to its claude.ai session, as in linlog. The hooks fail open, read the payload's `cwd`, and are plain Python or
+link to its claude.ai session, as in deduxit. The hooks fail open, read the payload's `cwd`, and are plain Python or
 shell; `jq` is not installed on this machine. When the repository
 changes shape, amend `.claude/` and this file in the same change.
 

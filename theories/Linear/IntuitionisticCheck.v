@@ -3,7 +3,7 @@
 
 (** * Two-sided proof terms, their checker and its soundness
 
-    A two-sided term is the certificate linlog writes for an
+    A two-sided term is the certificate deduxit writes for an
     intuitionistic proof: one node per inference of its two-sided
     derivation, named by the rule and the side of [⊢] its principal
     formula stands on, naming the immediate subformulas of that formula
@@ -22,7 +22,7 @@
     conclusion by its type. *)
 
 From Stdlib Require Import Bool List Permutation Lia.
-From Linlog Require Export Intuitionistic.
+From Deduxit.Linear Require Export Intuitionistic.
 Import ListNotations.
 
 Section Formulas.

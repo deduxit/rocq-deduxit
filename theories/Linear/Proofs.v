@@ -3,15 +3,15 @@
 
 (** * Proof terms
 
-    A proof term is the certificate linlog writes: one node per rule
+    A proof term is the certificate deduxit writes: one node per rule
     instance of the dyadic sequent calculus every engine searches in,
     naming the formulas the rule acts on and the subproofs of its
     premises, and never the sequent it proves. The checker ([Check])
     derives the sequents bottom-up, so a term is small and checking it
-    is a computation. The constructors mirror linlog's [Node] variants,
+    is a computation. The constructors mirror deduxit's [Node] variants,
     in their names and their order. *)
 
-From Linlog Require Export Formulas.
+From Deduxit.Linear Require Export Formulas.
 
 Section Proofs.
 

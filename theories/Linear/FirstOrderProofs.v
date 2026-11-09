@@ -3,16 +3,16 @@
 
 (** * First-order proof terms
 
-    The certificate linlog writes for a first-order proof: the terms of
+    The certificate deduxit writes for a first-order proof: the terms of
     [Proofs] over first-order formulas, the axiom naming its predicate and
     arguments, and two more nodes, [Forall] with the eigenvariable it
     introduces and [Exists] with its witness. Every formula a node names
     is an instance, the terms of the quantifiers below substituted for
     their variables, so the checker ([FirstOrderCheck]) compares formulas
-    alone. The constructors mirror linlog's [Node] variants, in their
+    alone. The constructors mirror deduxit's [Node] variants, in their
     names and their order. *)
 
-From Linlog Require Export FirstOrderFormulas.
+From Deduxit.Linear Require Export FirstOrderFormulas.
 
 Section Proofs.
 

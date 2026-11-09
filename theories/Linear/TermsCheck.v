@@ -9,7 +9,7 @@
     their eigenvariables; and the facts their soundness proofs use. *)
 
 From Stdlib Require Import Bool List.
-From Linlog Require Export Terms.
+From Deduxit.Linear Require Export Terms.
 Import ListNotations.
 
 Section Equality.
