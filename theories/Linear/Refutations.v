@@ -3,33 +3,36 @@
 
 (** * Refutations: invariants that every derivation keeps
 
-    Three properties hold of every derivable sequent, so a sequent that
-    lacks one is not derivable, and a few numbers or an assignment that
-    a function computes with show it:
+    This file proves that some sequents are not derivable. Every
+    derivable sequent has the three properties below, so a sequent that
+    lacks one is not derivable. A short computation shows that it lacks
+    it, from an assignment of truth values or a few numbers.
 
-    - the classical reading: erasing [!] and [?] and reading [⊗] and [&]
-      as "and", [⅋] and [⊕] as "or", [1] and [⊤] as true and [⊥] and [0]
-      as false, every derivable sequent is a tautology, in every
-      calculus [ll R], Mix, weakening and cut included ([ll_tautology]);
-    - the balance of an atom: without weakening, whichever additive
-      alternatives a derivation takes, the literals of an atom meet in
-      axioms, so the interval of its excess of positive over negative
-      literals contains zero, where no [⊤] absorbs and no [!] or [?]
-      copies it ([balance]);
-    - the count equation: without weakening, a derivable sequent of
+    - The classical reading. Erase [!] and [?]; read [⊗] and [&] as
+      "and", [⅋] and [⊕] as "or", [1] and [⊤] as true, [⊥] and [0] as
+      false. Every derivable sequent is then a tautology, in every
+      calculus [ll R], Mix, weakening and cut included ([ll_tautology]).
+    - The balance of an atom. Without weakening, the literals of an
+      atom meet in axioms, whichever additive alternatives a derivation
+      takes. So the interval of the atom's excess of positive over
+      negative literals contains zero, unless a [⊤] absorbs or a [!] or
+      [?] copies the atom ([balance]).
+    - The count equation. Without weakening, a derivable sequent of
       multiplicative formulas with units has [#⊗ − #⅋ − #1 + #⊥ + 2]
-      formulas, at least that many with Mix ([count_equation]).
+      formulas, or at least that many with Mix ([count_equation]).
 
-    The last two are proved of the calculi without cut alone: a cut
-    formula is not a subformula of the conclusion, so neither invariant
-    of the premises gives the conclusion's, and the theorems would need
-    cut elimination, which is not proved here.
+    The last two are proved for the calculi without cut only. A cut
+    formula is not a subformula of the conclusion, so the invariant of
+    the premises says nothing about the conclusion; with cut, the
+    theorems would need cut elimination, which this library does not
+    prove.
 
-    Each gives a theorem [~ ll R Γ] from a Boolean test of [Γ] that
-    computation decides, and the two-sided calculus inherits all three
-    through its one-sided translation ([ill_ll]): [~ ill R Γ C]. The
-    statements mention [ll] and [ill] alone, and the tests appear in
-    their hypotheses only, which [vm_compute] discharges. *)
+    Each property gives a theorem [~ ll R Γ] from a Boolean test of [Γ]
+    that computation decides. The two-sided calculus inherits all three
+    through its one-sided translation ([ill_ll]), as theorems
+    [~ ill R Γ C]. The statements mention only [ll] and [ill]; the
+    tests appear only in their hypotheses, which [vm_compute]
+    discharges. *)
 
 From Stdlib Require Import Bool List Permutation ZArith Lia.
 From Deduxit.Linear Require Export Calculus.
@@ -63,8 +66,8 @@ Proof.
     try destruct (eval v A1), (eval v A2); try destruct (v a); reflexivity.
 Qed.
 
-(** A sequent reads as the disjunction of its formulas, which a
-    permutation keeps. *)
+(** A sequent reads as the disjunction of its formulas, and a
+    permutation keeps that reading. *)
 Lemma existsb_perm : forall (f : formula -> bool) l1 l2,
   Permutation l1 l2 -> existsb f l1 = existsb f l2.
 Proof.
@@ -100,12 +103,12 @@ Proof.
     destruct (eval v A), (existsb (eval v) l1), (existsb (eval v) l2); cbn in *; congruence.
 Qed.
 
-(** Whether an assignment falsifies a sequent's reading. *)
+(** Whether an assignment makes a sequent's reading false. *)
 Definition falsifies (v : atom -> bool) (l : list formula) : bool :=
   negb (existsb (eval v) l).
 
-(** An assignment that falsifies a sequent's reading refutes it in every
-    calculus. *)
+(** An assignment that makes a sequent's reading false shows that the
+    sequent is not derivable, in every calculus. *)
 Theorem classical_refutation : forall R v l, falsifies v l = true -> ~ ll R l.
 Proof.
   intros R v l F H. unfold falsifies in F.
@@ -116,14 +119,14 @@ Qed.
 
 Section Balance.
 
-(** The equality of atoms the literals are compared with, and the atom
-    counted. The invariant holds whatever the function is, since both
-    literals of an axiom compare alike; a decision gives it its
-    meaning. *)
+(** The equality literals are compared with, and the atom counted.
+    The invariant holds for any function, since both literals of an
+    axiom compare alike; it means what it should when the function
+    decides equality, as [String.eqb] does. *)
 Variable atom_eqb : atom -> atom -> bool.
 Variable a : atom.
 
-(** Intervals of the excess, [None] where it is unbounded. *)
+(** An interval of the excess, [None] when it is unbounded. *)
 Local Notation span := (option (Z * Z)).
 
 (** The interval of a sum. *)
@@ -133,24 +136,24 @@ Definition add (x y : span) : span :=
   | _, _ => None
   end.
 
-(** The hull of two intervals, the excess of either alternative. *)
+(** The hull of two intervals: the excess of either alternative. *)
 Definition hull (x y : span) : span :=
   match x, y with
   | Some (l1, h1), Some (l2, h2) => Some (Z.min l1 l2, Z.max h1 h2)
   | _, _ => None
   end.
 
-(** Below [!] or [?]: nothing where the atom is absent, else unbounded,
-    since copies add any number. *)
+(** The interval below a [!] or [?]: zero when the atom is absent,
+    unbounded otherwise, since copies add any number. *)
 Definition bang (x : span) : span :=
   match x with
   | Some (Z0, Z0) => Some (0%Z, 0%Z)
   | _ => None
   end.
 
-(** The interval of the atom's excess of positive over negative literals
-    in a formula, over its additive alternatives: [None] where a [⊤]
-    absorbs or the atom lies below an exponential. *)
+(** The interval of the atom's excess of positive over negative
+    literals in a formula, over its additive alternatives. [None] when
+    a [⊤] absorbs or the atom is below an exponential. *)
 Fixpoint excess (A : formula) : span :=
   match A with
   | var b => Some (if atom_eqb a b then (1%Z, 1%Z) else (0%Z, 0%Z))
@@ -169,7 +172,7 @@ Fixpoint excesses (l : list formula) : span :=
   | A :: l => add (excess A) (excesses l)
   end.
 
-(** That an interval contains zero, or is unbounded. *)
+(** An interval contains zero, or is unbounded. *)
 Definition holds (x : span) : Prop :=
   match x with
   | Some (lo, hi) => (lo <= 0 <= hi)%Z
@@ -260,13 +263,13 @@ Definition excluded (x : span) : bool :=
   | None => false
   end.
 
-(** Whether the balance of the atom refutes a sequent in a calculus: one
-    without weakening and without cut, and an interval that excludes
+(** Whether the balance of the atom refutes a sequent in a calculus:
+    the calculus has no weakening and no cut, and the interval excludes
     zero. *)
 Definition unbalanced (R : rules) (l : list formula) : bool :=
   negb (weakening R) && negb (cut R) && excluded (excesses l).
 
-(** An unbalanced atom refutes a sequent. *)
+(** If [unbalanced] holds, the sequent is not derivable. *)
 Theorem unbalanced_refutation : forall R l, unbalanced R l = true -> ~ ll R l.
 Proof.
   intros R l U H. unfold unbalanced in U.
@@ -329,7 +332,7 @@ Definition counted (R : rules) (l : list formula) : Prop :=
 
 (** Without weakening and without cut, every derivable sequent of
     multiplicative formulas with units has as many formulas as the
-    equation says, at least as many with Mix. *)
+    equation says, or at least as many with Mix. *)
 Theorem count_equation : forall R l,
   ll R l -> weakening R = false -> cut R = false -> forallb mll l = true -> counted R l.
 Proof.
@@ -365,16 +368,16 @@ Proof.
   - congruence.
 Qed.
 
-(** Whether the count equation refutes a sequent in a calculus: one
-    without weakening and without cut, multiplicative formulas with
-    units, and fewer formulas than the equation asks for with Mix,
-    another number without. *)
+(** Whether the count equation refutes a sequent in a calculus: the
+    calculus has no weakening and no cut, the formulas are
+    multiplicative with units, and their number is not what the
+    equation asks for (with Mix: fewer). *)
 Definition fails_equation (R : rules) (l : list formula) : bool :=
   negb (weakening R) && negb (cut R) && forallb mll l
   && (if mix R then (Z.of_nat (length l) <? weights l + 2)%Z
       else negb (Z.of_nat (length l) =? weights l + 2)%Z).
 
-(** A failed count equation refutes a sequent. *)
+(** If [fails_equation] holds, the sequent is not derivable. *)
 Theorem equation_refutation : forall R l, fails_equation R l = true -> ~ ll R l.
 Proof.
   intros R l F H. unfold fails_equation in F.
@@ -388,7 +391,8 @@ Qed.
 
 (** ** The two-sided calculus in the one-sided one *)
 
-(** An intuitionistic formula as a one-sided one: [A ⊸ B] is [A⊥ ⅋ B]. *)
+(** An intuitionistic formula as a one-sided formula: [A ⊸ B] becomes
+    [A⊥ ⅋ B]. *)
 Fixpoint itr (A : iformula) : formula :=
   match A with
   | ivar a => var a
@@ -402,12 +406,12 @@ Fixpoint itr (A : iformula) : formula :=
   | ioc A => oc (itr A)
   end.
 
-(** A two-sided sequent [Γ ⊢ C] as the one-sided [⊢ C, Γ⊥]. *)
+(** A two-sided sequent [Γ ⊢ C] as the one-sided sequent [⊢ C, Γ⊥]. *)
 Definition one_sided (G : list iformula) (C : iformula) : list formula :=
   itr C :: map (fun A => dual (itr A)) G.
 
-(** The one-sided calculus of a two-sided one: no Mix, and its
-    weakening and its cut. *)
+(** The one-sided calculus for a two-sided one: no Mix, and the same
+    weakening and cut. *)
 Definition lrules (R : irules) : rules :=
   {| mix := false; weakening := iweakening R; cut := icut R |}.
 
@@ -415,9 +419,9 @@ Definition lrules (R : irules) : rules :=
 Local Lemma swap : forall R (A B : formula) l, ll R (A :: B :: l) -> ll R (B :: A :: l).
 Proof. intros. eapply ex_r; [eassumption | apply perm_swap]. Qed.
 
-(** Every derivation of the two-sided calculus gives one of its
-    one-sided translation, without Mix and with the same weakening and
-    cut. *)
+(** Every derivation in the two-sided calculus gives a derivation of
+    the sequent's one-sided translation, without Mix and with the same
+    weakening and cut. *)
 Theorem ill_ll : forall R G C, ill R G C -> ll (lrules R) (one_sided G C).
 Proof.
   intros R G C H. unfold one_sided. induction H; cbn in *.
@@ -462,7 +466,8 @@ Proof.
     + symmetry. apply Permutation_middle.
 Qed.
 
-(** An intuitionistic formula's classical reading: [⊸] as implication. *)
+(** An intuitionistic formula's classical reading, with [⊸] read as
+    implication. *)
 Fixpoint ieval (v : atom -> bool) (A : iformula) : bool :=
   match A with
   | ivar a => v a
@@ -480,7 +485,8 @@ Proof.
   destruct (ieval v A1), (ieval v A2); reflexivity.
 Qed.
 
-(** True hypotheses read false on the one-sided side. *)
+(** True hypotheses read as false once negated in the one-sided
+    translation. *)
 Lemma duals_false : forall v G,
   forallb (ieval v) G = true -> existsb (eval v) (map (fun A => dual (itr A)) G) = false.
 Proof.
@@ -490,7 +496,7 @@ Proof.
 Qed.
 
 (** Every derivable two-sided sequent, in either calculus, reads as a
-    tautology: where every hypothesis is true, so is the conclusion. *)
+    tautology: when every hypothesis is true, so is the conclusion. *)
 Theorem ill_tautology : forall R G C, ill R G C ->
   forall v, forallb (ieval v) G = true -> ieval v C = true.
 Proof.
@@ -500,23 +506,24 @@ Proof.
   now rewrite orb_false_r in E.
 Qed.
 
-(** An assignment that falsifies the translation refutes a two-sided
-    sequent. *)
+(** An assignment that makes the translation false shows that the
+    two-sided sequent is not derivable. *)
 Theorem iclassical_refutation : forall R v G C,
   falsifies v (one_sided G C) = true -> ~ ill R G C.
 Proof.
   intros R v G C F H. exact (classical_refutation _ v _ F (ill_ll R G C H)).
 Qed.
 
-(** An unbalanced atom of the translation refutes a two-sided sequent. *)
+(** An unbalanced atom in the translation shows that the two-sided
+    sequent is not derivable. *)
 Theorem iunbalanced_refutation : forall atom_eqb a R G C,
   unbalanced atom_eqb a (lrules R) (one_sided G C) = true -> ~ ill R G C.
 Proof.
   intros atom_eqb a R G C U H. exact (unbalanced_refutation atom_eqb a _ _ U (ill_ll R G C H)).
 Qed.
 
-(** A failed count equation of the translation refutes a two-sided
-    sequent. *)
+(** A failed count equation of the translation shows that the
+    two-sided sequent is not derivable. *)
 Theorem iequation_refutation : forall R G C,
   fails_equation (lrules R) (one_sided G C) = true -> ~ ill R G C.
 Proof.

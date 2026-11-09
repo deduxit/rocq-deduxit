@@ -3,46 +3,49 @@
 
 (** * Weighted counts: refutations where copies add literals
 
-    The balance of [Refutations] gives up on an atom below an exponential,
-    since copies add its literals any number of times. This file weighs
-    the literals instead, an integer per atom, and follows what each
-    formula can contribute to the weighted count of a derivable sequent,
-    copies included:
+    The balance of [Refutations] says nothing about an atom below an
+    exponential, since copies add its literals any number of times.
+    This file gives each atom an integer weight instead and follows
+    what each formula can contribute to the weighted count of a
+    derivable sequent, copies included:
 
     - a [?A] contributes the sum of any number of [A]'s contributions,
-      none included, and a [!A] contributes nothing, since a promotion's
-      context is all [?] formulas, which may take none;
+      zero included; a [!A] contributes nothing, since a promotion's
+      context is all [?] formulas, which may each contribute none;
     - an atom declared dead contributes nothing a sum can cancel: its
-      literal of the sign [p] names is [dead], as [0] is, and its other
+      literal of the sign [p] is [dead], as [0] is, and its other
       literal absorbs, as [⊤] does, so an axiom on it still balances
-      (for a Horn program [p] is the bodies' sign);
-    - [⊗] proves its sides apart, so a [⊤] on one side does not absorb a
-      [dead] on the other.
+      (for a Horn program, [p] is the sign of the bodies' literals);
+    - the two sides of a [⊗] are proved apart, so a [⊤] on one side
+      does not absorb a [dead] on the other.
 
-    Every derivable sequent can contribute zero or absorb
-    ([weighted_balance], without weakening and without cut, Mix allowed).
-    So when no formula of a sequent can absorb and every contribution the
-    sequent can make is positive, it is not derivable
-    ([weighted_refutation]); [overweight] tests that by computation from
-    a lower bound per formula. With the weight [1] on one atom and [0] on
-    the others, the test says that the atom's literals outside the
-    exponentials outnumber the other sign's while every copy adds
-    literals of one sign, which is the one-sided count. With the weights
-    of a Petri net's places that no transition raises and the target asks
-    raised (a Farkas certificate of a Horn program's state equation), and
-    the atoms no firing can reach declared dead in the bodies' sign, the
-    test says that the
-    state equation of the transitions that can fire has no solution.
+    Without weakening and without cut, Mix allowed, every derivable
+    sequent can contribute zero or absorb ([weighted_balance]). So a
+    sequent is not derivable when none of its formulas can absorb and
+    every contribution it can make is above zero
+    ([weighted_refutation]). [overweight] tests this by computation,
+    from a lower bound per formula. Two uses:
 
-    With weakening a derivation may drop formulas, and the count holds
-    only of formulas a Horn program's proof never drops: the outputs.
-    [outputs] counts them, the sign of the literals given as outputs and
-    every formula built so that each sequent of the derivation has one
-    output; a weakening drops an input alone, which a count with drops
-    of the formulas without an output follows ([affine_balance],
-    [affine_refutation]).
+    - With the weight [1] on one atom and [0] on the others, the test
+      says that the atom's literals outside the exponentials outnumber
+      those of the other sign, while every copy adds literals of one
+      sign: the one-sided count.
+    - A Horn program's state equation fails when there are weights on
+      the places of its Petri net that no transition raises and that the
+      target needs raised (a Farkas certificate). With these weights,
+      and with the atoms no firing can reach declared dead in the
+      bodies' sign, the test says that the state equation of the
+      transitions that can fire has no solution.
 
-    The two-sided calculus inherits both through its one-sided
+    With weakening, a derivation may drop formulas, and the count holds
+    only for the formulas a Horn program's proof never drops: the
+    outputs. [outputs] counts them, from the sign of the literals given
+    as outputs. On formulas built so that each sequent of the
+    derivation has one output, a weakening drops only inputs, and a
+    count that may drop the formulas without an output follows it
+    ([affine_balance], [affine_refutation]).
+
+    The two-sided calculus inherits both tests through its one-sided
     translation ([Refutations.ill_ll]). *)
 
 From Stdlib Require Import Bool List Permutation ZArith Lia.
@@ -51,15 +54,15 @@ Import ListNotations.
 
 (** ** Outcomes *)
 
-(** What a formula can contribute to a weighted count: a number, nothing
-    that a sum can cancel ([dead]), or everything ([absorb]). *)
+(** What a formula can contribute to a weighted count: a number,
+    something no sum can cancel ([dead]), or everything ([absorb]). *)
 Inductive outcome : Type :=
 | num : Z -> outcome
 | dead : outcome
 | absorb : outcome.
 
-(** The contribution of a [⊗], whose two sides are proved apart: a
-    [dead] side stays dead whatever the other absorbs. *)
+(** The contribution of a [⊗]. Its two sides are proved apart, so a
+    [dead] side stays dead even when the other absorbs. *)
 Definition otimes (a b : outcome) : outcome :=
   match a, b with
   | dead, _ | _, dead => dead
@@ -67,8 +70,8 @@ Definition otimes (a b : outcome) : outcome :=
   | num m, num n => num (m + n)
   end.
 
-(** The contribution of formulas beside each other in a sequent, or of
-    a [⅋]: an absorbing one takes everything. *)
+(** The contribution of formulas side by side in a sequent, or of a
+    [⅋]: one that absorbs takes everything. *)
 Definition opar (a b : outcome) : outcome :=
   match a, b with
   | absorb, _ | _, absorb => absorb
@@ -104,7 +107,7 @@ Proof.
     first [reflexivity | discriminate | apply Z.eqb_eq; lia].
 Qed.
 
-(** The premises of a [⊗] settled, its conclusion is. *)
+(** If the premises of a [⊗] are settled, so is its conclusion. *)
 Lemma settled_tensor : forall a b g1 g2,
   settled (opar a g1) = true -> settled (opar b g2) = true ->
   settled (opar (otimes a b) (opar g1 g2)) = true.
@@ -115,9 +118,9 @@ Qed.
 
 (** ** Lower bounds *)
 
-(** A lower bound of the numbers a formula can contribute: [never] where
-    it can contribute none, [from z] where each is at least [z], and
-    [unbounded]. *)
+(** A lower bound of the numbers a formula can contribute: [never] when
+    it can contribute no number, [from z] when each is at least [z],
+    and [unbounded]. *)
 Inductive low : Type :=
 | never : low
 | from : Z -> low
@@ -131,7 +134,7 @@ Definition lsum (x y : low) : low :=
   | _, _ => unbounded
   end.
 
-(** The bound of either. *)
+(** The bound of one or the other. *)
 Definition lmin (x y : low) : low :=
   match x, y with
   | never, z | z, never => z
@@ -139,7 +142,7 @@ Definition lmin (x y : low) : low :=
   | _, _ => unbounded
   end.
 
-(** The bound of a sum of any number of copies, none included. *)
+(** The bound of a sum of any number of copies, zero included. *)
 Definition lstar (x : low) : low :=
   match x with
   | never => from 0
@@ -147,7 +150,7 @@ Definition lstar (x : low) : low :=
   | unbounded => unbounded
   end.
 
-(** That [n] respects the bound. *)
+(** [n] respects the bound. *)
 Definition below (x : low) (n : Z) : Prop :=
   match x with
   | never => False
@@ -155,7 +158,8 @@ Definition below (x : low) (n : Z) : Prop :=
   | unbounded => True
   end.
 
-(** Whether a bound rules zero out: every number above zero, or none. *)
+(** Whether a bound rules out zero: every number is above zero, or
+    there is none. *)
 Definition positive (x : low) : bool :=
   match x with
   | never => true
@@ -163,8 +167,8 @@ Definition positive (x : low) : bool :=
   | unbounded => false
   end.
 
-(** Whether something other than [dead] can be contributed, by a formula
-    that may absorb ([w]) with the bound [x]. *)
+(** Whether a formula with the bound [x], which may absorb when [w]
+    holds, can contribute something other than [dead]. *)
 Definition reach (w : bool) (x : low) : bool :=
   w || match x with never => false | _ => true end.
 
@@ -198,8 +202,8 @@ Context {atom : Type}.
 Local Notation formula := (formula atom).
 Local Notation iformula := (iformula atom).
 
-(** The weight a table gives an atom, as certificates write it: the
-    first entry's, zero for an atom it does not list. *)
+(** The weight a table gives an atom, in the form certificates write:
+    the first entry's, or zero for an atom the table does not list. *)
 Fixpoint weight_of (atom_eqb : atom -> atom -> bool) (table : list (atom * Z)) (a : atom) : Z :=
   match table with
   | [] => 0%Z
@@ -207,25 +211,26 @@ Fixpoint weight_of (atom_eqb : atom -> atom -> bool) (table : list (atom * Z)) (
   end.
 
 (** The weight of each atom, and the atoms declared dead. Every theorem
-    holds whatever the two functions are. *)
+    holds for any two functions. *)
 Variable y : atom -> Z.
 Variable d : atom -> bool.
 
-(** The sign of a dead atom's literal that contributes nothing, [true]
-    for the positive one: a Horn program's bodies' sign, whose literals
-    are the outputs. The other literal of a dead atom absorbs. *)
+(** The sign of the dead atoms' literals that are [dead], [true] for
+    the positive one. For a Horn program it is the sign of the bodies'
+    literals, which is also the sign of the outputs. The other literal
+    of a dead atom absorbs. *)
 Variable p : bool.
 
 (** ** What a formula can contribute *)
 
 Section Contributions.
 
-(** The formulas that may be dropped, contributing zero: none without
-    weakening. *)
+(** The formulas that may be dropped, which then contribute zero; none
+    without weakening. *)
 Variable drop : formula -> bool.
 
-(** [out A o]: [A] can contribute [o], over its additive alternatives and
-    the copies of its [?] subformulas. *)
+(** [out A o]: [A] can contribute [o], for some choice of its additive
+    alternatives and of the copies of its [?] subformulas. *)
 Inductive out : formula -> outcome -> Prop :=
 | out_var : forall b,
     out (var b) (if d b then (if p then dead else absorb) else num (y b))
@@ -288,7 +293,7 @@ Proof.
   change (num 0) with (opar (num 0) (num 0)). constructor; [constructor | exact IH].
 Qed.
 
-(** Copies of a [?] formula put together. *)
+(** The contributions of copies of a [?] formula, put together. *)
 Lemma out_wn_merge : forall F a1, out F a1 -> forall A, F = wn A ->
   forall a2, out (wn A) a2 -> out (wn A) (opar a1 a2).
 Proof.
@@ -299,7 +304,8 @@ Proof.
   - now rewrite opar_zero_l.
 Qed.
 
-(** The bound of a formula that may be dropped includes zero. *)
+(** The bound of a formula, widened to include zero when it may be
+    dropped. *)
 Definition keep (A : formula) (x : low) : low :=
   if drop A then lmin (from 0) x else x.
 
@@ -340,7 +346,7 @@ Fixpoint leasts (l : list formula) : low :=
 Lemma below_keep : forall A x n, below x n -> below (keep A x) n.
 Proof. intros A x n H. unfold keep. destruct (drop A); [apply below_lmin_r |]; exact H. Qed.
 
-(** The bounds hold of every contribution. *)
+(** Every contribution respects the bounds. *)
 Lemma out_bound : forall A o, out A o ->
   (o = absorb -> absorbs A = true) /\ (forall n, o = num n -> below (least A) n).
 Proof.
@@ -402,8 +408,8 @@ Proof.
       apply below_lsum; auto.
 Qed.
 
-(** A sequent that may contribute zero or absorb, of which no formula
-    absorbs and whose bound is positive, does not exist. *)
+(** No sequent can contribute zero or absorb when none of its formulas
+    absorbs and its bound is positive. *)
 Lemma settled_bound : forall l o,
   outs l o -> settled o = true -> existsb absorbs l = false -> positive (leasts l) = true -> False.
 Proof.
@@ -473,14 +479,14 @@ Proof.
   - congruence.
 Qed.
 
-(** Whether the weights refute a sequent in a calculus: one without
-    weakening and without cut, no formula that may absorb, and every
-    contribution of the sequent above zero, or none. *)
+(** Whether the weights refute a sequent in a calculus: the calculus
+    has no weakening and no cut, no formula may absorb, and every
+    contribution of the sequent is above zero, or there is none. *)
 Definition overweight (R : rules) (l : list formula) : bool :=
   negb (weakening R) && negb (cut R)
   && negb (existsb (absorbs nodrop) l) && positive (leasts nodrop l).
 
-(** Weights that the test accepts refute a sequent. *)
+(** If [overweight] holds, the sequent is not derivable. *)
 Theorem weighted_refutation : forall R l, overweight R l = true -> ~ ll R l.
 Proof.
   intros R l T H. unfold overweight in T.
@@ -490,8 +496,8 @@ Proof.
   exact (settled_bound nodrop l o Ho S A P).
 Qed.
 
-(** Weights that the test accepts of the translation refute a two-sided
-    sequent. *)
+(** If [overweight] holds of the translation, the two-sided sequent is
+    not derivable. *)
 Theorem iweighted_refutation : forall R G C,
   overweight (lrules R) (one_sided G C) = true -> ~ ill R G C.
 Proof.
@@ -502,10 +508,12 @@ Qed.
 
 Section Outputs.
 
-(** The outputs of a formula, [p] naming the outputs' sign: one for a
-    literal of that sign, a [1], a [⊤] and a [!] formula, none for the
-    other literals, [⊥], [0] and a [?] formula; a [⊗] has one fewer than
-    its sides, a [⅋] as many, an additive the more of its sides'. *)
+(** The number of outputs of a formula, with [p] the outputs' sign:
+    - one for a literal of that sign, a [1], a [⊤] and a [!] formula;
+    - none for the other literals, [⊥], [0] and a [?] formula;
+    - for a [⊗], one fewer than its sides together; for a [⅋], as many
+      as its sides together; for an additive, as many as the side with
+      more. *)
 Fixpoint outputs (A : formula) : Z :=
   match A with
   | var _ => if p then 1 else 0
@@ -517,7 +525,7 @@ Fixpoint outputs (A : formula) : Z :=
   | awith A B | aplus A B => Z.max (outputs A) (outputs B)
   end.
 
-(** Whether every subformula has outputs, none below zero, and every
+(** Whether no subformula has fewer than zero outputs, and every
     formula below a [?] has none. *)
 Fixpoint shaped (A : formula) : bool :=
   (0 <=? outputs A)%Z &&
@@ -571,8 +579,8 @@ Local Ltac unshape :=
   end.
 
 (** Without cut, every derivable sequent of shaped formulas has an
-    output, and one with exactly one output can contribute zero or
-    absorb, its formulas without an output dropped where weakening
+    output. One with exactly one output can contribute zero or absorb,
+    when its formulas without an output may be dropped, as weakening
     dropped them. *)
 Theorem affine_balance : forall R l, ll R l -> cut R = false -> forallb shaped l = true ->
   (1 <= outputs_all l)%Z /\
@@ -654,16 +662,17 @@ Proof.
   - congruence.
 Qed.
 
-(** Whether the weights refute a sequent in a calculus with weakening or
-    without: one without cut, shaped formulas with one output, no formula
-    that may absorb, and every contribution of the sequent above zero,
-    or none, the formulas without an output dropped or not. *)
+(** Whether the weights refute a sequent in a calculus with or without
+    weakening: the calculus has no cut, the formulas are shaped with
+    one output in all, no formula may absorb, and every contribution of
+    the sequent is above zero, or there is none, whether or not the
+    formulas without an output are dropped. *)
 Definition overweight_affine (R : rules) (l : list formula) : bool :=
   negb (cut R) && forallb shaped l && (outputs_all l =? 1)%Z
   && negb (existsb (absorbs droppable) l) && positive (leasts droppable l).
 
-(** Weights that the test accepts refute a sequent, with weakening or
-    without. *)
+(** If [overweight_affine] holds, the sequent is not derivable, with or
+    without weakening. *)
 Theorem affine_refutation : forall R l, overweight_affine R l = true -> ~ ll R l.
 Proof.
   intros R l T H. unfold overweight_affine in T.
@@ -677,8 +686,8 @@ Qed.
 
 End Outputs.
 
-(** Weights that the test accepts of the translation refute a two-sided
-    sequent, with weakening or without. *)
+(** If [overweight_affine] holds of the translation, the two-sided
+    sequent is not derivable, with or without weakening. *)
 Theorem iaffine_refutation : forall R G C,
   overweight_affine (lrules R) (one_sided G C) = true -> ~ ill R G C.
 Proof.
