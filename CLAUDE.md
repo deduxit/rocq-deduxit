@@ -98,7 +98,8 @@ and import-tree loads every `.nix` file under `modules/` (a path
 segment starting with `_` skipped) as a flake-parts module, one aspect
 per file; no file is ever added to an imports list. `rocq-deduxit.nix`
 is the package, its check per admitted Rocq and the devshell; `doc.nix`
-the documentation; `opam.nix` the shell `scripts/opam-install.sh` runs
+the documentation, with a page `Linlog.X.html` forwarding each of
+0.2.0's deep links to `Deduxit.Linear.X.html`; `opam.nix` the shell `scripts/opam-install.sh` runs
 in; `rocq-bridges.nix` the
 bridges' check; `conventions.nix`, `treefmt.nix`, `claude-hooks.nix`
 and `systems.nix` what their names say. The inputs are pinned as
