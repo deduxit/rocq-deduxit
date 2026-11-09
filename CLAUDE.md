@@ -159,12 +159,12 @@ ids); the GitHub CLI asks before every command.
   syntax, `(* … *)` in Rocq and `#` in Nix, TOML, shell, Python, YAML,
   the Makefile and the opam file:
   ```
-  (* linlog © Fabian Lukas Grubmüller 2026 *)
+  (* deduxit © Fabian Lukas Grubmüller 2026 *)
   (* Licensed under the EUPL *)
   ```
   Markdown, JSON, `.gitignore`, `LICENSE` and the lock carry none. The
-  library is EUPL-1.2, as deduxit is. The header keeps the word
-  `linlog`, as deduxit's own files do, and the check looks for it.
+  library is EUPL-1.2, as deduxit is. The header names the project,
+  deduxit, as deduxit's own files do, and the check looks for it.
 - Comments are short, say why or what the code cannot, and are
   self-contained: no reference to sessions, prompts or the plan that
   organised the work.

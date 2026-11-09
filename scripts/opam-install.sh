@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# linlog © Fabian Lukas Grubmüller 2026
+# deduxit © Fabian Lukas Grubmüller 2026
 # Licensed under the EUPL
 
 # Installs the package from the repository's opam file into a fresh opam

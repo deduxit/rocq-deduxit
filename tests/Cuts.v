@@ -1,4 +1,4 @@
-(* linlog © Fabian Lukas Grubmüller 2026 *)
+(* deduxit © Fabian Lukas Grubmüller 2026 *)
 (* Licensed under the EUPL *)
 
 (** Certificates of proofs with cuts, in the form the exporter writes:
