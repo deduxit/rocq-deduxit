@@ -96,9 +96,10 @@ not read them:
 
 - `Formulas.v` and `Calculus.v` for a one-sided sequent;
 - `Intuitionistic.v` for a two-sided one;
-- `Terms.v`, `FirstOrderFormulas.v` and `FirstOrderCalculus.v` for a
-  first-order one-sided sequent, or `Terms.v` and
-  `FirstOrderIntuitionistic.v` for a first-order two-sided one.
+- `Terms.v`, `FirstOrderFormulas.v`, `FirstOrderCalculus.v` and
+  `Calculus.v` (for its `rules`) for a first-order one-sided sequent;
+- `Terms.v`, `FirstOrderIntuitionistic.v` and `Intuitionistic.v` (for
+  its `irules`) for a first-order two-sided one.
 
 Every theorem rests on no axiom: `Print Assumptions` answers `Closed
 under the global context`. `vm_compute` leaves a cast that the kernel
