@@ -52,13 +52,12 @@ deduxit's flake (the checkout `../linlog`) takes this one as a pinned
 input, locked to a commit of `main` (its nixpkgs following deduxit's,
 so one Rocq builds both), and compiles against this flake's package
 every certificate its exporter writes for its kernel of this library
-(its snapshots `core/tests/snapshots/linlog/` and some the command
-writes). Until deduxit's own rename moves it, that flake names the
-input `rocq-linlog`, the package and check `rocq-linlog` of a commit
-before the rename, the kernel `--kernel linlog` and the constant
-`export::rocq::LINLOG`, whose value must equal the opam file's version,
-an assertion of that flake; its rename makes them `rocq-deduxit`,
-`--kernel deduxit` and preludes `From Deduxit.Linear Require …`. So a
+(its snapshots `core/tests/snapshots/deduxit/` and some the command
+writes). That flake names the input `rocq-deduxit`, its checks
+`rocq-deduxit` and `rocq-deduxit-library`, the kernel `--kernel
+deduxit`, the preludes `From Deduxit.Linear Require …` and the constant
+`export::rocq::DEDUXIT`, whose value must equal the opam file's
+version, an assertion of that flake. So a
 change of a statement, a rule, a record field, a proof term's
 constructor or a path breaks deduxit's certificates at its next lock
 update: change the exporter there in the same

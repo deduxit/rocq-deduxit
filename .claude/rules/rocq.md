@@ -14,20 +14,18 @@ Loaded when a file of the library, its tests, its bridges or its build is
 read or changed. `modules/rocq-deduxit.nix` builds and checks it
 (CLAUDE.md). deduxit's exporter writes certificates for it as its second
 kernel (in deduxit's repository, the checkout `../linlog`,
-`core/src/export/rocq/linlog.rs` and its rules `core-export.md`), beside
+`core/src/export/rocq/deduxit.rs` and its rules `core-export.md`), beside
 the NanoYalla export, which it leaves as it was; deduxit's flake compiles
 them against this library, taken as a pinned input. Paths of the form
-`core/…` below are deduxit's, as they stood before its own rename.
+`core/…` below are deduxit's.
 
 - **deduxit re-exports this check.** deduxit's flake check
-  `rocq-linlog-library` (named so until its rename) is this repository's
+  `rocq-deduxit-library` is this repository's
   `checks.SYSTEM.rocq-deduxit` through its pinned input, so a commit
   whose check fails here fails deduxit's `nix flake check` once its lock
-  moves to it; its own check `rocq-linlog` compiles the exporter's
+  moves to it; its own check `rocq-deduxit` compiles the exporter's
   certificates against `packages.rocq-deduxit` and requires each
-  `certificate`'s assumptions closed. Before the rename these were
-  `checks.SYSTEM.rocq-linlog` and `packages.rocq-linlog`; the lock
-  pins such a commit until deduxit's rename moves it with its own names.
+  `certificate`'s assumptions closed.
 - **The Rocq versions.** The opam file admits Rocq 9.0 to 9.3
   (`rocq-core {>= "9.0" & < "9.4~"}`) and bounds `rocq-stdlib` below
   only, since the standard library's versions do not follow Rocq's (9.3
@@ -62,8 +60,7 @@ them against this library, taken as a pinned input. Paths of the form
   from `_RocqProject` with `rocq makefile` and hands it every target, so
   `make` builds and `make install` installs under `COQLIBINSTALL`),
   `rocq-deduxit.opam` (the archive's name for the library; the flake
-  reads its `version:`, which equals deduxit's `export::rocq::LINLOG`,
-  a name its rename may change), `README.md` (the library's front page:
+  reads its `version:`, which equals deduxit's `export::rocq::DEDUXIT`), `README.md` (the library's front page:
   deduxit's word mark by URL from the site,
   `https://deduxit.github.io/logo/wordmark-{light,dark}.svg`, under CC
   BY 4.0, and the dictionary line under it; no logo file is in the
@@ -261,7 +258,7 @@ them against this library, taken as a pinned input. Paths of the form
   `check … = false` for a wrong witness, an eigenvariable escaping its
   step, one introduced again above its step, one the sequent names and
   an open witness, `tests/FromCommand.v` from the command's
-  proofs; the exporter's own in deduxit's `core/tests/snapshots/linlog/`,
+  proofs; the exporter's own in deduxit's `core/tests/snapshots/deduxit/`,
   the first-order ones `first_order_*.v`; deduxit's flake check also writes
   first-order certificates with the command, one from a session's open
   witness, and requires a certificate with a wrong witness planted by
@@ -308,7 +305,7 @@ them against this library, taken as a pinned input. Paths of the form
   full `cbn` turns `add (Some (0, 0)) x` and `1 + x` into matches no
   lemma rewrites. Certificates of non-derivability are in
   `tests/Refutations.v`, `tests/Weights.v`, `tests/FirstOrderWeights.v` and, from the exporter, in
-  `core/tests/snapshots/linlog/`; the OneSided count (copies of one
+  `core/tests/snapshots/deduxit/`; the OneSided count (copies of one
   sign) and the state equation are `Weights.v`'s (below).
 - **`Weights.v`** (in the package, exporting `Refutations`): what a
   formula can contribute to a weighted count (`out`, an inductive
