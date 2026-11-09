@@ -4,21 +4,24 @@
 (** * The checker
 
     [check atom_eqb R p Γ] computes whether the proof term [p] proves the
-    sequent [⊢ Γ] in the calculus [R]. It derives, bottom-up, the dyadic
-    sequent [⊢ Θ ; Γ] every subterm proves: [Θ] the least unrestricted
-    zone the subterm needs (a [Copy] adds its formula, a [Quest] removes
-    it), [Γ] the linear zone as a multiset, and a flag saying that a [⊤]
-    above absorbs any further linear context. At the root [Θ] must be
-    empty and [Γ] the sequent, or part of it under the flag. [Soundness]
-    proves that a term the checker accepts yields a derivation. *)
+    sequent [⊢ Γ] in the calculus [R]. From the leaves to the root, it
+    computes the dyadic sequent [⊢ Θ ; Γ] each subterm proves:
+    - [Θ] is the least unrestricted zone the subterm needs (a [Copy]
+      adds its formula, a [Quest] removes it);
+    - [Γ] is the linear zone, a multiset;
+    - a flag says that a [⊤] above absorbs any further linear context.
+
+    At the root [Θ] must be empty and [Γ] must be the sequent, or part
+    of it when the flag is set. [Soundness] proves that a term the
+    checker accepts has a derivation behind it. *)
 
 From Stdlib Require Import Bool List.
 From Deduxit.Linear Require Export Calculus Proofs.
 Import ListNotations.
 
-(** Sequencing of partial computations: [k] runs on the value of [e], and
-    [None] is failure. Local to this file, so that it clashes with no
-    other library's. *)
+(** Sequencing of computations that may fail: [k] runs on the value of
+    [e], and [None] is failure. Local to this file, so that it clashes
+    with no other library's notation. *)
 Local Notation "'let*' x ':=' e 'in' k" :=
   (match e with Some x => k | None => None end)
   (at level 200, x pattern, e at level 100, k at level 200, right associativity).
@@ -43,8 +46,8 @@ Fixpoint remove_one (A : formula) (l : list formula) : option (list formula) :=
 Definition remove_all (A : formula) (l : list formula) : list formula :=
   filter (fun B => negb (eqb A B)) l.
 
-(** Removes each formula of [l1] from [l2]: what is left of [l2] when [l1]
-    is included in it as a multiset, [None] otherwise. *)
+(** Removes each formula of [l1] from [l2]. Returns what is left of
+    [l2] when [l1] is included in it as a multiset, [None] otherwise. *)
 Fixpoint take_all (l1 l2 : list formula) : option (list formula) :=
   match l1 with
   | [] => Some l2
@@ -53,8 +56,8 @@ Fixpoint take_all (l1 l2 : list formula) : option (list formula) :=
       take_all l1' l2'
   end.
 
-(** [l2] less [l1]: each formula of [l1] removed from [l2] where it has
-    one. [l1 ++ diff l2 l1] is the multiset union of the two. *)
+(** [l2] less [l1]: each formula of [l1] is removed from [l2] where
+    [l2] has it. [l1 ++ diff l2 l1] is the multiset union of the two. *)
 Fixpoint diff (l2 l1 : list formula) : list formula :=
   match l1 with
   | [] => l2
@@ -64,19 +67,19 @@ Fixpoint diff (l2 l1 : list formula) : list formula :=
 
 (** ** States *)
 
-(** What a subterm proves: the dyadic sequent [⊢ theta ; gamma], or with
-    [any] set [⊢ theta ; gamma, Δ] for every [Δ], because a [⊤] leaf
-    above absorbs whatever context it is given. [theta] is the least
-    unrestricted zone the subterm needs; since weakening and contraction
-    on it are implicit, any larger zone does as well. *)
+(** What a subterm proves: the dyadic sequent [⊢ theta ; gamma]. With
+    [any] set, it proves [⊢ theta ; gamma, Δ] for every [Δ], because a
+    [⊤] leaf above absorbs whatever context it is given. [theta] is the
+    least unrestricted zone the subterm needs. Weakening and
+    contraction on it are implicit, so any larger zone works too. *)
 Record state : Type := State {
   theta : list formula;  (** the unrestricted zone the subterm needs *)
   gamma : list formula;  (** the linear zone *)
   any : bool;            (** whether a [⊤] above absorbs more *)
 }.
 
-(** Consumes one copy of [A] from a premise's linear zone [gamma]: a [⊤]
-    above ([any]) stands in for a missing one. *)
+(** Consumes one copy of [A] from a premise's linear zone [gamma]. When
+    [gamma] has none, a [⊤] above ([any]) supplies it. *)
 Definition take (A : formula) (gamma : list formula) (any : bool)
     : option (list formula) :=
   match remove_one A gamma with
@@ -84,10 +87,11 @@ Definition take (A : formula) (gamma : list formula) (any : bool)
   | None => if any then Some gamma else None
   end.
 
-(** The conclusion of a [&] rule from its premises, after each consumed
-    its own subformula: both premises must prove the same context. An
-    exact premise fixes it, an absorbing one adapts to the other, and two
-    absorbing premises absorb together over the union of their zones. *)
+(** The conclusion of a [&] rule from its premises, after each has
+    consumed its own subformula. Both premises must prove the same
+    context. A premise without [any] fixes the context, and one with
+    [any] adapts to the other; when both have [any], the conclusion has
+    the union of their zones and [any] set. *)
 Definition join_with (A B : formula) (sl sr : state) : option state :=
   let theta := theta sl ++ theta sr in
   match any sl, any sr with
@@ -108,8 +112,8 @@ Definition join_with (A B : formula) (sl sr : state) : option state :=
 
 (** ** The pass *)
 
-(** Derives what a term proves, or fails at the first node that misapplies
-    its rule or uses one that [R] forbids. *)
+(** Computes what a term proves. Fails at the first node that applies
+    its rule wrongly or uses a rule that [R] does not allow. *)
 Fixpoint derive (R : rules) (p : proof) : option state :=
   match p with
   | Ax a =>
@@ -177,9 +181,9 @@ Fixpoint derive (R : rules) (p : proof) : option state :=
       else None
   end.
 
-(** Whether [p] proves [⊢ sequent] in [R]: its root needs no unrestricted
-    zone and derives the sequent's formulas exactly, or a part of them
-    when a [⊤] absorbs the rest. *)
+(** Whether [p] proves [⊢ sequent] in [R]: its root needs no
+    unrestricted zone and proves exactly the sequent's formulas, or a
+    part of them when a [⊤] absorbs the rest. *)
 Definition check (R : rules) (p : proof) (sequent : list formula) : bool :=
   match derive R p with
   | Some (State [] gamma any) =>

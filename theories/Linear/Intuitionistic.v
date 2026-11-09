@@ -3,20 +3,25 @@
 
 (** * The two-sided sequent calculus of intuitionistic linear logic
 
-    The trusted definition of the intuitionistic statements: [ill R Γ C]
+    This file is what a certificate's intuitionistic statement rests
+    on: read it to know what such a certificate claims. [ill R Γ C]
     says that the sequent [Γ ⊢ C], with the hypotheses [Γ] and exactly
     one conclusion [C], has a derivation in intuitionistic linear logic,
-    or in its affine variant when [R] adds weakening, a cut-free one
-    when [icut R = false]. The formulas and the rules are those of
-    Yalla's standalone kernel [nanoill.v] and of the textbook calculus
-    over [1], [⊗], [⊸], [⊤], [&], [0], [⊕] and [!], without [⊥]: every
-    sequent has exactly one conclusion, so no rule weakens on the right,
-    and the axiom is on atoms (the identity on any formula is
-    derivable); [nanoill.v] has no cut, which [R] adds here. The
-    hypotheses are a list read as a multiset, so the exchange rule
-    [ex_ir] admits any permutation, and every left rule acts on the first
-    hypothesis, the cut on the first hypothesis of its second premise. Nothing is derived here, and nothing is assumed. The derivations live
-    in [Prop]: [ill R Γ C] says that one exists. *)
+    or in its affine variant when [R] adds weakening; without cut when
+    [icut R = false].
+
+    The formulas and the rules are those of Yalla's standalone kernel
+    [nanoill.v] and of the textbook calculus over [1], [⊗], [⊸], [⊤],
+    [&], [0], [⊕] and [!], without [⊥]. Every sequent has exactly one
+    conclusion, so no rule weakens on the right. The axiom is on atoms;
+    the identity on any formula is derivable. [nanoill.v] has no cut;
+    [R] adds one here.
+
+    The hypotheses are a list read as a multiset: the exchange rule
+    [ex_ir] allows any permutation. Every left rule acts on the first
+    hypothesis, and the cut on the first hypothesis of its second
+    premise. The file derives nothing and assumes nothing. [ill R Γ C]
+    is a [Prop]: it says that a derivation exists. *)
 
 From Stdlib Require Import List Permutation.
 Import ListNotations.
@@ -42,17 +47,17 @@ End Formulas.
 
 Arguments iformula atom : clear implicits.
 
-(** The optional rules of a two-sided calculus: intuitionistic linear
-    logic has none, affine logic adds the weakening of any hypothesis
-    ([weakening_ilr] below), never of the conclusion, while the weakening
-    of a [!] hypothesis, [wk_ilr], belongs to both; a calculus with cut
-    adds [cut_ir]. *)
+(** The optional rules of a two-sided calculus. Intuitionistic linear
+    logic has none. Affine logic adds the weakening of any hypothesis
+    ([weakening_ilr] below), never of the conclusion; the weakening of a
+    [!] hypothesis, [wk_ilr], is in both. A calculus with cut adds
+    [cut_ir]. *)
 Record irules : Type := IRules {
   iweakening : bool;  (** weakening of any hypothesis, not only of [!] ones *)
   icut : bool;        (** cut: [Γ, Δ ⊢ C] from [Γ ⊢ A] and [Δ, A ⊢ C] *)
 }.
 
-(** Intuitionistic linear logic: no weakening but of [!] hypotheses, no
+(** Intuitionistic linear logic: weakening of [!] hypotheses only, no
     cut. *)
 Definition intuitionistic : irules := {| iweakening := false; icut := false |}.
 
@@ -64,8 +69,8 @@ Section Calculus.
 Context {atom : Type}.
 Local Notation iformula := (iformula atom).
 
-(** The derivable sequents [Γ ⊢ C], with [R] the optional rules in
-    force. *)
+(** The derivable sequents [Γ ⊢ C], where [R] gives the optional
+    rules. *)
 Inductive ill (R : irules) : list iformula -> iformula -> Prop :=
 | ax_ir : forall a,
     ill R [ivar a] (ivar a)

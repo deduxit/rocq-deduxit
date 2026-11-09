@@ -3,13 +3,13 @@
 
 (** * Proof terms
 
-    A proof term is the certificate deduxit writes: one node per rule
-    instance of the dyadic sequent calculus every engine searches in,
-    naming the formulas the rule acts on and the subproofs of its
-    premises, and never the sequent it proves. The checker ([Check])
-    derives the sequents bottom-up, so a term is small and checking it
-    is a computation. The constructors mirror deduxit's [Node] variants,
-    in their names and their order. *)
+    A proof term is the proof inside a certificate deduxit writes. It
+    has one node per rule of the dyadic sequent calculus deduxit
+    searches in. A node names the formulas its rule acts on and the
+    proofs of its premises, never the sequent it proves: the checker
+    ([Check]) computes the sequents from the leaves to the root. So a
+    term is small, and checking it is a computation. The constructors
+    have the names and the order of deduxit's proof nodes ([Node]). *)
 
 From Deduxit.Linear Require Export Formulas.
 
@@ -23,9 +23,10 @@ Inductive branch : Type :=
 | Left
 | Right.
 
-(** A proof term. Below, [⊢ Θ ; Γ] is a dyadic sequent with the
-    unrestricted zone [Θ] and the linear zone [Γ]; the checker keeps the
-    least [Θ] a subproof needs. *)
+(** A proof term. Below, [⊢ Θ ; Γ] is a dyadic sequent: [Θ] is the
+    unrestricted zone, whose formulas may be used any number of times,
+    and [Γ] the linear zone. The checker keeps the least [Θ] a subproof
+    needs. *)
 Inductive proof : Type :=
 | Ax (a : atom)
     (** the axiom [⊢ Θ ; a⊥, a] *)

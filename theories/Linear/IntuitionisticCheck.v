@@ -3,22 +3,24 @@
 
 (** * Two-sided proof terms, their checker and its soundness
 
-    A two-sided term is the certificate deduxit writes for an
-    intuitionistic proof: one node per inference of its two-sided
-    derivation, named by the rule and the side of [⊢] its principal
-    formula stands on, naming the immediate subformulas of that formula
-    and the subterms of its premises. A [⊤] on the right and a [0] on the
-    left name the context they absorb, so every node's sequent is
-    determined by its subterms. [icheck] computes that sequent bottom-up
-    and compares it with the one stated; [soundness_ill] proves that a
-    term it accepts yields a derivation in [ill].
+    A two-sided term is the proof inside a certificate deduxit writes
+    for an intuitionistic proof. It has one node per rule of the
+    two-sided derivation. A node's constructor names the rule and the
+    side of [⊢] its principal formula is on; its arguments are the
+    immediate subformulas of that formula and the terms of its premises.
+    A [⊤] on the right and a [0] on the left also name the context they
+    absorb, so a node and the terms of its premises determine its
+    sequent. [icheck]
+    computes that sequent from the leaves to the root and compares it
+    with the one stated; [soundness_ill] proves that a term it accepts
+    has a derivation in [ill] behind it.
 
-    The one-sided terms of [Proofs] do not determine this statement: a
-    one-sided formula does not say which side of [⊢] it stands on when it
-    is built from [⊤] and [0] alone ([top] is both [⊤] on the right and
-    [0] on the left), and a derivation's single conclusion is a property
-    of those sides. Here every formula of every sequent is an
-    intuitionistic formula on a known side, and a sequent has its one
+    The one-sided terms of [Proofs] cannot express this statement. A
+    one-sided formula built from [⊤] and [0] alone does not say which
+    side of [⊢] it is on ([top] is both [⊤] on the right and [0] on the
+    left), and whether a derivation has a single conclusion depends on
+    those sides. Here every formula of every sequent is an
+    intuitionistic formula on a known side, and a sequent has one
     conclusion by its type. *)
 
 From Stdlib Require Import Bool List Permutation Lia.
@@ -32,12 +34,11 @@ Local Notation iformula := (iformula atom).
 
 Section Equality.
 
-(** A Boolean equality on atoms, which the checker compares atoms
-    with. *)
+(** A Boolean equality on atoms; the checker compares atoms with it. *)
 Variable atom_eqb : atom -> atom -> bool.
 
-(** Structural equality of intuitionistic formulas, decided through
-    [atom_eqb]. *)
+(** Structural equality of intuitionistic formulas, comparing atoms
+    with [atom_eqb]. *)
 Fixpoint iformula_eqb (A B : iformula) : bool :=
   match A, B with
   | ivar a, ivar b => atom_eqb a b
@@ -52,7 +53,7 @@ Fixpoint iformula_eqb (A B : iformula) : bool :=
   | _, _ => false
   end.
 
-(** [atom_eqb] decides equality, as the soundness theorem assumes. *)
+(** [atom_eqb] decides equality. The soundness theorem assumes this. *)
 Hypothesis atom_eqb_spec : forall a b, reflect (a = b) (atom_eqb a b).
 
 Lemma iformula_eqb_spec : forall A B, reflect (A = B) (iformula_eqb A B).
@@ -70,7 +71,7 @@ Proof.
   all: constructor; congruence.
 Qed.
 
-(** Equality of intuitionistic formulas as a decision, for the proofs;
+(** Equality of intuitionistic formulas as a decision, used in proofs;
     the checker computes with [iformula_eqb]. *)
 Definition iformula_eq_dec (A B : iformula) : {A = B} + {A <> B} :=
   reflect_dec _ _ (iformula_eqb_spec A B).
@@ -85,8 +86,8 @@ Context {atom : Type} (atom_eqb : atom -> atom -> bool).
 Local Notation iformula := (iformula atom).
 Local Notation eqb := (iformula_eqb atom_eqb).
 
-(** A two-sided proof term. [Γ ⊢ C] below is the conclusion of the node,
-    the hypotheses read as a multiset. *)
+(** A two-sided proof term. Below, [Γ ⊢ C] is the node's conclusion,
+    its hypotheses read as a multiset. *)
 Inductive iproof : Type :=
 | IAx (a : atom)
     (** the axiom [a ⊢ a] *)
@@ -130,8 +131,8 @@ Inductive iproof : Type :=
     (** weakening of any hypothesis, [Γ, A ⊢ C] from [Γ ⊢ C], with
         [iweakening] *)
 | ICut (A : iformula) (left right : iproof).
-    (** [Γ, Δ ⊢ C] from [Γ ⊢ A] and [Δ, A ⊢ C], with [icut]: either
-        premise may be the one that proves [A] *)
+    (** [Γ, Δ ⊢ C] from [Γ ⊢ A] and [Δ, A ⊢ C], with [icut]; the
+        premise that proves [A] may come first or second *)
 
 (** ** Multisets, as lists compared through [iformula_eqb] *)
 
@@ -158,9 +159,9 @@ Fixpoint unoc (l : list iformula) : option (list iformula) :=
   | _ :: _ => None
   end.
 
-(** The conclusion [Γ1, Γ2 ⊢ C2] of a cut on [A] whose first premise
-    [Γ1 ⊢ C1] proves [A] and whose second [Γ2 ⊢ C2] has it as a
-    hypothesis, or [None] when they do not. *)
+(** The conclusion [Γ1, Γ2 ⊢ C2] of a cut on [A] when the first premise
+    [Γ1 ⊢ C1] proves [A] and the second, [Γ2 ⊢ C2], has [A] as a
+    hypothesis; [None] otherwise. *)
 Definition cut_by (A : iformula) (l1 : list iformula) (C1 : iformula)
     (l2 : list iformula) (C2 : iformula) : option (list iformula * iformula) :=
   if eqb A C1 then
@@ -171,8 +172,9 @@ Definition cut_by (A : iformula) (l1 : list iformula) (C1 : iformula)
   else None.
 
 (** The conclusion of a cut on [A] from its premises [Γ1 ⊢ C1] and
-    [Γ2 ⊢ C2], whichever of them proves [A]. Where both orders apply,
-    they give the same sequent: then [C1] and [C2] are both [A]. *)
+    [Γ2 ⊢ C2], whichever of them proves [A]. When both orders apply,
+    [C1] and [C2] are both [A], and the two orders give the same
+    sequent. *)
 Definition icut_conclusion (A : iformula) (l1 : list iformula) (C1 : iformula)
     (l2 : list iformula) (C2 : iformula) : option (list iformula * iformula) :=
   match cut_by A l1 C1 l2 C2 with
@@ -183,7 +185,7 @@ Definition icut_conclusion (A : iformula) (l1 : list iformula) (C1 : iformula)
 (** ** The pass *)
 
 (** The conclusion [Γ ⊢ C] of a term, or [None] at the first node that
-    misapplies its rule or uses one [R] forbids. *)
+    applies its rule wrongly or uses a rule that [R] does not allow. *)
 Fixpoint iderive (R : irules) (p : iproof) : option (list iformula * iformula) :=
   match p with
   | IAx a => Some ([ivar a], ivar a)
@@ -333,7 +335,7 @@ Fixpoint iderive (R : irules) (p : iproof) : option (list iformula * iformula) :
   end.
 
 (** Whether [p] proves [hypotheses ⊢ goal] in [R]: its conclusion has
-    that goal and those hypotheses, as a multiset. *)
+    that goal and, as a multiset, those hypotheses. *)
 Definition icheck (R : irules) (p : iproof) (hypotheses : list iformula) (goal : iformula)
     : bool :=
   match iderive R p with
@@ -392,7 +394,7 @@ Local Ltac equalities :=
   end.
 
 (** Unfolds a node's [match]es on its subterms' conclusions and on the
-    multiset operations, keeping what each one computed. *)
+    multiset operations, and keeps what each one computed. *)
 Local Ltac steps :=
   repeat match goal with
   | H : match ?e with _ => _ end = Some _ |- _ =>
@@ -425,8 +427,7 @@ Local Ltac premise :=
   | H : ill R ?l ?C |- ill R _ ?C => apply (ex_ir R l _ C H); iperm
   end.
 
-(** A cut's conclusion, from premises whose sequents are derivable, is
-    derivable. *)
+(** If a cut's premises are derivable, its conclusion is. *)
 Lemma cut_by_sound : forall A l1 C1 l2 C2 l C,
   icut R = true -> ill R l1 C1 -> ill R l2 C2 ->
   cut_by atom_eqb A l1 C1 l2 C2 = Some (l, C) -> ill R l C.
@@ -448,7 +449,7 @@ Proof.
   - exact (cut_by_sound _ _ _ _ _ _ _ K H2 H1 E).
 Qed.
 
-(** Every conclusion the pass computes is derivable. *)
+(** Every conclusion [iderive] computes is derivable. *)
 Lemma iderive_sound : forall p l C,
   iderive atom_eqb R p = Some (l, C) -> ill R l C.
 Proof.
@@ -486,9 +487,10 @@ Qed.
 
 End Soundness.
 
-(** A term the checker accepts for a sequent proves it in the
-    two-sided calculus [R]: intuitionistic linear logic or its affine
-    variant, with or without cut. *)
+(** If the checker accepts a term for a sequent, the sequent is
+    derivable in the two-sided calculus [R]: intuitionistic linear
+    logic or its affine variant, with or without cut. A certificate of
+    a two-sided proof applies this theorem. *)
 Theorem soundness_ill {atom : Type} (atom_eqb : atom -> atom -> bool)
   (atom_eqb_spec : forall a b, reflect (a = b) (atom_eqb a b)) (R : irules) :
   forall (p : iproof atom) (hypotheses : list (iformula atom)) (goal : iformula atom),

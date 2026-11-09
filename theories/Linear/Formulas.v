@@ -3,12 +3,11 @@
 
 (** * Formulas of classical linear logic in negation normal form
 
-    Formulas are built over a type of atoms that stays abstract: the
-    calculus ([Calculus]) needs nothing of it, and the checker ([Check])
-    needs only a Boolean equality that decides it. Negation is the
-    function [dual], not a connective, so every formula is in negation
-    normal form by construction. The constructors are named as in
-    Yalla and NanoYalla. *)
+    Atoms have any type you choose. The calculus ([Calculus]) assumes
+    nothing about it; the checker ([Check]) needs a Boolean equality
+    that decides it. Negation is the function [dual], not a
+    connective, so every formula is in negation normal form. The
+    constructors have the names Yalla and NanoYalla use. *)
 
 From Stdlib Require Import Bool List.
 Import ListNotations.
@@ -32,8 +31,8 @@ Inductive formula : Type :=
 | oc : formula -> formula                 (** [!A] *)
 | wn : formula -> formula.                (** [?A] *)
 
-(** Linear negation: an involution that swaps each connective with its
-    dual and [var] with [covar]. *)
+(** Linear negation: it swaps each connective with its dual and [var]
+    with [covar], and applied twice it gives the formula back. *)
 Fixpoint dual (A : formula) : formula :=
   match A with
   | var a => covar a
@@ -53,8 +52,8 @@ Fixpoint dual (A : formula) : formula :=
 Lemma dual_dual : forall A, dual (dual A) = A.
 Proof. induction A; cbn; congruence. Qed.
 
-(** Whether a formula is a [?] formula, which weakening may always
-    introduce. *)
+(** Whether a formula starts with [?]. Every calculus may weaken such
+    a formula. *)
 Definition is_wn (A : formula) : bool :=
   match A with
   | wn _ => true
@@ -63,11 +62,11 @@ Definition is_wn (A : formula) : bool :=
 
 Section Equality.
 
-(** A Boolean equality on atoms, which the checker compares literals
-    with. *)
+(** A Boolean equality on atoms; the checker compares literals with
+    it. *)
 Variable atom_eqb : atom -> atom -> bool.
 
-(** Structural equality of formulas, decided through [atom_eqb]. *)
+(** Structural equality of formulas, comparing atoms with [atom_eqb]. *)
 Fixpoint formula_eqb (A B : formula) : bool :=
   match A, B with
   | var a, var b => atom_eqb a b
@@ -85,8 +84,8 @@ Fixpoint formula_eqb (A B : formula) : bool :=
   | _, _ => false
   end.
 
-(** [atom_eqb] decides equality: what the soundness theorem assumes of
-    it, and what the certificates prove of the equality they use. *)
+(** [atom_eqb] decides equality. The soundness theorems assume this,
+    and a certificate proves it of the equality it uses. *)
 Hypothesis atom_eqb_spec : forall a b, reflect (a = b) (atom_eqb a b).
 
 Lemma formula_eqb_spec : forall A B, reflect (A = B) (formula_eqb A B).
@@ -104,7 +103,7 @@ Proof.
   all: constructor; congruence.
 Qed.
 
-(** Equality of formulas as a decision, for the proofs; the checker
+(** Equality of formulas as a decision, used in proofs; the checker
     computes with [formula_eqb]. *)
 Definition formula_eq_dec (A B : formula) : {A = B} + {A <> B} :=
   reflect_dec _ _ (formula_eqb_spec A B).

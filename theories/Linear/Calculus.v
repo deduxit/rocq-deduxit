@@ -3,24 +3,25 @@
 
 (** * The one-sided sequent calculus of classical linear logic
 
-    The trusted definition: [ll R Γ] says that the sequent [⊢ Γ] has a
-    derivation in the calculus whose optional rules [R] names, a
-    cut-free one when [cut R = false]. A sequent is a list of formulas
-    read as a multiset, so the exchange rule [ex_r] admits any
-    permutation. The rules are the textbook ones, every rule but
-    exchange, Mix and cut acting on the first formula of its conclusion
-    or of its premises; nothing is derived here, and nothing is assumed.
-    The derivations live in [Prop]: [ll R Γ] says that one exists. *)
+    This file is part of what a certificate's statement rests on: read
+    it to know what a certificate claims. [ll R Γ] says that the
+    sequent [⊢ Γ] has a derivation in the calculus whose optional rules
+    are [R]; without cut when [cut R = false]. A sequent is a list of
+    formulas read as a multiset: the exchange rule [ex_r] allows any
+    permutation. The rules are the textbook ones. Every rule except
+    exchange, Mix and cut acts on the first formula of its conclusion
+    and its premises. The file derives nothing and assumes nothing.
+    [ll R Γ] is a [Prop]: it says that a derivation exists. *)
 
 From Stdlib Require Import List Permutation.
 From Deduxit.Linear Require Export Formulas.
 Import ListNotations.
 
-(** The optional rules of a calculus: classical linear logic has none,
-    Mix adds the first, affine logic the second, and a calculus with cut
-    the third. Mix is the binary rule alone, never the nullary one ([⊢]
-    with nothing); [weakening] is the rule [weakening_r] below, while
-    the weakening of [?] formulas, [wk_r], belongs to every calculus;
+(** The optional rules of a calculus. Classical linear logic has none;
+    Mix adds [mix], affine logic adds [weakening], and a calculus with
+    cut adds [cut]. [mix] is the binary rule only, never the nullary
+    one (the empty sequent [⊢]). [weakening] is the rule [weakening_r]
+    below; the weakening of [?] formulas, [wk_r], is in every calculus.
     [cut] is the rule [cut_r]. *)
 Record rules : Type := Rules {
   mix : bool;        (** binary Mix: [⊢ Γ, Δ] from [⊢ Γ] and [⊢ Δ] *)
@@ -36,7 +37,7 @@ Section Calculus.
 Context {atom : Type}.
 Local Notation formula := (formula atom).
 
-(** The derivable sequents, with [R] the optional rules in force. *)
+(** The derivable sequents, where [R] gives the optional rules. *)
 Inductive ll (R : rules) : list formula -> Prop :=
 | ax_r : forall a,
     ll R [covar a; var a]

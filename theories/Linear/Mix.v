@@ -3,14 +3,14 @@
 
 (** * Mix as a hypothesis [?(⊥ ⊗ ⊥)]
 
-    A derivation that uses binary Mix becomes one without it, of the
-    same sequent with [?(⊥ ⊗ ⊥)] added, and with no cut it did not have:
-    the extra
-    formula travels up the derivation, a Mix of [⊢ Γ] and [⊢ Δ] becomes
-    the [⊗] of [⊢ ⊥, ?(⊥ ⊗ ⊥), Γ] and [⊢ ⊥, ?(⊥ ⊗ ⊥), Δ] under a
-    dereliction, and contraction merges the copies that every
-    two-premise rule, cut included, makes. The proof follows Yalla's [mix_to_ll]
-    ([ll_fragments.v]) for the binary case. *)
+    A derivation that uses binary Mix becomes a derivation without Mix
+    of the same sequent with [?(⊥ ⊗ ⊥)] added. It uses no cut the
+    first one did not use. The proof carries the extra formula up the
+    derivation. A Mix of [⊢ Γ] and [⊢ Δ] becomes the [⊗] of
+    [⊢ ⊥, ?(⊥ ⊗ ⊥), Γ] and [⊢ ⊥, ?(⊥ ⊗ ⊥), Δ] under a dereliction.
+    Every rule with two premises, cut included, makes two copies of the
+    extra formula, and a contraction merges them. The proof follows
+    Yalla's [mix_to_ll] ([ll_fragments.v]) for binary Mix. *)
 
 From Stdlib Require Import List Permutation.
 From Deduxit.Linear Require Export Calculus.
@@ -21,7 +21,8 @@ Section Mix.
 Context {atom : Type}.
 Local Notation formula := (formula atom).
 
-(** A rule of one premise applied behind the extra first formula [X]. *)
+(** A rule with one premise, applied behind an extra first formula
+    [X]. *)
 Lemma behind : forall R (X A B : formula) l,
   (forall m, ll R (A :: m) -> ll R (B :: m)) -> ll R (X :: A :: l) -> ll R (X :: B :: l).
 Proof.
@@ -29,8 +30,9 @@ Proof.
   eapply ex_r; [apply rule; eapply ex_r; [exact H | apply perm_swap] | apply perm_swap].
 Qed.
 
-(** A derivation in any calculus gives one of [?(⊥ ⊗ ⊥), Γ] in the same
-    calculus without Mix (its weakening and its cut kept). *)
+(** A derivation of [⊢ Γ] in any calculus gives a derivation of
+    [⊢ ?(⊥ ⊗ ⊥), Γ] in the same calculus without Mix, with the same
+    [weakening] and [cut]. *)
 Theorem mix_to_ll : forall R (l : list formula),
   ll R l ->
   ll {| mix := false; weakening := weakening R; cut := cut R |} (wn (tens bot bot) :: l).
@@ -68,7 +70,8 @@ Proof.
     eapply ex_r; [exact IHll |].
     apply perm_trans with (wn A :: wn (tens bot bot) :: wn A :: l);
       [apply perm_swap | apply perm_skip, perm_swap].
-  - (* Mix: the [⊗] of the two premises under [⊥], then a dereliction. *)
+  - (* Mix: the [⊗] of the two premises, each under a [⊥], then a
+   dereliction. *)
     apply co_r, co_r.
     eapply ex_r.
     + apply de_r.
@@ -76,7 +79,7 @@ Proof.
         apply bot_r; [exact IHll1 | exact IHll2].
     + cbn. apply perm_skip, perm_skip, Permutation_sym, Permutation_middle.
   - eapply ex_r; [apply weakening_r, IHll | apply perm_swap]. assumption.
-  - (* Cut: the copies of the two premises contracted. *)
+  - (* Cut: the two premises' copies contracted. *)
     apply co_r.
     eapply ex_r.
     + refine (cut_r R' _ A (wn (tens bot bot) :: l1) (wn (tens bot bot) :: l2) _ _).
@@ -86,8 +89,8 @@ Proof.
     + cbn. apply perm_skip. symmetry. apply Permutation_middle.
 Qed.
 
-(** The case the name says: a derivation with Mix gives one of
-    [?(⊥ ⊗ ⊥), Γ] in classical linear logic. *)
+(** From Mix to classical linear logic: a derivation of [⊢ Γ] with Mix
+    gives one of [⊢ ?(⊥ ⊗ ⊥), Γ] in classical linear logic. *)
 Corollary mix_to_classical : forall l : list formula,
   ll {| mix := true; weakening := false; cut := false |} l ->
   ll classical (wn (tens bot bot) :: l).

@@ -3,12 +3,14 @@
 
 (** * Soundness of the checker
 
-    A term the checker accepts yields a derivation: [soundness] for any
-    calculus [rules] names, cut included, and its instances
-    [soundness_classical], [soundness_mix] and [soundness_affine], the
-    calculi without cut. The proof follows the pass: every state [derive]
-    computes is satisfied in the sense of [sat], the sequents it stands
-    for are derivable, and the root's state gives the sequent. *)
+    If the checker accepts a term for a sequent, the sequent is
+    derivable. [soundness] states this for every calculus a [rules]
+    value describes, cut included. [soundness_classical],
+    [soundness_mix] and [soundness_affine] are its instances for the
+    calculi without cut; a certificate applies one of the four. The
+    proof follows [derive]: every state it computes satisfies [sat],
+    which says that the sequents the state stands for are derivable,
+    and the root's state gives the sequent. *)
 
 From Stdlib Require Import Bool List Permutation Lia.
 From Deduxit.Linear Require Export Check.
@@ -99,7 +101,7 @@ Lemma wn_contract_cons : forall (A : formula) n (l : list formula),
   ll R (wn A :: map wn (repeat A n) ++ l) -> ll R (wn A :: l).
 Proof. induction n; cbn; intros l H; [exact H | apply IHn, co_r, H]. Qed.
 
-(** Any number of copies of [?A], none included, contract into one. *)
+(** Any number of copies of [?A], zero included, contract into one. *)
 Lemma wn_contract : forall (A : formula) n (l : list formula),
   ll R (map wn (repeat A n) ++ l) -> ll R (wn A :: l).
 Proof.
@@ -109,7 +111,7 @@ Qed.
 (** ** What a state stands for *)
 
 (** The sequents a state stands for are derivable: [⊢ gamma, ?theta, Δ]
-    for every [Δ] when the state absorbs, and for [Δ] empty otherwise. *)
+    for every [Δ] when [any] is set, and for the empty [Δ] otherwise. *)
 Definition sat (theta gamma : list formula) (any : bool) : Prop :=
   forall Δ, (any = false -> Δ = []) -> ll R (gamma ++ map wn theta ++ Δ).
 
@@ -129,8 +131,8 @@ Proof.
   - destruct any; [| discriminate]. injection H as <-. auto.
 Qed.
 
-(** Consuming [A] from a satisfied zone leaves a satisfied zone with [A]
-    in front, wherever [pre] the rule has put before it. *)
+(** Consuming [A] from a satisfied zone leaves a satisfied zone with
+    [A] in front, behind whatever prefix [pre] the rule puts first. *)
 Lemma take_sat : forall pre A theta gamma any gamma',
   take atom_eqb A gamma any = Some gamma' ->
   sat theta (pre ++ gamma) any -> sat theta (pre ++ A :: gamma') any.
@@ -194,23 +196,23 @@ Proof.
     pose proof (take_sat [] _ _ _ _ _ Tr IHr) as Hr; cbn in Hr.
     unfold join_with in H; cbn in H.
     destruct al, ar; cbn in H.
-    + (* both premises absorb: the union of their zones *)
+    + (* both premises have [any]: the union of their zones *)
       injection H as <-; cbn. intros Δ _. apply with_r.
       * eapply ex_r; [apply (Hl (diff atom_eqb gr gl ++ map wn θr ++ Δ)); easy | perm].
       * eapply ex_r; [apply (Hr (diff atom_eqb gl gr ++ map wn θl ++ Δ)); easy | perm].
-    + (* the left premise absorbs: the right one's zone *)
+    + (* the left premise has [any]: the right one's zone *)
       destruct (take_all atom_eqb gl gr) as [rest |] eqn:T; [| discriminate].
       injection H as <-; cbn. apply take_all_perm in T.
       intros Δ HΔ. rewrite (HΔ eq_refl). apply with_r.
       * eapply ex_r; [apply (Hl (rest ++ map wn θr)); easy | rewrite T; perm].
       * eapply ex_r; [apply (wk_list θl), (Hr []); easy | perm].
-    + (* the right premise absorbs: the left one's zone *)
+    + (* the right premise has [any]: the left one's zone *)
       destruct (take_all atom_eqb gr gl) as [rest |] eqn:T; [| discriminate].
       injection H as <-; cbn. apply take_all_perm in T.
       intros Δ HΔ. rewrite (HΔ eq_refl). apply with_r.
       * eapply ex_r; [apply (wk_list θr), (Hl []); easy | perm].
       * eapply ex_r; [apply (Hr (rest ++ map wn θl)); easy | rewrite T; perm].
-    + (* both exact: the same zone *)
+    + (* neither has [any]: both zones are the same *)
       destruct (take_all atom_eqb gl gr) as [[| r' rest] |] eqn:T;
         [| discriminate | discriminate].
       injection H as <-; cbn. apply take_all_perm in T. rewrite app_nil_r in T.
@@ -296,7 +298,8 @@ Qed.
 
 (** ** The theorem *)
 
-(** A term the checker accepts for a sequent proves it in the calculus. *)
+(** If the checker accepts a term for a sequent, the sequent is
+    derivable in the calculus. *)
 Theorem soundness : forall p sequent,
   check atom_eqb R p sequent = true -> ll R sequent.
 Proof.
@@ -312,8 +315,8 @@ Qed.
 
 End Soundness.
 
-(** The theorem for classical linear logic, the calculus without Mix,
-    weakening or cut. *)
+(** The theorem for classical linear logic: no Mix, no weakening, no
+    cut. *)
 Theorem soundness_classical {atom : Type} (atom_eqb : atom -> atom -> bool)
   (atom_eqb_spec : forall a b, reflect (a = b) (atom_eqb a b)) :
   forall (p : proof atom) (sequent : list (formula atom)),
