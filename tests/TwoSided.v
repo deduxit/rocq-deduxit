@@ -1,11 +1,11 @@
 (* deduxit © Fabian Lukas Grubmüller 2026 *)
 (* Licensed under the EUPL *)
 
-(** Certificates of intuitionistic proofs, in the form the exporter
-    writes: the two-sided sequent over [ill], proved by [soundness_ill]
-    from a two-sided term the checker accepts by computation. Every rule
-    of the calculus is exercised; the last lemmas pin what the checker
-    rejects. *)
+(** Certificates of intuitionistic proofs, in the form deduxit writes
+    them: the lemma states the two-sided sequent in [ill], and the proof
+    applies [soundness_ill] to a two-sided term the checker accepts by
+    computation. The lemmas use every rule of the calculus; the last
+    ones check what the checker rejects. *)
 
 From Stdlib Require Import List String.
 From Deduxit.Linear Require Import IntuitionisticCheck.
@@ -74,7 +74,8 @@ Proof.
   vm_compute. reflexivity.
 Qed.
 
-(** [0 ⊢ ⊤], which both rules prove: one-sided, both formulas are [⊤]. *)
+(** [0 ⊢ ⊤], which both rules prove; in the one-sided calculus, both
+    formulas are [⊤]. *)
 Lemma zero_top_by_zero : ill (atom := string) intuitionistic [izero] itop.
 Proof.
   apply (soundness_ill String.eqb String.eqb_spec intuitionistic (IZeroL [] itop)).

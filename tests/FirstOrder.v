@@ -1,14 +1,14 @@
 (* deduxit © Fabian Lukas Grubmüller 2026 *)
 (* Licensed under the EUPL *)
 
-(** Certificates of first-order proofs, one-sided, in the form the
-    exporter writes: the sequent over a first-order calculus, proved by
-    its soundness theorem from a term the checker accepts by
-    computation, with strings as symbols. The last lemmas pin what the
-    checker refuses: a wrong witness, an eigenvariable that escapes its
-    [∀] step through a witness below it, one introduced again above its
-    step, one that the sequent names, and a witness with a bound
-    variable. *)
+(** Certificates of one-sided first-order proofs, in the form deduxit
+    writes them: the lemma states the sequent in a first-order
+    calculus, and the proof applies its soundness theorem to a term the
+    checker accepts by computation. Symbols are strings. The last
+    lemmas check what the checker refuses: a wrong witness, an
+    eigenvariable that escapes its [∀] step through a witness below it,
+    one introduced again above its step, one that the sequent names,
+    and a witness with a bound variable. *)
 
 From Stdlib Require Import List String.
 From Deduxit.Linear Require Calculus.
@@ -16,8 +16,9 @@ From Deduxit.Linear Require Import FirstOrderSoundness.
 Import ListNotations.
 Open Scope string_scope.
 
-(** [∀x. p(x) ⊢ ∃y. p(y)]: domains are not empty, so a constant no [∀]
-    step introduces, the eigenvariable [0], is a witness. *)
+(** [∀x. p(x) ⊢ ∃y. p(y)]: domains are not empty, so the
+    eigenvariable [0], a constant no [∀] step introduces, is a
+    witness. *)
 Lemma nonempty : ll (symbol := string) Calculus.classical
   [fex (covar "p" [bound 0]); fex (var "p" [bound 0])].
 Proof.
@@ -98,11 +99,11 @@ Lemma wrong_witness :
     [fex (covar "p" [bound 0]); var "p" [tapp "c" []]] = false.
 Proof. vm_compute. reflexivity. Qed.
 
-(** An eigenvariable escaping its step: the unprovable [∀x. ∃y. r(x, y)
-    ⊢ ∃y. ∀x. r(x, y)] with the witnesses chosen below the [∀] steps
-    that introduce them, each [∀] step's eigenvariable standing in its
-    conclusion. Every rule is applied as written, and the set the root
-    carries holds both eigenvariables. *)
+(** An eigenvariable escaping its step: the unprovable
+    [∀x. ∃y. r(x, y) ⊢ ∃y. ∀x. r(x, y)], with the witnesses chosen below
+    the [∀] steps that introduce them, so each [∀] step's eigenvariable
+    is in its conclusion. Every rule is applied correctly, and the set
+    the root carries has both eigenvariables. *)
 Lemma escaping :
   check String.eqb Calculus.classical
     (Exists (fall (covar "r" [bound 1; bound 0])) (eigen 1)
@@ -130,7 +131,7 @@ Lemma in_the_sequent :
     [fall (var "p" [bound 0]); covar "p" [eigen 0]] = false.
 Proof. vm_compute. reflexivity. Qed.
 
-(** A witness with a bound variable, which a quantifier above could
+(** A witness with a bound variable, which a quantifier above it could
     capture. *)
 Lemma open_witness :
   check String.eqb Calculus.classical

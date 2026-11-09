@@ -1,21 +1,23 @@
 (* deduxit © Fabian Lukas Grubmüller 2026 *)
 (* Licensed under the EUPL *)
 
-(** Certificates of non-derivability by weighted counts, in the form the
-    exporter writes: the sequent stated not derivable over [ll] or [ill],
-    proved by a refutation theorem from weights, dead atoms and, with
-    weakening, the sign of the outputs, which a test accepts by
-    computation. The classical reading, the balance and the count
-    equation refute none of them but [one_sided_negative]. The last
-    lemmas pin what the tests reject. *)
+(** Certificates of non-derivability by weighted counts, in the form
+    deduxit writes them: the lemma states that the sequent is not
+    derivable in [ll] or [ill], and the proof applies a refutation
+    theorem to weights, dead atoms and, with weakening, the sign of the
+    outputs, which a test accepts by computation. Of these sequents,
+    the classical reading, the balance and the count equation refute
+    only [one_sided_negative]. The last lemmas check what the tests
+    reject. *)
 
 From Stdlib Require Import List String ZArith.
 From Deduxit.Linear Require Import Weights.
 Import ListNotations.
 Open Scope string_scope.
 
-(** The one-sided count: [!d, !((c ⊗ d ⊗ d) ⊸ 1) ⊢ c ⊗ c], where every
-    copy adds a positive [c] and two are wanted outside the copies. *)
+(** The one-sided count: [!d, !((c ⊗ d ⊗ d) ⊸ 1) ⊢ c ⊗ c]. Every copy
+    adds a positive [c], and the goal needs two more outside the
+    copies. *)
 Lemma one_sided_two_sided :
   ~ ill (atom := string) intuitionistic
       [ioc (ivar "d"); ioc (ilmap (itens (ivar "c") (itens (ivar "d") (ivar "d"))) ione)]
@@ -48,9 +50,10 @@ Proof.
   vm_compute. reflexivity.
 Qed.
 
-(** The state equation: [a, !(a ⊗ a ⊸ b), !(c ⊸ c ⊗ a) ⊢ a ⊗ b], where
-    a [b] costs two [a]s and the second clause never fires, since nothing
-    makes a [c]. With it, the equation has a solution. *)
+(** The state equation: [a, !(a ⊗ a ⊸ b), !(c ⊸ c ⊗ a) ⊢ a ⊗ b]. A [b]
+    costs two [a]s, and the second clause never fires, since nothing
+    makes a [c]. Counting that clause, the equation would have a
+    solution. *)
 Lemma state_equation_dead :
   ~ ill (atom := string) intuitionistic
       [ivar "a"; ioc (ilmap (itens (ivar "a") (ivar "a")) (ivar "b"));
@@ -62,10 +65,10 @@ Proof.
   vm_compute. reflexivity.
 Qed.
 
-(** The same with the bodies negative, as a classical one-sided Horn
-    program may write them: [⊢ a, ?(~a ⊗ (a ⅋ a)), ?((~a ⊗ ~c) ⊗ b), ~b],
-    the weights negated and [c] dead in the negative sign, so that the
-    clause that never fires contributes nothing. *)
+(** The same with negative bodies, as a classical one-sided Horn
+    program may write them: [⊢ a, ?(~a ⊗ (a ⅋ a)), ?((~a ⊗ ~c) ⊗ b), ~b].
+    The weights are negated and [c] is dead in the negative sign, so
+    the clause that never fires contributes nothing. *)
 Lemma state_equation_negative_bodies :
   ~ ll (atom := string) classical
       [var "a"; wn (tens (covar "a") (parr (var "a") (var "a")));
@@ -100,7 +103,7 @@ Proof.
   vm_compute. reflexivity.
 Qed.
 
-(** Without the dead atom the copies of the second clause lower the
+(** Without the dead atom, the copies of the second clause lower the
     count without bound. *)
 Lemma state_equation_needs_dead :
   overweight (atom := string) (weight_of String.eqb [("a", 1%Z); ("b", 2%Z)]) (fun _ => false) true
@@ -111,8 +114,8 @@ Lemma state_equation_needs_dead :
       (itens (ivar "a") (ivar "b"))) = false.
 Proof. vm_compute. reflexivity. Qed.
 
-(** With the dead sign wrong, the clause that never fires absorbs and
-    the test refuses. *)
+(** With the wrong sign for the dead atom, the clause that never fires
+    absorbs, and the test refuses. *)
 Lemma negative_bodies_wrong_sign :
   overweight (atom := string) (weight_of String.eqb [("b", (-1)%Z)])
     (fun a => existsb (String.eqb a) ["c"]) true classical
@@ -120,7 +123,7 @@ Lemma negative_bodies_wrong_sign :
      wn (tens (tens (covar "a") (covar "c")) (var "b")); covar "b"] = false.
 Proof. vm_compute. reflexivity. Qed.
 
-(** A derivable sequent, [a, !(a ⊸ b) ⊢ b], is refuted by no weights. *)
+(** No weights refute a derivable sequent, [a, !(a ⊸ b) ⊢ b]. *)
 Lemma derivable_not_overweight :
   overweight (atom := string) (weight_of String.eqb [("a", 1%Z); ("b", 1%Z)]) (fun _ => false) true
     (lrules intuitionistic)
@@ -141,8 +144,8 @@ Lemma weakening_not_overweight :
       (itens (ivar "b") (itens (ivar "b") (ivar "b")))) = false.
 Proof. vm_compute. reflexivity. Qed.
 
-(** With the outputs' sign wrong the affine test refuses: the goal has
-    no output then. *)
+(** With the wrong sign for the outputs, the affine test refuses: the
+    goal then has no output. *)
 Lemma affine_wrong_sign :
   overweight_affine (atom := string) (weight_of String.eqb [("a", 2%Z); ("b", 1%Z)])
     (fun _ => false) false (lrules affine)

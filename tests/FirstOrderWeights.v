@@ -2,9 +2,9 @@
 (* Licensed under the EUPL *)
 
 (** Certificates of non-derivability of first-order sequents by
-    weighted counts: the weights per predicate, or per closed atom of a
+    weighted counts: weights per predicate, or per closed atom of a
     fixed predicate, which a test accepts by computation. The last
-    lemmas pin what the test rejects. *)
+    lemmas check what the test rejects. *)
 
 From Stdlib Require Import List String ZArith.
 From Deduxit.Linear Require Calculus Intuitionistic TermsCheck.
@@ -18,9 +18,10 @@ Definition c : term string := tapp "c" [].
 (** The constant [d]. *)
 Definition d : term string := tapp "d" [].
 
-(** Counted over all atoms of [p]: [!(∀x. q(x)), !(∀x. (p(x) ⊗ q(x) ⊗
-    q(x)) ⊸ 1) ⊢ ∃x. p(x) ⊗ p(x)], where every copy adds a positive [p]
-    and two are wanted outside the copies. *)
+(** Counted over all atoms of [p]:
+    [!(∀x. q(x)), !(∀x. (p(x) ⊗ q(x) ⊗ q(x)) ⊸ 1) ⊢ ∃x. p(x) ⊗ p(x)].
+    Every copy adds a positive [p], and the goal needs two more outside
+    the copies. *)
 Lemma one_sided_symbol :
   ~ ill (symbol := string) Intuitionistic.intuitionistic
       [ioc (iall (ivar "q" [bound 0]));
@@ -55,8 +56,9 @@ Lemma one_sided_atom_needs_fixed :
      covar "p" [d]; covar "p" [d]; covar "p" [d]; fex (var "q" [bound 0])] = false.
 Proof. vm_compute. reflexivity. Qed.
 
-(** A fixed predicate with a literal under a quantifier, which an
-    instance may turn into the atom weighed, is refused. *)
+(** The test refuses a fixed predicate with a literal under a
+    quantifier, since an instance may turn it into the atom
+    weighed. *)
 Lemma unpinned_not_overweight :
   overweight (symbol := string) (fun p => String.eqb p "p")
     (fun p ts => if TermsCheck.terms_eqb String.eqb ts [c] then 1%Z else 0%Z)

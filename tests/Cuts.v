@@ -1,12 +1,13 @@
 (* deduxit © Fabian Lukas Grubmüller 2026 *)
 (* Licensed under the EUPL *)
 
-(** Certificates of proofs with cuts, in the form the exporter writes:
-    the sequent over a calculus with cut, given as a record literal,
-    proved by [soundness] or [soundness_ill] from a term the checker
-    accepts by computation. The last lemmas pin that a cut whose
-    premises do not hold the cut formula and its dual is refused, and
-    that a cut is refused in a calculus without it. *)
+(** Certificates of proofs with cuts, in the form deduxit writes them:
+    the lemma states the sequent in a calculus with cut, given as a
+    record literal, and the proof applies [soundness] or
+    [soundness_ill] to a term the checker accepts by computation. The
+    last lemmas check that the checker refuses a cut whose premises do
+    not have the cut formula and its dual, and a cut in a calculus
+    without cut. *)
 
 From Stdlib Require Import List String.
 From Deduxit.Linear Require Import Soundness IntuitionisticCheck.
@@ -24,8 +25,8 @@ Proof.
   vm_compute. reflexivity.
 Qed.
 
-(** [⊢ !A, ?A⊥]: a cut on [?A⊥], which each premise moves into its
-    unrestricted zone and back, against [!A]. *)
+(** [⊢ !A, ?A⊥]: a cut on [?A⊥] against [!A]; each premise moves
+    [?A⊥] into its unrestricted zone and back. *)
 Lemma cut_of_quest : ll {| mix := false; weakening := false; cut := true |}
   [oc (var "A"); wn (covar "A")].
 Proof.

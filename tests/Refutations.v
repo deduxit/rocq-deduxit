@@ -1,17 +1,18 @@
 (* deduxit © Fabian Lukas Grubmüller 2026 *)
 (* Licensed under the EUPL *)
 
-(** Certificates of non-derivability, in the form the exporter writes:
-    the sequent stated not derivable over [ll] or [ill], proved by a
-    refutation theorem from an assignment or an atom that a test accepts
-    by computation. The last lemmas pin what the tests reject. *)
+(** Certificates of non-derivability, in the form deduxit writes them:
+    the lemma states that the sequent is not derivable in [ll] or
+    [ill], and the proof applies a refutation theorem to an assignment
+    or an atom that a test accepts by computation. The last lemmas
+    check what the tests reject. *)
 
 From Stdlib Require Import List String.
 From Deduxit.Linear Require Import Refutations.
 Import ListNotations.
 Open Scope string_scope.
 
-(** [⊢ A & B, A⊥] read classically is false where [A] is true and [B]
+(** [⊢ A & B, A⊥] read classically is false when [A] is true and [B]
     false. *)
 Lemma classical_with : ~ ll (atom := string) classical [awith (var "A") (var "B"); covar "A"].
 Proof.
@@ -19,7 +20,8 @@ Proof.
   vm_compute. reflexivity.
 Qed.
 
-(** The reading holds in every calculus: with Mix and weakening too. *)
+(** The classical reading refutes in every calculus, with Mix and
+    weakening too. *)
 Lemma classical_with_both :
   ~ ll (atom := string) {| mix := true; weakening := true; cut := false |} [wn (var "A"); bot].
 Proof.
@@ -27,7 +29,7 @@ Proof.
   vm_compute. reflexivity.
 Qed.
 
-(** [A ⊕ B ⊢ A]: false where [B] is true and [A] false. *)
+(** [A ⊕ B ⊢ A]: false when [B] is true and [A] false. *)
 Lemma classical_two_sided : ~ ill (atom := string) intuitionistic [iplus (ivar "A") (ivar "B")] (ivar "A").
 Proof.
   apply (iclassical_refutation intuitionistic (fun a => existsb (String.eqb a) ["B"])).
@@ -81,11 +83,12 @@ Proof.
   vm_compute. reflexivity.
 Qed.
 
-(** A tautology has no falsifying assignment. *)
+(** No assignment makes a tautology false. *)
 Lemma excluded_middle_read : forall v, falsifies v [var "A"; covar "A"] = false.
 Proof. intro v. unfold falsifies. cbn. destruct (v "A"); reflexivity. Qed.
 
-(** A balanced atom, a [⊤] that absorbs and weakening refute nothing. *)
+(** The balance refutes nothing when the atom is balanced, when a [⊤]
+    absorbs, or with weakening. *)
 Lemma balanced : unbalanced String.eqb "A" classical [covar "A"; var "A"] = false.
 Proof. vm_compute. reflexivity. Qed.
 
@@ -96,8 +99,8 @@ Lemma weakened :
   unbalanced String.eqb "A" {| mix := false; weakening := true; cut := false |} [var "A"] = false.
 Proof. vm_compute. reflexivity. Qed.
 
-(** The equation holds of an axiom, needs the multiplicatives, and
-    allows more formulas with Mix. *)
+(** An axiom satisfies the equation; the test needs multiplicative
+    formulas, and allows more formulas with Mix. *)
 Lemma axiom_counts : fails_equation classical [covar "A"; var "A"] = false.
 Proof. vm_compute. reflexivity. Qed.
 

@@ -1,12 +1,12 @@
 (* deduxit © Fabian Lukas Grubmüller 2026 *)
 (* Licensed under the EUPL *)
 
-(** What the soundness theorems, the first-order ones among them, the
-    reduction of Mix and the refutations rest on: nothing beyond the
-    definitions. Rocq answers "Closed under the global context" for
-    each, which the flake's check requires. Every theorem is
-    named by its full path, since the first-order ones share their names
-    with the propositional ones. *)
+(** The soundness theorems (the first-order ones included), the
+    reduction of Mix and the refutations rest on no axiom: Rocq answers
+    "Closed under the global context" for each, and the flake's check
+    requires that answer. Every theorem is named by its full path,
+    since the first-order ones share their names with the propositional
+    ones. *)
 
 From Deduxit.Linear Require Soundness IntuitionisticCheck Mix Refutations Weights.
 From Deduxit.Linear Require FirstOrderSoundness FirstOrderIntuitionisticCheck FirstOrderWeights.

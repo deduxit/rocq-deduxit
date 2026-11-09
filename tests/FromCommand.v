@@ -1,9 +1,10 @@
 (* deduxit © Fabian Lukas Grubmüller 2026 *)
 (* Licensed under the EUPL *)
 
-(** Certificates of proofs the command found, translated from their JSON
-    form by a scratch program: the larger terms, with shared subproofs
-    unfolded. *)
+(** Certificates of proofs that the command [deduxit prove] found,
+    larger than the hand-written ones, with shared subproofs unfolded.
+    Above each lemma: the sequent as given to the command, and the
+    number of nodes of its term. *)
 
 From Stdlib Require Import List String.
 From Deduxit.Linear Require Import Soundness.

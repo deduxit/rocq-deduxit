@@ -1,14 +1,15 @@
 (* deduxit © Fabian Lukas Grubmüller 2026 *)
 (* Licensed under the EUPL *)
 
-(** Certificates of classical proofs, in the form the exporter writes:
-    the sequent over the calculus, proved by the soundness theorem from a
-    term the checker accepts by computation. Atoms are strings. Every
-    rule of the calculus but Mix is exercised; the last lemmas pin what
-    the checker rejects. [vm_compute] leaves a cast that the kernel
-    checks with its virtual machine, which thereby stands beside the
-    kernel in what a certificate trusts; [reflexivity] alone avoids it at
-    a cost in time. *)
+(** Certificates of classical proofs, in the form deduxit writes them:
+    the lemma states the sequent in the calculus, and the proof applies
+    the soundness theorem to a term the checker accepts by computation.
+    Atoms are strings. The lemmas use every rule of the calculus except
+    Mix; the last ones check what the checker rejects.
+
+    [vm_compute] leaves a cast that the kernel checks with its virtual
+    machine, so a certificate trusts that machine as well as the
+    kernel. [reflexivity] alone avoids this, but takes longer. *)
 
 From Stdlib Require Import List String.
 From Deduxit.Linear Require Import Soundness.
@@ -40,7 +41,7 @@ Proof.
   vm_compute. reflexivity.
 Qed.
 
-(** [⊢ A & ⊤, A⊥]: the [⊤] premise adapts to the other one's context. *)
+(** [⊢ A & ⊤, A⊥]: the [⊤] premise takes the other premise's context. *)
 Lemma with_top : ll classical [awith (var "A") top; covar "A"].
 Proof.
   apply (soundness_classical String.eqb String.eqb_spec
@@ -56,14 +57,14 @@ Proof.
   vm_compute. reflexivity.
 Qed.
 
-(** [⊢ ⊤ & ⊤, A]: both premises absorb, so the conclusion does. *)
+(** [⊢ ⊤ & ⊤, A]: both premises absorb, so the conclusion absorbs. *)
 Lemma top_with_top : ll classical [awith top top; var "A"].
 Proof.
   apply (soundness_classical String.eqb String.eqb_spec (With top top Top Top)).
   vm_compute. reflexivity.
 Qed.
 
-(** [⊢ ?A⊥, A ⊗ A]: two copies of one formula, then its [?] step. *)
+(** [⊢ ?A⊥, A ⊗ A]: two copies of one formula, then its [?] rule. *)
 Lemma contraction : ll classical [wn (covar "A"); tens (var "A") (var "A")].
 Proof.
   apply (soundness_classical String.eqb String.eqb_spec
@@ -89,9 +90,10 @@ Proof.
   vm_compute. reflexivity.
 Qed.
 
-(** What the checker rejects: a [⅋] on two subformulas it does not find,
-    a [⊗] that leaves the axiom's other literal over, Mix and weakening
-    of an ordinary formula outside their calculi. *)
+(** What the checker rejects: a [⅋] whose two subformulas are not in
+    its premise, a [⊗] that leaves the axiom's other literal over, and
+    Mix and the weakening of a formula without [?] in a calculus
+    without them. *)
 Lemma rejects_missing_subformula :
   check String.eqb classical (Par (var "A") (var "A") (Ax "A")) [parr (var "A") (var "A")] = false.
 Proof. vm_compute. reflexivity. Qed.

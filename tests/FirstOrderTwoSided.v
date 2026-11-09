@@ -1,12 +1,12 @@
 (* deduxit © Fabian Lukas Grubmüller 2026 *)
 (* Licensed under the EUPL *)
 
-(** Certificates of first-order proofs, two-sided, in the form the
-    exporter writes: the sequent over the first-order intuitionistic
-    calculus, proved by [soundness_ill] from a term the checker accepts
-    by computation. The last lemmas pin that an eigenvariable escaping
-    its step through a witness below it, and a wrong witness, are
-    refused. *)
+(** Certificates of two-sided first-order proofs, in the form deduxit
+    writes them: the lemma states the sequent in the first-order
+    intuitionistic calculus, and the proof applies [soundness_ill] to a
+    term the checker accepts by computation. The last lemmas check that
+    the checker refuses an eigenvariable escaping its step through a
+    witness below it, and a wrong witness. *)
 
 From Stdlib Require Import List String.
 From Deduxit.Linear Require Intuitionistic.
@@ -28,8 +28,8 @@ Proof.
   vm_compute. reflexivity.
 Qed.
 
-(** [∀x. p(x), q ⊢ ∃y. p(y)], affine: the witness a constant no step
-    introduces. *)
+(** [∀x. p(x), q ⊢ ∃y. p(y)], affine: the witness is a constant no
+    step introduces. *)
 Lemma affine_nonempty : ill (symbol := string) Intuitionistic.affine
   [iall (ivar "p" [bound 0]); ivar "q" []] (iex (ivar "p" [bound 0])).
 Proof.

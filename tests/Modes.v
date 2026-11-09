@@ -1,11 +1,11 @@
 (* deduxit © Fabian Lukas Grubmüller 2026 *)
 (* Licensed under the EUPL *)
 
-(** Certificates with Mix and with affine weakening, in the form the
-    exporter writes: the sequent over the calculus with the rule, proved
-    by that calculus's soundness theorem from a term the checker accepts.
-    The last lemmas pin that each rule is refused in the calculus without
-    it. *)
+(** Certificates with Mix and with affine weakening, in the form
+    deduxit writes them: the lemma states the sequent in the calculus
+    with the rule, and the proof applies that calculus's soundness
+    theorem to a term the checker accepts. The last lemmas check that
+    each rule is refused in the calculus without it. *)
 
 From Stdlib Require Import List String.
 From Deduxit.Linear Require Import Soundness.
