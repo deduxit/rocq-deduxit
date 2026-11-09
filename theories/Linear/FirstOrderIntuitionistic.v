@@ -3,22 +3,27 @@
 
 (** * The two-sided sequent calculus of first-order intuitionistic linear logic
 
-    The trusted definition of the first-order intuitionistic statements:
+    This file is what a certificate's first-order intuitionistic
+    statement rests on: read it to know what such a certificate claims.
     [ill R Γ C] says that the sequent [Γ ⊢ C] has a derivation in
     first-order intuitionistic linear logic, or in its affine variant
-    when [R] adds weakening, a cut-free one when [Intuitionistic.icut R
-    = false] ([Intuitionistic.irules], the optional rules of the
-    propositional calculus). The formulas and the rules are those of
-    [Intuitionistic] with predicates applied to terms ([Terms]) and the
-    quantifiers [∀] and [∃], each with its two rules: [∀R] and [∃L] with
-    an eigenvariable that occurs nowhere in their conclusion, [∃R] and
-    [∀L] with any closed term as the witness (an eigenvariable among
-    them, a constant outside the signature). A quantifier binds the bound
-    variable [0] of its body. Every left rule acts on the first
-    hypothesis, the cut on the first hypothesis of its second premise,
-    and the exchange rule [ex_ir] admits any permutation. Nothing is
-    derived here, and nothing is assumed. The derivations live in
-    [Prop]: [ill R Γ C] says that one exists. *)
+    when [R] adds weakening; without cut when
+    [Intuitionistic.icut R = false]. [R] is the record
+    [Intuitionistic.irules] of the propositional calculus.
+
+    The formulas and the rules are those of [Intuitionistic], with
+    predicates applied to terms ([Terms]) and the quantifiers [∀] and
+    [∃], each with two rules:
+    - [∀R] and [∃L], with an eigenvariable that occurs nowhere in their
+      conclusion;
+    - [∃R] and [∀L], with any closed term as the witness, eigenvariables
+      included (they are constants outside the signature).
+
+    A quantifier binds the bound variable [0] of its body. Every left
+    rule acts on the first hypothesis, and the cut on the first
+    hypothesis of its second premise; the exchange rule [ex_ir] allows
+    any permutation. The file derives nothing and assumes nothing.
+    [ill R Γ C] is a [Prop]: it says that a derivation exists. *)
 
 From Stdlib Require Import List Permutation.
 From Deduxit.Linear Require Intuitionistic.
@@ -44,9 +49,10 @@ Inductive iformula : Type :=
 | iall : iformula -> iformula                (** [∀x. A], [x] the bound variable [0] of [A] *)
 | iex : iformula -> iformula.                (** [∃x. A] *)
 
-(** Substitutes the closed term [u] for the bound variable [k] of [A],
-    one more under every quantifier: [isubst 0 u A] is the instance at
-    [u] of the body [A] of [∀x. A] or [∃x. A]. *)
+(** Substitutes the closed term [u] for the bound variable [k] of [A];
+    that variable is [k] at the top and one more under each quantifier.
+    [isubst 0 u A] is the instance at [u] of the body [A] of [∀x. A] or
+    [∃x. A]. *)
 Fixpoint isubst (k : nat) (u : term) (A : iformula) : iformula :=
   match A with
   | ivar p l => ivar p (map (tsubst k u) l)
@@ -84,8 +90,8 @@ Section Calculus.
 Context {symbol : Type}.
 Local Notation iformula := (iformula symbol).
 
-(** The derivable sequents [Γ ⊢ C], with [R] the optional rules in
-    force. *)
+(** The derivable sequents [Γ ⊢ C], where [R] gives the optional
+    rules. *)
 Inductive ill (R : Intuitionistic.irules) : list iformula -> iformula -> Prop :=
 | ax_ir : forall p l,
     ill R [ivar p l] (ivar p l)

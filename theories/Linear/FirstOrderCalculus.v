@@ -3,21 +3,26 @@
 
 (** * The one-sided sequent calculus of first-order classical linear logic
 
-    The trusted definition of the first-order one-sided statements: [ll R
-    Γ] says that the sequent [⊢ Γ] has a derivation in first-order linear
-    logic with the optional rules [R] names (Mix, weakening and cut, the
-    record [Calculus.rules] of the propositional calculus), a cut-free one
-    when [Calculus.cut R = false]. The rules are those of [Calculus] over
-    first-order formulas, the axiom on a predicate and its negation with
-    equal arguments, and the two quantifier rules: [∃] with any closed
-    term as its witness (an eigenvariable among them, a constant outside
-    the signature), and [∀] with an eigenvariable that occurs nowhere in
-    its conclusion, the context of a [⊤] above included, since that
-    context is written in the sequent. A sequent is a list of formulas
-    read as a multiset, so the exchange rule [ex_r] admits any
-    permutation; every other rule but Mix and cut acts on the first
-    formula. Nothing is derived here, and nothing is assumed. The
-    derivations live in [Prop]: [ll R Γ] says that one exists. *)
+    This file is what a certificate's first-order one-sided statement
+    rests on: read it to know what such a certificate claims. [ll R Γ]
+    says that the sequent [⊢ Γ] has a derivation in first-order linear
+    logic with the optional rules [R]; without cut when
+    [Calculus.cut R = false]. [R] is the record [Calculus.rules] of the
+    propositional calculus: Mix, weakening and cut.
+
+    The rules are those of [Calculus] over first-order formulas, with
+    the axiom on a predicate and its negation with equal arguments, and
+    two quantifier rules:
+    - [∃], with any closed term as its witness, eigenvariables included
+      (they are constants outside the signature);
+    - [∀], with an eigenvariable that occurs nowhere in its conclusion.
+      This includes the context of a [⊤] above, since that context is
+      written in the sequent.
+
+    A sequent is a list of formulas read as a multiset: the exchange
+    rule [ex_r] allows any permutation. Every other rule except Mix and
+    cut acts on the first formula. The file derives nothing and assumes
+    nothing. [ll R Γ] is a [Prop]: it says that a derivation exists. *)
 
 From Stdlib Require Import List Permutation.
 From Deduxit.Linear Require Calculus.
@@ -33,7 +38,7 @@ Local Notation formula := (formula symbol).
 Definition fresh (a : nat) (l : list formula) : Prop :=
   forall A, In A l -> occurs a A = false.
 
-(** The derivable sequents, with [R] the optional rules in force. *)
+(** The derivable sequents, where [R] gives the optional rules. *)
 Inductive ll (R : Calculus.rules) : list formula -> Prop :=
 | ax_r : forall p l,
     ll R [covar p l; var p l]

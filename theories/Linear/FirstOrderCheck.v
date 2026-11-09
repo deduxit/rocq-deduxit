@@ -4,26 +4,31 @@
 (** * The checker of first-order proof terms
 
     [check symbol_eqb R p Γ] computes whether the proof term [p] proves
-    the sequent [⊢ Γ] in the first-order calculus [R], in two passes, as
-    deduxit's checker does. The first, [introduced], collects the
-    eigenvariables the [∀] steps introduce and fails where a [∀] step's
-    eigenvariable is introduced again above it. The second, [derive], is
-    the propositional checker's pass ([Check]) over first-order formulas,
-    a [∀] step consuming its body's instance at its eigenvariable and an
-    [∃] step its body's instance at its witness, and it carries a set of
-    eigenvariables to the root: an [∃] step adds those of its witness, a
-    cut those of its formula, and a [∀] step removes its own. At the root
-    no eigenvariable a [∀] step introduces may be left in the set or occur
-    in the sequent; one that no step introduces is a constant like any
-    other. [FirstOrderSoundness] proves that a term the checker accepts
-    yields a derivation, the condition on eigenvariables included. *)
+    the sequent [⊢ Γ] in the first-order calculus [R]. Like deduxit's
+    checker, it makes two passes.
+
+    - The first, [introduced], collects the eigenvariables the [∀]
+      steps introduce. It fails when a [∀] step's eigenvariable is
+      introduced again above that step.
+    - The second, [derive], is the propositional checker ([Check]) over
+      first-order formulas. A [∀] step consumes its body's instance at
+      its eigenvariable, and an [∃] step its body's instance at its
+      witness. It also carries a set of eigenvariables to the root: an
+      [∃] step adds those of its witness, a cut those of its formula,
+      and a [∀] step removes its own.
+
+    At the root, no eigenvariable a [∀] step introduces may be left in
+    the set or occur in the sequent. An eigenvariable that no step
+    introduces is a constant like any other. [FirstOrderSoundness]
+    proves that a term the checker accepts has a derivation behind it,
+    with the condition on eigenvariables. *)
 
 From Stdlib Require Import Bool List.
 From Deduxit.Linear Require Export TermsCheck FirstOrderCalculus FirstOrderProofs.
 Import ListNotations.
 
-(** Sequencing of partial computations: [k] runs on the value of [e], and
-    [None] is failure. Local to this file. *)
+(** Sequencing of computations that may fail: [k] runs on the value of
+    [e], and [None] is failure. Local to this file. *)
 Local Notation "'let*' x ':=' e 'in' k" :=
   (match e with Some x => k | None => None end)
   (at level 200, x pattern, e at level 100, k at level 200, right associativity).
@@ -54,8 +59,8 @@ Fixpoint formula_eqb (A B : formula) : bool :=
   | _, _ => false
   end.
 
-(** [symbol_eqb] decides equality: what the soundness theorem assumes of
-    it, and what the certificates prove of the equality they use. *)
+(** [symbol_eqb] decides equality. The soundness theorems assume this,
+    and a certificate proves it of the equality it uses. *)
 Hypothesis symbol_eqb_spec : forall f g, reflect (f = g) (symbol_eqb f g).
 
 Lemma formula_eqb_spec : forall A B, reflect (A = B) (formula_eqb A B).
@@ -74,7 +79,7 @@ Proof.
   all: constructor; congruence.
 Qed.
 
-(** Equality of formulas as a decision, for the proofs; the checker
+(** Equality of formulas as a decision, used in proofs; the checker
     computes with [formula_eqb]. *)
 Definition formula_eq_dec (A B : formula) : {A = B} + {A <> B} :=
   reflect_dec _ _ (formula_eqb_spec A B).
@@ -96,8 +101,8 @@ Fixpoint feigens (A : formula) : list nat :=
   | oc A | wn A | fall A | fex A => feigens A
   end.
 
-(** Whether a formula is a [?] formula, which weakening may always
-    introduce. *)
+(** Whether a formula starts with [?]. Every calculus may weaken such
+    a formula. *)
 Definition is_wn (A : formula) : bool :=
   match A with
   | wn _ => true
@@ -127,8 +132,8 @@ Fixpoint remove_one (A : formula) (l : list formula) : option (list formula) :=
 Definition remove_all (A : formula) (l : list formula) : list formula :=
   filter (fun B => negb (eqb A B)) l.
 
-(** Removes each formula of [l1] from [l2]: what is left of [l2] when [l1]
-    is included in it as a multiset, [None] otherwise. *)
+(** Removes each formula of [l1] from [l2]. Returns what is left of
+    [l2] when [l1] is included in it as a multiset, [None] otherwise. *)
 Fixpoint take_all (l1 l2 : list formula) : option (list formula) :=
   match l1 with
   | [] => Some l2
@@ -137,8 +142,8 @@ Fixpoint take_all (l1 l2 : list formula) : option (list formula) :=
       take_all l1' l2'
   end.
 
-(** [l2] less [l1]: each formula of [l1] removed from [l2] where it has
-    one. [l1 ++ diff l2 l1] is the multiset union of the two. *)
+(** [l2] less [l1]: each formula of [l1] is removed from [l2] where
+    [l2] has it. [l1 ++ diff l2 l1] is the multiset union of the two. *)
 Fixpoint diff (l2 l1 : list formula) : list formula :=
   match l1 with
   | [] => l2
@@ -148,12 +153,12 @@ Fixpoint diff (l2 l1 : list formula) : list formula :=
 
 (** ** States *)
 
-(** What a subterm proves: the dyadic sequent [⊢ theta ; gamma], or with
-    [any] set [⊢ theta ; gamma, Δ] for every [Δ] in which no eigenvariable
-    its [∀] steps introduce occurs, because a [⊤] leaf above absorbs
-    whatever context it is given; and [eigens], the eigenvariables its
-    [∃] steps' witnesses and its cut formulas bring in and no [∀] step
-    below them removes. *)
+(** What a subterm proves: the dyadic sequent [⊢ theta ; gamma]. With
+    [any] set, it proves [⊢ theta ; gamma, Δ] for every [Δ] in which no
+    eigenvariable its [∀] steps introduce occurs, because a [⊤] leaf
+    above absorbs whatever context it is given. [eigens] holds the
+    eigenvariables that its [∃] steps' witnesses and its cut formulas
+    bring in, and that no [∀] step below them removes. *)
 Record state : Type := State {
   theta : list formula;  (** the unrestricted zone the subterm needs *)
   gamma : list formula;  (** the linear zone *)
@@ -161,8 +166,8 @@ Record state : Type := State {
   eigens : list nat;     (** the eigenvariables carried to the root *)
 }.
 
-(** Consumes one copy of [A] from a premise's linear zone [gamma]: a [⊤]
-    above ([any]) stands in for a missing one. *)
+(** Consumes one copy of [A] from a premise's linear zone [gamma]. When
+    [gamma] has none, a [⊤] above ([any]) supplies it. *)
 Definition take (A : formula) (gamma : list formula) (any : bool)
     : option (list formula) :=
   match remove_one A gamma with
@@ -170,10 +175,11 @@ Definition take (A : formula) (gamma : list formula) (any : bool)
   | None => if any then Some gamma else None
   end.
 
-(** The conclusion of a [&] rule from its premises, after each consumed
-    its own subformula: both premises must prove the same context. An
-    exact premise fixes it, an absorbing one adapts to the other, and two
-    absorbing premises absorb together over the union of their zones. *)
+(** The conclusion of a [&] rule from its premises, after each has
+    consumed its own subformula. Both premises must prove the same
+    context. A premise without [any] fixes the context, and one with
+    [any] adapts to the other; when both have [any], the conclusion has
+    the union of their zones and [any] set. *)
 Definition join_with (A B : formula) (sl sr : state) : option state :=
   let theta := theta sl ++ theta sr in
   let eigens := eigens sl ++ eigens sr in
@@ -196,7 +202,7 @@ Definition join_with (A B : formula) (sl sr : state) : option state :=
 (** ** The first pass *)
 
 (** The eigenvariables the [∀] steps of [p] introduce, or [None] when a
-    [∀] step's eigenvariable is introduced again above it. *)
+    [∀] step's eigenvariable is introduced again above that step. *)
 Fixpoint introduced (p : proof) : option (list nat) :=
   match p with
   | Ax _ _ | One | Top => Some []
@@ -213,8 +219,8 @@ Fixpoint introduced (p : proof) : option (list nat) :=
 
 (** ** The second pass *)
 
-(** Derives what a term proves, or fails at the first node that misapplies
-    its rule or uses one that [R] forbids. *)
+(** Computes what a term proves. Fails at the first node that applies
+    its rule wrongly or uses a rule that [R] does not allow. *)
 Fixpoint derive (R : Calculus.rules) (p : proof) : option state :=
   match p with
   | Ax a l =>
@@ -297,11 +303,12 @@ Fixpoint derive (R : Calculus.rules) (p : proof) : option state :=
       else None
   end.
 
-(** Whether [p] proves [⊢ sequent] in [R]: no eigenvariable its [∀]
-    steps introduce is left in the set its root carries or occurs in the
-    sequent, and its root needs no unrestricted zone and derives the
-    sequent's formulas exactly, or a part of them when a [⊤] absorbs the
-    rest. *)
+(** Whether [p] proves [⊢ sequent] in [R]:
+    - no eigenvariable its [∀] steps introduce is left in the set its
+      root carries, or occurs in the sequent;
+    - its root needs no unrestricted zone and proves exactly the
+      sequent's formulas, or a part of them when a [⊤] absorbs the
+      rest. *)
 Definition check (R : Calculus.rules) (p : proof) (sequent : list formula) : bool :=
   match introduced p, derive R p with
   | Some i, Some (State [] gamma any e) =>

@@ -3,17 +3,21 @@
 
 (** * First-order terms
 
-    The terms the first-order formulas ([FirstOrderFormulas],
-    [FirstOrderIntuitionistic]) apply their predicates to, over a type of
-    symbols that stays abstract: a symbol applied to a list of terms (a
-    constant is one applied to none), a variable bound by a quantifier,
-    or an eigenvariable. Bound variables are de Bruijn indices, [bound 0]
-    the variable of the innermost quantifier around it, so formulas that
-    differ only in the names of their bound variables are equal. An
-    eigenvariable is a constant outside every signature, named by a
-    natural number: the fresh constant a [∀] inference introduces, or any
-    other constant a witness may use. Arities are not checked: a symbol
-    applied to lists of different lengths is simply a different term. *)
+    The terms that the predicates of first-order formulas
+    ([FirstOrderFormulas], [FirstOrderIntuitionistic]) apply to. Symbols
+    have any type you choose. A term is one of:
+    - a symbol applied to a list of terms (a constant is a symbol
+      applied to none);
+    - a variable bound by a quantifier;
+    - an eigenvariable.
+
+    Bound variables are de Bruijn indices: [bound 0] is the variable of
+    the innermost quantifier around it. So formulas that differ only in
+    the names of their bound variables are equal. An eigenvariable is a
+    constant outside every signature, named by a natural number: the
+    fresh constant a [∀] rule introduces, or any other constant a
+    witness may use. Arities are not checked: a symbol applied to lists
+    of different lengths gives different terms. *)
 
 From Stdlib Require Import Bool List.
 Import ListNotations.
@@ -44,8 +48,8 @@ Fixpoint toccurs (a : nat) (t : term) : bool :=
   | tapp _ l => existsb (toccurs a) l
   end.
 
-(** Whether [t] is closed: no bound variable occurs in it, so that it
-    may be substituted under any number of quantifiers without being
+(** Whether [t] is closed: no bound variable occurs in it, so it can be
+    substituted under any number of quantifiers without being
     captured. *)
 Fixpoint tclosed (t : term) : bool :=
   match t with

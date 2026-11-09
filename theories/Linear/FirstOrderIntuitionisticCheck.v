@@ -4,20 +4,25 @@
 (** * First-order two-sided proof terms, their checker and its soundness
 
     The two-sided terms of [IntuitionisticCheck] over first-order
-    intuitionistic formulas, the axiom naming its predicate and arguments,
-    with the four quantifier rules: [IAllR] and [IExL] with the
-    eigenvariable they introduce, [IExR] and [IAllL] with their witness.
-    Every formula a node names is an instance, the terms of the
-    quantifiers below substituted for their variables. [icheck] runs in
-    two passes, as deduxit's checker does: [iintroduced] collects the
-    eigenvariables the [∀R] and [∃L] steps introduce and fails where one
-    is introduced again above its step; [iderive] computes every node's
-    sequent bottom-up and carries a set of eigenvariables to the root,
-    which [∃R] and [∀L] add their witness's to, a cut its formula's, and
-    [∀R] and [∃L] remove their own from. At the root no eigenvariable a
-    step introduces may be left in the set or occur in the sequent.
-    [soundness_ill] proves that a term it accepts yields a derivation in
-    [ill], the condition on eigenvariables included. *)
+    intuitionistic formulas. The axiom names its predicate and
+    arguments, and four nodes are the quantifier rules: [IAllR] and
+    [IExL] with the eigenvariable they introduce, [IExR] and [IAllL]
+    with their witness. Every formula a node names is an instance: the
+    terms of the quantifier rules below it are already substituted for
+    their variables.
+
+    Like deduxit's checker, [icheck] makes two passes.
+    - [iintroduced] collects the eigenvariables the [∀R] and [∃L] steps
+      introduce. It fails when one is introduced again above its step.
+    - [iderive] computes every node's sequent, from the leaves to the
+      root. It also carries a set of eigenvariables to the root: [∃R]
+      and [∀L] add their witness's, a cut adds its formula's, and [∀R]
+      and [∃L] remove their own.
+
+    At the root, no eigenvariable a step introduces may be left in the
+    set or occur in the sequent. [soundness_ill] proves that a term
+    [icheck] accepts has a derivation in [ill] behind it, with the
+    condition on eigenvariables. *)
 
 From Stdlib Require Import Bool List Permutation Lia.
 From Deduxit.Linear Require Intuitionistic.
@@ -33,8 +38,8 @@ Section Equality.
 
 Variable symbol_eqb : symbol -> symbol -> bool.
 
-(** Structural equality of intuitionistic formulas, decided through
-    [symbol_eqb]. *)
+(** Structural equality of intuitionistic formulas, comparing symbols
+    with [symbol_eqb]. *)
 Fixpoint iformula_eqb (A B : iformula) : bool :=
   match A, B with
   | ivar p l, ivar q k => symbol_eqb p q && terms_eqb symbol_eqb l k
@@ -51,7 +56,7 @@ Fixpoint iformula_eqb (A B : iformula) : bool :=
   | _, _ => false
   end.
 
-(** [symbol_eqb] decides equality, as the soundness theorem assumes. *)
+(** [symbol_eqb] decides equality. The soundness theorem assumes this. *)
 Hypothesis symbol_eqb_spec : forall f g, reflect (f = g) (symbol_eqb f g).
 
 Lemma iformula_eqb_spec : forall A B, reflect (A = B) (iformula_eqb A B).
@@ -71,7 +76,7 @@ Proof.
   all: constructor; congruence.
 Qed.
 
-(** Equality of intuitionistic formulas as a decision, for the proofs;
+(** Equality of intuitionistic formulas as a decision, used in proofs;
     the checker computes with [iformula_eqb]. *)
 Definition iformula_eq_dec (A B : iformula) : {A = B} + {A <> B} :=
   reflect_dec _ _ (iformula_eqb_spec A B).
@@ -89,8 +94,8 @@ Fixpoint ieigens (A : iformula) : list nat :=
 
 End Formulas.
 
-(** Sequencing of partial computations: [k] runs on the value of [e], and
-    [None] is failure. Local to this file. *)
+(** Sequencing of computations that may fail: [k] runs on the value of
+    [e], and [None] is failure. Local to this file. *)
 Local Notation "'let*' x ':=' e 'in' k" :=
   (match e with Some x => k | None => None end)
   (at level 200, x pattern, e at level 100, k at level 200, right associativity).
@@ -102,8 +107,8 @@ Local Notation term := (term symbol).
 Local Notation iformula := (iformula symbol).
 Local Notation eqb := (iformula_eqb symbol_eqb).
 
-(** A two-sided proof term. [Γ ⊢ C] below is the conclusion of the node,
-    the hypotheses read as a multiset. *)
+(** A two-sided proof term. Below, [Γ ⊢ C] is the node's conclusion,
+    its hypotheses read as a multiset. *)
 Inductive iproof : Type :=
 | IAx (p : symbol) (l : list term)
     (** the axiom [p(l) ⊢ p(l)] *)
@@ -147,14 +152,14 @@ Inductive iproof : Type :=
     (** weakening of any hypothesis, [Γ, A ⊢ C] from [Γ ⊢ C], with
         [iweakening] *)
 | ICut (A : iformula) (left right : iproof)
-    (** [Γ, Δ ⊢ C] from [Γ ⊢ A] and [Δ, A ⊢ C], with [icut]: either
-        premise may be the one that proves [A] *)
+    (** [Γ, Δ ⊢ C] from [Γ ⊢ A] and [Δ, A ⊢ C], with [icut]; the
+        premise that proves [A] may come first or second *)
 | IAllR (A : iformula) (a : nat) (premise : iproof)
-    (** [Γ ⊢ ∀x. A] from [Γ ⊢ A[a/x]], the eigenvariable [a] occurring
-        in no formula of the conclusion *)
+    (** [Γ ⊢ ∀x. A] from [Γ ⊢ A[a/x]], where the eigenvariable [a]
+        occurs in no formula of the conclusion *)
 | IExL (A : iformula) (a : nat) (premise : iproof)
-    (** [Γ, ∃x. A ⊢ C] from [Γ, A[a/x] ⊢ C], the eigenvariable [a]
-        occurring in no formula of the conclusion *)
+    (** [Γ, ∃x. A ⊢ C] from [Γ, A[a/x] ⊢ C], where the eigenvariable
+        [a] occurs in no formula of the conclusion *)
 | IExR (A : iformula) (t : term) (premise : iproof)
     (** [Γ ⊢ ∃x. A] from [Γ ⊢ A[t/x]], for a closed term [t] *)
 | IAllL (A : iformula) (t : term) (premise : iproof).
@@ -185,9 +190,9 @@ Fixpoint unoc (l : list iformula) : option (list iformula) :=
   | _ :: _ => None
   end.
 
-(** The conclusion [Γ1, Γ2 ⊢ C2] of a cut on [A] whose first premise
-    [Γ1 ⊢ C1] proves [A] and whose second [Γ2 ⊢ C2] has it as a
-    hypothesis, or [None] when they do not. *)
+(** The conclusion [Γ1, Γ2 ⊢ C2] of a cut on [A] when the first premise
+    [Γ1 ⊢ C1] proves [A] and the second, [Γ2 ⊢ C2], has [A] as a
+    hypothesis; [None] otherwise. *)
 Definition cut_by (A : iformula) (l1 : list iformula) (C1 : iformula)
     (l2 : list iformula) (C2 : iformula) : option (list iformula * iformula) :=
   if eqb A C1 then
@@ -213,7 +218,7 @@ Definition without (a : nat) (e : list nat) : list nat :=
 (** ** The first pass *)
 
 (** The eigenvariables the [∀R] and [∃L] steps of [p] introduce, or
-    [None] when one is introduced again above its step. *)
+    [None] when one is introduced again above its own step. *)
 Fixpoint iintroduced (p : iproof) : option (list nat) :=
   match p with
   | IAx _ _ | IOneR | ITopR _ | IZeroL _ _ => Some []
@@ -232,8 +237,8 @@ Fixpoint iintroduced (p : iproof) : option (list nat) :=
 (** ** The second pass *)
 
 (** The conclusion [Γ ⊢ C] of a term and the eigenvariables it carries
-    to the root, or [None] at the first node that misapplies its rule or
-    uses one [R] forbids. *)
+    to the root, or [None] at the first node that applies its rule
+    wrongly or uses a rule that [R] does not allow. *)
 Fixpoint iderive (R : Intuitionistic.irules) (p : iproof)
     : option (list iformula * iformula * list nat) :=
   match p with
@@ -338,10 +343,11 @@ Fixpoint iderive (R : Intuitionistic.irules) (p : iproof)
       else None
   end.
 
-(** Whether [p] proves [hypotheses ⊢ goal] in [R]: no eigenvariable its
-    [∀R] and [∃L] steps introduce is left in the set its root carries or
-    occurs in the sequent, and its conclusion has that goal and those
-    hypotheses, as a multiset. *)
+(** Whether [p] proves [hypotheses ⊢ goal] in [R]:
+    - no eigenvariable its [∀R] and [∃L] steps introduce is left in the
+      set its root carries, or occurs in the sequent;
+    - its conclusion has that goal and, as a multiset, those
+      hypotheses. *)
 Definition icheck (R : Intuitionistic.irules) (p : iproof) (hypotheses : list iformula)
     (goal : iformula) : bool :=
   match iintroduced p, iderive R p with
@@ -414,7 +420,7 @@ Proof.
     destruct (toccurs_tsubst _ _ _ _ Ht); [left; exists t; auto | right; assumption].
 Qed.
 
-(** An instance is fresh where its body and its term are. *)
+(** An instance is fresh when its body and its term are. *)
 Lemma ioccurs_isubst_false : forall b k u (A : iformula),
   ioccurs b A = false -> toccurs b u = false -> ioccurs b (isubst k u A) = false.
 Proof.
@@ -422,7 +428,7 @@ Proof.
   destruct (ioccurs_subst _ _ _ _ O); congruence.
 Qed.
 
-(** A term is fresh where none of its eigenvariables is [b]. *)
+(** A term is fresh for [b] when none of its eigenvariables is [b]. *)
 Lemma toccurs_false : forall b (t : term), ~ In b (teigens t) -> toccurs b t = false.
 Proof.
   intros b t H. destruct (toccurs b t) eqn:O; [| reflexivity].
@@ -461,8 +467,8 @@ Proof.
   destruct (PeanoNat.Nat.eqb_spec a b); [congruence | reflexivity].
 Qed.
 
-(** The first pass refused an eigenvariable introduced again above its
-    step. *)
+(** After the first pass, no eigenvariable is introduced again above
+    its own step. *)
 Lemma not_reintroduced : forall a i, existsb (Nat.eqb a) i = false -> forall b, In b i -> b <> a.
 Proof.
   intros a i H b Hb ->.
@@ -470,16 +476,15 @@ Proof.
   apply existsb_exists. exists a. split; [exact Hb | apply PeanoNat.Nat.eqb_refl].
 Qed.
 
-(** No eigenvariable of [i] stands in the set [e] or in the sequent
-    [l ⊢ C]: what the rules below a subterm guarantee for the
-    eigenvariables it introduces. *)
+(** No eigenvariable of [i] is in the set [e] or in the sequent
+    [l ⊢ C]. The rules below a subterm guarantee this for the
+    eigenvariables the subterm introduces. *)
 Definition igood (i : list nat) (l : list iformula) (C : iformula) (e : list nat) : Prop :=
   forall b, In b i -> ~ In b e /\ ifresh b (C :: l).
 
 Variable R : Intuitionistic.irules.
 
-(** A cut's conclusion, from premises whose sequents are derivable, is
-    derivable. *)
+(** If a cut's premises are derivable, its conclusion is. *)
 Lemma cut_by_sound : forall A l1 C1 l2 C2 l C,
   Intuitionistic.icut R = true -> ill R l1 C1 -> ill R l2 C2 ->
   cut_by symbol_eqb A l1 C1 l2 C2 = Some (l, C) -> ill R l C.
@@ -536,7 +541,7 @@ Local Ltac equalities :=
   end.
 
 (** Unfolds a node's [match]es on its subterms' conclusions and on the
-    multiset operations, keeping what each one computed. *)
+    multiset operations, and keeps what each one computed. *)
 Local Ltac steps :=
   repeat match goal with
   | H : match ?e with _ => _ end = Some _ |- _ =>
@@ -567,7 +572,7 @@ Local Ltac premise :=
   | H : ill R ?l ?C |- ill R _ ?C => apply (ex_ir R l _ C H); iperm
   end.
 
-(** Breaks the freshness and the absences in the context into those of
+(** Breaks the hypotheses of freshness and absence into ones about
     single formulas and lists. *)
 Local Ltac facts :=
   repeat match goal with
@@ -578,9 +583,9 @@ Local Ltac facts :=
   | H : ~ In _ (_ ++ _) |- _ => rewrite in_app_iff in H; apply Decidable.not_or in H as [? ?]
   end.
 
-(** Proves [ioccurs b X = false] for a formula [X] the context says is
-    fresh, or an instance of one at an eigenvariable other than [b] or at
-    a witness whose eigenvariables [b] is not among. *)
+(** Proves [ioccurs b X = false] when [X] is a formula the hypotheses
+    say is fresh, or an instance of one at an eigenvariable other than
+    [b], or at a witness whose eigenvariables do not include [b]. *)
 Local Ltac instance :=
   first
     [ assumption
@@ -593,10 +598,10 @@ Local Ltac instance :=
               exact (not_reintroduced _ _ N _ Hb)
           end ] ].
 
-(** Proves [ioccurs b X = false] from [HX : In X l]: [l] is a list the
-    context says is fresh, or a list built from such lists and formulas
-    the context says are fresh, up to at most [n] permutations in the
-    context. *)
+(** Proves [ioccurs b X = false] from [HX : In X l], where the
+    hypotheses say that [l] is fresh, or [l] is built from lists and
+    formulas they say are fresh, through at most [n] permutations among
+    the hypotheses. *)
 Local Ltac ifresh_in n :=
   match goal with
   | HX : In ?X ?l, H : ifresh _ ?l |- _ => exact (H X HX)
@@ -616,17 +621,18 @@ Local Ltac ifresh_in n :=
   end.
 
 (** Proves that a premise's sequent is fresh, formula by formula, from
-    the freshness of the conclusion's formulas: every formula of the
+    the freshness of the conclusion's formulas. Every formula of the
     premise is one of the conclusion's, found through the permutations
-    in the context, or a subformula of one. *)
+    among the hypotheses, or a subformula of one. *)
 Local Ltac ifresh_goal :=
   let X := fresh "X" in
   let HX := fresh "HX" in
   intros X HX; ifresh_in 3.
 
 (** Proves that a premise's sequent is good from the conclusion's
-    [G], where its eigenvariables are among the conclusion's and each of
-    its formulas is one of the conclusion's or a subformula of one. *)
+    [G], when the premise's eigenvariables are among the conclusion's
+    and each of its formulas is one of the conclusion's or a subformula
+    of one. *)
 Local Ltac good_tac G :=
   intros ?b ?Hb;
   let HE := fresh "HE" in
@@ -641,9 +647,9 @@ Local Ltac good_tac G :=
         end ]
   | ifresh_goal ].
 
-(** Every conclusion the pass computes is derivable, where no
-    eigenvariable a step of the term introduces stands in it or in the
-    set it carries. *)
+(** Every conclusion [iderive] computes is derivable, when no
+    eigenvariable a step of the term introduces is in it or in the set
+    it carries. *)
 Lemma iderive_sound : forall p i l C e,
   iintroduced p = Some i -> iderive symbol_eqb R p = Some (l, C, e) -> igood i l C e ->
   ill R l C.
@@ -687,10 +693,10 @@ Proof.
     | H : unoc ?l = Some _ |- _ => apply unoc_map in H; subst l
     end.
   all: try (apply ax_ir || apply one_irr || apply top_irr || apply zero_ilr).
-  (* Every subterm's sequent is good: the eigenvariables of a premise are
-     among the conclusion's, but the one its step introduces, and its
-     formulas among the conclusion's, their subformulas, or instances
-     whose terms the set holds. *)
+  (* Every subterm's sequent is good. A premise's eigenvariables are
+     among the conclusion's, except the one its step introduces. Its
+     formulas are the conclusion's, their subformulas, or instances at
+     terms whose eigenvariables are in the set. *)
   all: repeat match goal with
        | IH : forall i l C e, _ |- _ =>
            let H' := fresh "IH" in
@@ -704,8 +710,8 @@ Proof.
                assert (G' : igood i l C e) by good_tac G; specialize (H' G')
            end
        end.
-  (* The rule, its side condition on the eigenvariable from the root's
-     guarantee for the conclusion. *)
+  (* Apply the rule. Its side condition on the eigenvariable comes from
+     what the root guarantees for the conclusion. *)
   all: first
     [ match goal with
       | G : igood (?a :: _) ?l (iall ?A) _ |- ill R ?l (iall ?A) =>
@@ -736,9 +742,11 @@ Proof.
         | eapply all_ilr; [eassumption | premise] ] ].
 Qed.
 
-(** A term the checker accepts for a sequent proves it in the
-    two-sided calculus [R]: first-order intuitionistic linear logic or
-    its affine variant, with or without cut. *)
+(** If the checker accepts a term for a sequent, the sequent is
+    derivable in the two-sided calculus [R]: first-order intuitionistic
+    linear logic or its affine variant, with or without cut. A
+    certificate of a first-order two-sided proof applies this
+    theorem. *)
 Theorem soundness_ill : forall p hypotheses goal,
   icheck symbol_eqb R p hypotheses goal = true -> ill R hypotheses goal.
 Proof.

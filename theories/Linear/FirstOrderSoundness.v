@@ -3,21 +3,28 @@
 
 (** * Soundness of the first-order checker
 
-    A term the checker accepts yields a derivation: [soundness] for any
-    calculus [Calculus.rules] names, cut included, and its instances
-    [soundness_classical], [soundness_mix] and [soundness_affine], the
-    calculi without cut. The proof follows the second pass, as the
-    propositional one does ([Soundness]), with one more invariant handed
-    from the root to the leaves: [good i s] says that no eigenvariable
-    [i] holds stands in the set a subterm carries or in its conclusion.
-    The root's check gives it for the root and the [∀] steps' eigenvariables;
-    every rule passes it to its premises, since a formula of a premise is a
-    formula of the conclusion, a subformula of one, an instance at a
-    witness whose eigenvariables the set holds, or the instance at its
-    own eigenvariable, which the first pass keeps out of the premise's
-    [i]. At a [∀] step it is the side condition of the rule, for the
-    absorbed context of a [⊤] above too, which every context handed up
-    avoids. *)
+    If the checker accepts a term for a sequent, the sequent is
+    derivable. [soundness] states this for every calculus a
+    [Calculus.rules] value describes, cut included.
+    [soundness_classical], [soundness_mix] and [soundness_affine] are
+    its instances for the calculi without cut; a certificate applies
+    one of the four.
+
+    The proof follows the second pass, as the propositional proof
+    ([Soundness]) does, with one more invariant passed from the root to
+    the leaves. [good i s] says that no eigenvariable in [i] is in the
+    set a subterm carries or in its conclusion. The check at the root
+    gives it for the root, with [i] the [∀] steps' eigenvariables. Each
+    rule passes it on to its premises, since a formula of a premise is
+    one of these:
+    - a formula of the conclusion, or a subformula of one;
+    - an instance at a witness, whose eigenvariables are in the set;
+    - the instance at the step's own eigenvariable, which the first
+      pass keeps out of the premise's [i].
+
+    At a [∀] step, [good] gives the rule's side condition, also for the
+    context a [⊤] above absorbs, since every context passed up avoids
+    [i]. *)
 
 From Stdlib Require Import Bool List Permutation Lia.
 From Deduxit.Linear Require Calculus.
@@ -87,7 +94,8 @@ Proof.
     destruct (eq_dec A x); subst; lia.
 Qed.
 
-(** A formula of [l2] is in [l1] or in what is left of [l2] without it. *)
+(** A formula of [l2] is in [l1], or in what is left of [l2] after
+    removing [l1]. *)
 Lemma diff_in : forall (l1 l2 : list formula) x,
   In x l2 -> In x l1 \/ In x (diff symbol_eqb l2 l1).
 Proof.
@@ -191,15 +199,15 @@ Proof.
   - destruct any; [| discriminate]. injection H as <-. auto.
 Qed.
 
-(** What a premise's zone held is fresh when what the rule left of it
-    and the formula it took are. *)
+(** A premise's zone is fresh when what the rule left of it and the
+    formula it took are fresh. *)
 Lemma fresh_take : forall b (A : formula) gamma any g,
   take symbol_eqb A gamma any = Some g -> occurs b A = false -> fresh b g -> fresh b gamma.
 Proof.
   intros * T HA Hg X HX. destruct (take_in _ _ _ _ _ T HX) as [-> | HX']; auto.
 Qed.
 
-(** Breaks the freshness and the absences in the context into those of
+(** Breaks the hypotheses of freshness and absence into ones about
     single formulas and lists. *)
 Ltac facts :=
   repeat match goal with
@@ -231,7 +239,7 @@ Lemma wn_contract_cons : forall (A : formula) n (l : list formula),
   ll R (wn A :: map wn (repeat A n) ++ l) -> ll R (wn A :: l).
 Proof. induction n; cbn; intros l H; [exact H | apply IHn, co_r, H]. Qed.
 
-(** Any number of copies of [?A], none included, contract into one. *)
+(** Any number of copies of [?A], zero included, contract into one. *)
 Lemma wn_contract : forall (A : formula) n (l : list formula),
   ll R (map wn (repeat A n) ++ l) -> ll R (wn A :: l).
 Proof.
@@ -241,15 +249,15 @@ Qed.
 (** ** What a state stands for *)
 
 (** The sequents a state stands for are derivable: [⊢ gamma, ?theta, Δ]
-    for every [Δ] in which no eigenvariable of [i] occurs when the state
-    absorbs, and for [Δ] empty otherwise. *)
+    when [any] is set, for every [Δ] in which no eigenvariable of [i]
+    occurs; for the empty [Δ] otherwise. *)
 Definition sat (i : list nat) (theta gamma : list formula) (any : bool) : Prop :=
   forall Δ, (any = false -> Δ = []) -> (forall b, In b i -> fresh b Δ) ->
   ll R (gamma ++ map wn theta ++ Δ).
 
-(** No eigenvariable of [i] stands in the set [s] carries or in the
-    sequent [⊢ ?theta, gamma] it proves: what the rules below a subterm
-    guarantee for the eigenvariables it introduces. *)
+(** No eigenvariable of [i] is in the set [s] carries or in the sequent
+    [⊢ ?theta, gamma] it proves. The rules below a subterm guarantee
+    this for the eigenvariables the subterm introduces. *)
 Definition good (i : list nat) (s : state) : Prop :=
   forall b, In b i -> ~ In b (eigens s) /\ fresh b (gamma s ++ map wn (theta s)).
 
@@ -276,9 +284,10 @@ Proof.
   - destruct any; [| discriminate]. injection H as <-. auto.
 Qed.
 
-(** Consuming [A] from a satisfied zone leaves a satisfied zone with [A]
-    in front, wherever [pre] the rule has put before it; where a [⊤]
-    absorbs [A], [A] must be fresh as every absorbed formula is. *)
+(** Consuming [A] from a satisfied zone leaves a satisfied zone with
+    [A] in front, behind whatever prefix [pre] the rule puts first.
+    When a [⊤] absorbs [A], [A] must be fresh, as every absorbed
+    formula is. *)
 Lemma take_sat : forall i pre A theta gamma any gamma',
   take symbol_eqb A gamma any = Some gamma' ->
   (forall b, In b i -> occurs b A = false) ->
@@ -290,8 +299,8 @@ Proof.
     intros b Hb. apply fresh_cons_iff. auto.
 Qed.
 
-(** Hands a context to a premise's [sat]: fresh for the premise's
-    eigenvariables, which are among the conclusion's. *)
+(** Passes a context to a premise's [sat]. The context is fresh for the
+    premise's eigenvariables, which are among the conclusion's. *)
 Ltac delta :=
   intros ?b ?Hb;
   first
@@ -433,7 +442,7 @@ Proof.
     pose proof (take_sat _ [] _ _ _ _ _ Tr
       (fun b H => proj1 (proj2 (F b (in_or_app _ _ _ (or_intror H))))) IHr) as Hr; cbn in Hr.
     destruct al, ar; cbn in H.
-    + (* both premises absorb: the union of their zones *)
+    + (* both premises have [any]: the union of their zones *)
       injection H as <-; cbn. intros Δ _ HD. apply with_r.
       * eapply ex_r; [apply (Hl (diff symbol_eqb gr gl ++ map wn θr ++ Δ)); [easy |] | perm].
         intros b Hb. pose proof (F b (in_or_app _ _ _ (or_introl Hb))) as [_ [_ [_ [Fr [_ Ft]]]]].
@@ -443,7 +452,7 @@ Proof.
         intros b Hb. pose proof (F b (in_or_app _ _ _ (or_intror Hb))) as [_ [_ [Fl [_ [Ft _]]]]].
         fresh_split; [| assumption | apply HD, in_or_app; auto].
         apply (fresh_incl _ _ gl); [apply diff_incl | assumption].
-    + (* the left premise absorbs: the right one's zone *)
+    + (* the left premise has [any]: the right one's zone *)
       destruct (take_all symbol_eqb gl gr) as [rest |] eqn:T; [| discriminate].
       injection H as <-; cbn. apply take_all_perm in T.
       intros Δ HΔ HD. rewrite (HΔ eq_refl). apply with_r.
@@ -453,7 +462,7 @@ Proof.
         apply (fresh_incl _ _ gr); [| assumption].
         intros X HX. apply (Permutation_in _ (Permutation_sym T)), in_or_app; auto.
       * eapply ex_r; [apply (wk_list θl), (Hr []); [easy | delta] | perm].
-    + (* the right premise absorbs: the left one's zone *)
+    + (* the right premise has [any]: the left one's zone *)
       destruct (take_all symbol_eqb gr gl) as [rest |] eqn:T; [| discriminate].
       injection H as <-; cbn. apply take_all_perm in T.
       intros Δ HΔ HD. rewrite (HΔ eq_refl). apply with_r.
@@ -463,7 +472,7 @@ Proof.
         fresh_split; [| assumption].
         apply (fresh_incl _ _ gl); [| assumption].
         intros X HX. apply (Permutation_in _ (Permutation_sym T)), in_or_app; auto.
-    + (* both exact: the same zone *)
+    + (* neither has [any]: both zones are the same *)
       destruct (take_all symbol_eqb gl gr) as [[| r' rest] |] eqn:T;
         [| discriminate | discriminate].
       injection H as <-; cbn. apply take_all_perm in T. rewrite app_nil_r in T.
@@ -634,8 +643,8 @@ Proof.
     specialize (IHq _ _ eq_refl eq_refl Gq); cbn in IHq.
     pose proof (take_sat _ [] _ _ _ _ _ T FA IHq) as H1; cbn in H1.
     intros Δ HΔ HD. change (ll R (fall A :: (g ++ map wn θ ++ Δ))). apply (fall_r R A a).
-    + (* the side condition: [a] is fresh in the conclusion, the context
-         the rules below hand up included *)
+    + (* the side condition: [a] is fresh in the conclusion, including
+         the context the rules below pass up *)
       destruct (G a (or_introl eq_refl)) as [_ HF]. cbn [gamma theta] in HF.
       rewrite <- app_comm_cons in HF.
       apply (proj1 (fresh_cons_iff _ _ _)) in HF as [HA HF].
@@ -665,7 +674,8 @@ Qed.
 
 (** ** The theorem *)
 
-(** A term the checker accepts for a sequent proves it in the calculus. *)
+(** If the checker accepts a term for a sequent, the sequent is
+    derivable in the calculus. *)
 Theorem soundness : forall p sequent,
   check symbol_eqb R p sequent = true -> ll R sequent.
 Proof.
@@ -706,8 +716,8 @@ Qed.
 
 End Soundness.
 
-(** The theorem for first-order classical linear logic, the calculus
-    without Mix, weakening or cut. *)
+(** The theorem for first-order classical linear logic: no Mix, no
+    weakening, no cut. *)
 Theorem soundness_classical {symbol : Type} (symbol_eqb : symbol -> symbol -> bool)
   (symbol_eqb_spec : forall f g, reflect (f = g) (symbol_eqb f g)) :
   forall (p : proof symbol) (sequent : list (formula symbol)),

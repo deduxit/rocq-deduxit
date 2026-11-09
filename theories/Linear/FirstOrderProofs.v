@@ -3,14 +3,15 @@
 
 (** * First-order proof terms
 
-    The certificate deduxit writes for a first-order proof: the terms of
-    [Proofs] over first-order formulas, the axiom naming its predicate and
-    arguments, and two more nodes, [Forall] with the eigenvariable it
-    introduces and [Exists] with its witness. Every formula a node names
-    is an instance, the terms of the quantifiers below substituted for
-    their variables, so the checker ([FirstOrderCheck]) compares formulas
-    alone. The constructors mirror deduxit's [Node] variants, in their
-    names and their order. *)
+    The proof inside a certificate deduxit writes for a first-order
+    proof. These are the terms of [Proofs] over first-order formulas,
+    with the axiom naming its predicate and arguments, and two more
+    nodes: [Forall] with the eigenvariable it introduces, and [Exists]
+    with its witness. Every formula a node names is an instance: the
+    terms of the quantifier rules below it are already substituted for
+    their variables. So the checker ([FirstOrderCheck]) only compares
+    formulas. The constructors have the names and the order of
+    deduxit's proof nodes ([Node]). *)
 
 From Deduxit.Linear Require Export FirstOrderFormulas.
 
@@ -25,9 +26,10 @@ Inductive branch : Type :=
 | Left
 | Right.
 
-(** A proof term. Below, [⊢ Θ ; Γ] is a dyadic sequent with the
-    unrestricted zone [Θ] and the linear zone [Γ]; the checker keeps the
-    least [Θ] a subproof needs. *)
+(** A proof term. Below, [⊢ Θ ; Γ] is a dyadic sequent: [Θ] is the
+    unrestricted zone, whose formulas may be used any number of times,
+    and [Γ] the linear zone. The checker keeps the least [Θ] a subproof
+    needs. *)
 Inductive proof : Type :=
 | Ax (p : symbol) (l : list term)
     (** the axiom [⊢ Θ ; p(l)⊥, p(l)] *)
@@ -61,8 +63,8 @@ Inductive proof : Type :=
 | Cut (A : formula) (left right : proof)
     (** [⊢ Θ ; Γ, Δ] from [⊢ Θ ; Γ, A] and [⊢ Θ ; Δ, A⊥], with [cut] *)
 | Forall (A : formula) (a : nat) (premise : proof)
-    (** [⊢ Θ ; Γ, ∀x. A] from [⊢ Θ ; Γ, A[a/x]], the eigenvariable [a]
-        occurring in no formula of the conclusion *)
+    (** [⊢ Θ ; Γ, ∀x. A] from [⊢ Θ ; Γ, A[a/x]], where the eigenvariable
+        [a] occurs in no formula of the conclusion *)
 | Exists (A : formula) (t : term) (premise : proof).
     (** [⊢ Θ ; Γ, ∃x. A] from [⊢ Θ ; Γ, A[t/x]], for a closed term [t] *)
 

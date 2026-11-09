@@ -4,9 +4,9 @@
 (** * Terms for the checkers
 
     What the first-order checkers ([FirstOrderCheck],
-    [FirstOrderIntuitionisticCheck]) compute with on terms: their
-    equality, decided through an equality of symbols, and the list of
-    their eigenvariables; and the facts their soundness proofs use. *)
+    [FirstOrderIntuitionisticCheck]) compute on terms: their equality,
+    given an equality of symbols, and the list of their eigenvariables.
+    Also the facts about them that the soundness proofs use. *)
 
 From Stdlib Require Import Bool List.
 From Deduxit.Linear Require Export Terms.
@@ -17,7 +17,8 @@ Section Equality.
 Context {symbol : Type} (symbol_eqb : symbol -> symbol -> bool).
 Local Notation term := (term symbol).
 
-(** Structural equality of terms, decided through [symbol_eqb]. *)
+(** Structural equality of terms, comparing symbols with
+    [symbol_eqb]. *)
 Fixpoint term_eqb (t u : term) : bool :=
   match t, u with
   | bound n, bound m => Nat.eqb n m
@@ -41,8 +42,8 @@ Fixpoint terms_eqb (l k : list term) : bool :=
   | _, _ => false
   end.
 
-(** Induction on terms, with the hypothesis on every argument of an
-    application. *)
+(** Induction on terms, with an induction hypothesis for every
+    argument of an application. *)
 Lemma term_ind' (P : term -> Prop) :
   (forall n, P (bound n)) -> (forall a, P (eigen a)) ->
   (forall f l, List.Forall P l -> P (tapp f l)) -> forall t, P t.

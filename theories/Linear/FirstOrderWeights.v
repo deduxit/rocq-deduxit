@@ -3,24 +3,25 @@
 
 (** * Weighted counts of first-order sequents
 
-    The weighted count of [Weights] over the first-order calculi, without
-    weakening: a quantifier's rule changes no literal's predicate, and no
-    literal without a bound variable at all, so a count that weighs each
-    literal by its predicate, or by the whole literal where no literal of
-    the predicate has a bound variable, is the same of an instance as of
-    the quantified body. [value] is that weight: [table p ts] for a
-    predicate [fixed p], whose literals the test requires closed
-    ([pinned]), [weight p] for the others. With the weight [1] on one
-    predicate the test is the one-sided count over all its atoms
-    together; with [1] on one closed atom of a fixed predicate, over that
-    atom alone.
+    The weighted count of [Weights] over the first-order calculi,
+    without weakening. A quantifier rule changes no literal's predicate,
+    and changes no literal that has no bound variable. So a count gives
+    an instance the same value as the quantified body when it weighs
+    each literal by its predicate, or by the whole literal when no
+    literal of the predicate has a bound variable. [value] is that
+    weight: [table p ts] for a predicate with [fixed p], whose literals
+    the test requires to be closed ([pinned]), and [weight p] for the
+    others. With the weight [1] on one predicate, the test is the
+    one-sided count over all its atoms together; with [1] on one closed
+    atom of a fixed predicate, over that atom alone.
 
-    [weighted_balance] and [weighted_refutation] state it one-sided;
-    [ill_ll] embeds the two-sided calculus in the one-sided one, as
-    [Refutations.ill_ll] does the propositional one, and
-    [iweighted_refutation] states it two-sided. No atom is declared dead
-    here: the dead atoms serve the state equation of Horn programs, which
-    are propositional. The outcomes and bounds are those of [Weights]. *)
+    [weighted_balance] and [weighted_refutation] are the one-sided
+    statements. [ill_ll] embeds the two-sided calculus in the one-sided
+    one, as [Refutations.ill_ll] does for the propositional calculi,
+    and [iweighted_refutation] is the two-sided statement. No atom is
+    declared dead here: dead atoms are for the state equation of Horn
+    programs, which are propositional. The outcomes and bounds are
+    those of [Weights]. *)
 
 From Stdlib Require Import Bool List Permutation ZArith Lia.
 From Deduxit.Linear Require Calculus Intuitionistic TermsCheck.
@@ -38,9 +39,9 @@ Local Notation term := (term symbol).
 Local Notation formula := (formula symbol).
 Local Notation iformula := (iformula symbol).
 
-(** The predicates weighed by their literals, the weights of their
-    literals, and the weights of the other predicates. Every theorem
-    holds whatever the three functions are. *)
+(** The predicates whose literals are weighed one by one, the weights
+    of those literals, and the weights of the other predicates. Every
+    theorem holds for any three functions. *)
 Variable fixed : symbol -> bool.
 Variable table : symbol -> list term -> Z.
 Variable weight : symbol -> Z.
@@ -49,9 +50,9 @@ Variable weight : symbol -> Z.
 Definition value (p : symbol) (ts : list term) : Z :=
   if fixed p then table p ts else weight p.
 
-(** [out A o]: [A] can contribute [o], over its additive alternatives,
-    the copies of its [?] subformulas and the instances of its
-    quantifiers. *)
+(** [out A o]: [A] can contribute [o], for some choice of its additive
+    alternatives, of the copies of its [?] subformulas and of the
+    instances of its quantifiers. *)
 Inductive out : formula -> outcome -> Prop :=
 | out_var : forall p ts, out (var p ts) (num (value p ts))
 | out_covar : forall p ts, out (covar p ts) (num (- value p ts))
@@ -76,7 +77,8 @@ Inductive outs : list formula -> outcome -> Prop :=
 | outs_nil : outs [] (num 0)
 | outs_cons : forall A l a o, out A a -> outs l o -> outs (A :: l) (opar a o).
 
-(** The connectives of a formula, which an instance keeps. *)
+(** The size of a formula: its connectives, units and literals. An
+    instance has the same size. *)
 Fixpoint size (A : formula) : nat :=
   match A with
   | var _ _ | covar _ _ | one | bot | top | zero => 1
@@ -147,8 +149,8 @@ Qed.
 
 (** ** Bounds *)
 
-(** Whether every literal of a fixed predicate in [A] is closed, so that
-    no instance changes it. *)
+(** Whether every literal of a fixed predicate in [A] is closed, so
+    that no instance changes it. *)
 Fixpoint pinned (A : formula) : bool :=
   match A with
   | var p ts | covar p ts => negb (fixed p) || forallb tclosed ts
@@ -182,7 +184,7 @@ Fixpoint absorbs (A : formula) : bool :=
   | _ => false
   end.
 
-(** The bound of a sequent. *)
+(** The bound of a sequent: the sum over its formulas. *)
 Fixpoint leasts (l : list formula) : low :=
   match l with
   | [] => from 0
@@ -205,7 +207,8 @@ Proof.
   apply andb_prop in P as [Pt Pts]. now rewrite tsubst_closed, IH.
 Qed.
 
-(** An instance of a pinned formula has its bounds, and is pinned. *)
+(** An instance of a pinned formula has the same bounds, and is
+    pinned. *)
 Lemma subst_pinned : forall A k u, pinned A = true ->
   pinned (subst k u A) = true /\ least (subst k u A) = least A
   /\ absorbs (subst k u A) = absorbs A.
@@ -229,7 +232,7 @@ Proof.
     apply andb_prop in P as [Pt Pts]. rewrite tsubst_closed by exact Pt. now rewrite Pt, IH.
 Qed.
 
-(** The bounds hold of every contribution of a pinned formula. *)
+(** Every contribution of a pinned formula respects the bounds. *)
 Lemma out_bound : forall A o, out A o -> pinned A = true ->
   (o = absorb -> absorbs A = true) /\ (forall n, o = num n -> below (least A) n).
 Proof.
@@ -343,15 +346,15 @@ Proof.
     exists (opar a' g). split; [apply outs_cons; [eapply out_fex |]; eassumption | exact S].
 Qed.
 
-(** Whether the weights refute a sequent in a calculus: one without
-    weakening and without cut, every literal of a fixed predicate
-    closed, no formula that may absorb, and every contribution of the
-    sequent above zero, or none. *)
+(** Whether the weights refute a sequent in a calculus: the calculus
+    has no weakening and no cut, every literal of a fixed predicate is
+    closed, no formula may absorb, and every contribution of the
+    sequent is above zero, or there is none. *)
 Definition overweight (R : Calculus.rules) (l : list formula) : bool :=
   negb (Calculus.weakening R) && negb (Calculus.cut R) && forallb pinned l
   && negb (existsb absorbs l) && positive (leasts l).
 
-(** Weights that the test accepts refute a sequent. *)
+(** If [overweight] holds, the sequent is not derivable. *)
 Theorem weighted_refutation : forall R l, overweight R l = true -> ~ ll R l.
 Proof.
   intros R l T H. unfold overweight in T.
@@ -376,8 +379,8 @@ Context {symbol : Type}.
 Local Notation formula := (formula symbol).
 Local Notation iformula := (iformula symbol).
 
-(** A first-order intuitionistic formula as a one-sided one: [A ⊸ B] is
-    [A⊥ ⅋ B]. *)
+(** A first-order intuitionistic formula as a one-sided formula:
+    [A ⊸ B] becomes [A⊥ ⅋ B]. *)
 Fixpoint itr (A : iformula) : formula :=
   match A with
   | ivar p ts => var p ts
@@ -393,7 +396,7 @@ Fixpoint itr (A : iformula) : formula :=
   | iex A => fex (itr A)
   end.
 
-(** A two-sided sequent [Γ ⊢ C] as the one-sided [⊢ C, Γ⊥]. *)
+(** A two-sided sequent [Γ ⊢ C] as the one-sided sequent [⊢ C, Γ⊥]. *)
 Definition one_sided (G : list iformula) (C : iformula) : list formula :=
   itr C :: map (fun A => dual (itr A)) G.
 
@@ -425,9 +428,9 @@ Qed.
 Local Lemma swap : forall R (A B : formula) l, ll R (A :: B :: l) -> ll R (B :: A :: l).
 Proof. intros. eapply ex_r; [eassumption | apply perm_swap]. Qed.
 
-(** Every derivation of the two-sided calculus gives one of its
-    one-sided translation, without Mix and with the same weakening and
-    cut. *)
+(** Every derivation in the two-sided calculus gives a derivation of
+    the sequent's one-sided translation, without Mix and with the same
+    weakening and cut. *)
 Theorem ill_ll : forall R G C, ill R G C -> ll (Refutations.lrules R) (one_sided G C).
 Proof.
   intros R G C H. unfold one_sided. induction H; cbn in *.
@@ -487,8 +490,8 @@ Qed.
 
 End Translation.
 
-(** Weights that the test accepts of the translation refute a two-sided
-    first-order sequent. *)
+(** If [overweight] holds of the translation, the two-sided
+    first-order sequent is not derivable. *)
 Theorem iweighted_refutation : forall {symbol : Type} fixed table weight R G C,
   overweight (symbol := symbol) fixed table weight (Refutations.lrules R) (one_sided G C) = true ->
   ~ ill R G C.

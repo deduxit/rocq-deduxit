@@ -4,14 +4,17 @@
 (** * Formulas of first-order classical linear logic in negation normal form
 
     The formulas of [Formulas], with predicates applied to terms
-    ([Terms]) in place of atoms and the two quantifiers [∀] and [∃],
-    over a type of symbols that stays abstract (predicate and function
-    symbols share it, as deduxit's sequents do). A quantifier binds the
-    bound variable [0] of its body, and the variables of the quantifiers
-    around it from [1] on. Negation is the function [dual], so every
-    formula is in negation normal form by construction. This development
-    stands beside the propositional one and shares no name with it: a
-    file that needs both requires them without importing one. *)
+    ([Terms]) in place of atoms, and the two quantifiers [∀] and [∃].
+    Symbols have any type you choose; predicate and function symbols
+    share it, as in deduxit's sequents. A quantifier binds the bound
+    variable [0] of its body; the variables of the quantifiers around
+    it are [1] and up. Negation is the function [dual], so every
+    formula is in negation normal form.
+
+    The first-order files reuse the propositional names ([formula],
+    [ll], [proof], [check], ...). A file that needs both developments
+    requires them without importing one of them, and qualifies the
+    names. *)
 
 From Stdlib Require Import List.
 From Deduxit.Linear Require Export Terms.
@@ -40,8 +43,9 @@ Inductive formula : Type :=
 | fall : formula -> formula               (** [∀x. A], [x] the bound variable [0] of [A] *)
 | fex : formula -> formula.               (** [∃x. A] *)
 
-(** Linear negation: an involution that swaps each connective with its
-    dual, [var] with [covar] and [∀] with [∃]. *)
+(** Linear negation: it swaps each connective with its dual, [var] with
+    [covar] and [∀] with [∃], and applied twice it gives the formula
+    back. *)
 Fixpoint dual (A : formula) : formula :=
   match A with
   | var p l => covar p l
@@ -60,9 +64,10 @@ Fixpoint dual (A : formula) : formula :=
   | fex A => fall (dual A)
   end.
 
-(** Substitutes the closed term [u] for the bound variable [k] of [A],
-    which is [k] at the top and one more under every quantifier: [subst 0
-    u A] is the instance at [u] of the body [A] of [∀x. A] or [∃x. A]. *)
+(** Substitutes the closed term [u] for the bound variable [k] of [A];
+    that variable is [k] at the top and one more under each quantifier.
+    [subst 0 u A] is the instance at [u] of the body [A] of [∀x. A] or
+    [∃x. A]. *)
 Fixpoint subst (k : nat) (u : term) (A : formula) : formula :=
   match A with
   | var p l => var p (map (tsubst k u) l)
