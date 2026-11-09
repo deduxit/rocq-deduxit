@@ -5,10 +5,12 @@ opam-version: "2.0"
 version: "0.3.0"
 synopsis: "The Rocq library of deduxit, a collection of logic suites"
 description: """
-Certificates for the proofs and refutations that deduxit, a prover of
-classical and intuitionistic linear logic and of ordinary logic, finds:
-the sequent calculi of linear logic in Rocq under Deduxit.Linear, against
-which the scripts deduxit writes check every proof rule by rule.
+The Rocq library that checks the certificates deduxit writes for the
+proofs and refutations it finds. deduxit is a prover of classical and
+intuitionistic linear logic and of ordinary logic. The library defines
+the sequent calculi of linear logic under Deduxit.Linear, a checker for
+deduxit's proof terms, and the theorems that turn a checked term into a
+derivation.
 
 The library's definitions, proofs, tests and documentation, like deduxit's,
 were written with substantial AI assistance, by Anthropic's Claude models
