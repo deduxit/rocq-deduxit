@@ -143,8 +143,8 @@ Definition hull (x y : span) : span :=
   | _, _ => None
   end.
 
-(** The interval below a [!] or [?]: zero when the atom is absent,
-    unbounded otherwise, since copies add any number. *)
+(** The interval below a [!] or [?]: zero when the interval inside is
+    exactly zero, unbounded otherwise, since copies add any number. *)
 Definition bang (x : span) : span :=
   match x with
   | Some (Z0, Z0) => Some (0%Z, 0%Z)
@@ -153,7 +153,8 @@ Definition bang (x : span) : span :=
 
 (** The interval of the atom's excess of positive over negative
     literals in a formula, over its additive alternatives. [None] when
-    a [⊤] absorbs or the atom is below an exponential. *)
+    a [⊤] absorbs, or when the interval below an exponential is not
+    exactly zero. *)
 Fixpoint excess (A : formula) : span :=
   match A with
   | var b => Some (if atom_eqb a b then (1%Z, 1%Z) else (0%Z, 0%Z))
