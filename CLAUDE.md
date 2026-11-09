@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project
 
 `rocq-linlog` (logical path `Linlog`) is the Rocq library of linlog,
-the linear logic prover of `github.com/sequentium/sequentium`: the
+the linear logic prover of `github.com/deduxit/deduxit`: the
 one-sided calculus of linear logic with Mix, weakening and cut as
 parameters and the two-sided calculus of intuitionistic linear logic
 and its affine variant as inductives, linlog's proof terms as
@@ -110,7 +110,7 @@ request are the author's.
 ## Version control: jj only
 
 A jj repository, colocated with git only so that nix and the GitHub
-remote `origin` (`github.com/sequentium/rocq-linlog`) keep working.
+remote `origin` (`github.com/deduxit/rocq-linlog`) keep working.
 **Never run git, not even to read**; the `Bash(git *)` deny rule and
 `.claude/hooks/block-git.py` enforce it. Commit thematically, without
 being asked, with `jj commit -m`; never `jj new -m` (a hook blocks it);

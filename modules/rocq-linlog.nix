@@ -62,7 +62,7 @@
           propagatedBuildInputs = [ rocqPackages.stdlib ];
           meta = {
             description = "The Rocq library of linlog: linear logic, proof terms, their checker and its soundness";
-            homepage = "https://github.com/sequentium/rocq-linlog";
+            homepage = "https://github.com/deduxit/rocq-linlog";
             license = lib.licenses.eupl12;
           };
         };
