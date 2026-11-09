@@ -165,6 +165,12 @@ ids); the GitHub CLI asks before every command.
   Markdown, JSON, `.gitignore`, `LICENSE` and the lock carry none. The
   library is EUPL-1.2, as deduxit is. The header names the project,
   deduxit, as deduxit's own files do, and the check looks for it.
+- Every text a person reads (README, the doc comments and comments,
+  the changelog, the opam description) follows
+  `.claude/rules/writing.md`, a copy of deduxit's rule, the author's
+  standing instruction of 2026-11-09: concise, plain language;
+  self-contained; written for someone checking a certificate or proving
+  with the library; free of the patterns that make text hard to read.
 - Comments are short, say why or what the code cannot, and are
   self-contained: no reference to sessions, prompts or the plan that
   organised the work.
@@ -180,7 +186,10 @@ repositories, with its cases in `modules/claude-hooks.nix`), the
 formatter hook `format.sh`, the SessionStart note `session-jj-state.sh`,
 the worktree hook `jj-worktree.py` (a copy of deduxit's as well, its test
 `modules/claude-worktree-hook-test.py`), the permission rules in
-`settings.json` and the rules file `rocq.md`.
+`settings.json`, the rules file `rocq.md` (loaded for the library's
+files) and `writing.md` (no `paths:`, so it loads at launch, as
+deduxit's does; a change to its four rules belongs in both
+repositories).
 `settings.json` also sets `attribution.sessionUrl` to `false` (the
 author, 2026-11-03, for privacy), so no commit gets a `Claude-Session:`
 link to its claude.ai session, as in deduxit. The hooks fail open, read the payload's `cwd`, and are plain Python or
