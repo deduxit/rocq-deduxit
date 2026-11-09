@@ -9,7 +9,7 @@ version is deduxit's: a certificate that deduxit writes for `--kernel
 deduxit` (linlog for `--kernel linlog` up to 0.2.0) compiles against the
 library of the same version.
 
-## [0.3.0] - unreleased
+## [0.3.0] - 2026-11-09
 
 The library renamed `rocq-deduxit`, under the logical root `Deduxit`,
 and certificates of non-derivability where copies add literals, beside
@@ -110,4 +110,5 @@ only a first draft of the opam file; nothing of it was published before.
   takes this repository as a pinned input and compiles the certificates
   its exporter writes against it.
 
+[0.3.0]: https://github.com/deduxit/rocq-deduxit/releases/tag/v0.3.0
 [0.2.0]: https://github.com/linlog-prover/rocq-linlog/releases/tag/v0.2.0
