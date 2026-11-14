@@ -18,7 +18,8 @@ refutations), the reduction of Mix to `?(⊥⊗⊥)`, and a first-order
 development beside the propositional one. Rocq 9.0 to 9.3 with its
 standard library and nothing else, each tested by the flake. It lived under `rocq/` of deduxit's
 repository until 2026-11-02; its history up to then is that repository's.
-The local directory keeps the name `rocq-linlog`.
+The local directory is `rocq-deduxit` since 2026-11-14 (`rocq-linlog`
+before).
 
 The library's shape (the author, 2026-11-09): one logical root, a
 namespace per calculus (`Deduxit.Linear` now, `Deduxit.Intuitionistic`
@@ -48,7 +49,7 @@ see in the code.
 
 ## deduxit depends on this repository
 
-deduxit's flake (the checkout `../linlog`) takes this one as a pinned
+deduxit's flake (the checkout `../deduxit`) takes this one as a pinned
 input, locked to a commit of `main` (its nixpkgs following deduxit's,
 so one Rocq builds both), and compiles against this flake's package
 every certificate its exporter writes for its kernel of this library
@@ -183,7 +184,7 @@ author's NixOS flake (`~/Projects/own/flake`, `modules/claude-code.nix`,
 which has their checks); never copy them here. `settings.json` registers
 `claude-jj-worktree` for `WorktreeCreate` and `WorktreeRemove`, so an
 isolated session or sub-agent works in a jj workspace
-`../rocq-linlog-wt-NAME` instead of a git worktree jj cannot see, and
+`../rocq-deduxit-wt-NAME` instead of a git worktree jj cannot see, and
 `claude-jj-worktree prune` removes the empty ones.
 
 This repository's own `.claude/`: the formatter hook `format.sh`
@@ -197,6 +198,6 @@ repositories). `settings.json` also
 sets `attribution.sessionUrl` to `false` (the author, 2026-11-03, for
 privacy), so no commit gets a `Claude-Session:` link to its claude.ai
 session, as in deduxit, and `autoMemoryDirectory` to
-`~/.claude/memory/rocq-linlog`, the memory both accounts share. When the
+`~/.claude/memory/rocq-deduxit`, the memory both accounts share. When the
 repository changes shape, amend `.claude/` and this file in the same
 change.

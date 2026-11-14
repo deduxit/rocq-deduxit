@@ -13,7 +13,7 @@ paths:
 Loaded when a file of the library, its tests, its bridges or its build is
 read or changed. `modules/rocq-deduxit.nix` builds and checks it
 (CLAUDE.md). deduxit's exporter writes certificates for it as its second
-kernel (in deduxit's repository, the checkout `../linlog`,
+kernel (in deduxit's repository, the checkout `../deduxit`,
 `core/src/export/rocq/deduxit.rs` and its rules `core-export.md`), beside
 the NanoYalla export, which it leaves as it was; deduxit's flake compiles
 them against this library, taken as a pinned input. Paths of the form
