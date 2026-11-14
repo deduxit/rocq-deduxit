@@ -83,10 +83,7 @@ nix fmt                                 # nixfmt, taplo, shfmt, shellcheck, ruff
 `nix flake check` runs `rocq-deduxit` and `rocq-deduxit-9_N`, `rocq-bridges`, `treefmt`,
 `conventions` (the licence header on every source, no comment naming
 the plan of deduxit's sessions), `typos` (`typos.toml`), `deadnix`,
-`actionlint` (the workflow), `claude-hooks` (the guards under
-`.claude/hooks`, their cases in `modules/claude-hooks.nix`) and
-`claude-worktree-hook` (the worktree hook against a throwaway colocated
-repository, `modules/claude-worktree-hook-test.py`). On this
+and `actionlint` (the workflow). On this
 machine, run it under the machine lock with few jobs: `flock -o
 /tmp/linlog-machine.lock nix flake check --max-jobs 2 --cores 6`.
 Every change that touches the library, a test or a bridge passes it.
@@ -101,8 +98,8 @@ is the package, its check per admitted Rocq and the devshell; `doc.nix`
 the documentation, with a page `Linlog.X.html` forwarding each of
 0.2.0's deep links to `Deduxit.Linear.X.html`; `opam.nix` the shell `scripts/opam-install.sh` runs
 in; `rocq-bridges.nix` the
-bridges' check; `conventions.nix`, `treefmt.nix`, `claude-hooks.nix`
-and `systems.nix` what their names say. The inputs are pinned as
+bridges' check; `conventions.nix`, `treefmt.nix` and `systems.nix`
+what their names say. The inputs are pinned as
 deduxit pins them (the same nixpkgs channel tarball, NanoYalla and Yalla
 at the same commits); a lock bump is a change of its own,
 "flake.lock: Update".
@@ -134,7 +131,7 @@ remote `origin` (`github.com/deduxit/rocq-deduxit`, renamed from
 `deduxit/rocq-linlog` on 2026-11-09; GitHub redirects the old address)
 keep working.
 **Never run git, not even to read**; the `Bash(git *)` deny rule and
-`.claude/hooks/block-git.py` enforce it. Commit thematically, without
+the machine's `claude-jj-guard` (git writes) enforce it. Commit thematically, without
 being asked, with `jj commit -m`; never `jj new -m` (a hook blocks it);
 `jj squash` into a described parent needs `--use-destination-message`
 or `-m` (in a Claude session jj's editor is `false`, so a command that
@@ -179,34 +176,27 @@ ids); the GitHub CLI asks before every command.
 
 ## Claude Code setup
 
-`.claude/` is checked in, as deduxit's: the guards `block-git.py` and
-`block-jj-new-message.py` with their shared reading of a command line
-`command_line.py` (copies of deduxit's; a change to one belongs in both
-repositories, with its cases in `modules/claude-hooks.nix`), the
-formatter hook `format.sh`, the SessionStart note `session-jj-state.sh`,
-the worktree hook `jj-worktree.py` (a copy of deduxit's as well, its test
-`modules/claude-worktree-hook-test.py`), the permission rules in
-`settings.json`, the rules file `rocq.md` (loaded for the library's
+The version-control hooks are the machine's, the same in every repository
+and for both accounts: the git and `jj new -m` guard, the jj notes, the
+commit signer and the worktree hook are `claude-*` commands from the
+author's NixOS flake (`~/Projects/own/flake`, `modules/claude-code.nix`,
+which has their checks); never copy them here. `settings.json` registers
+`claude-jj-worktree` for `WorktreeCreate` and `WorktreeRemove`, so an
+isolated session or sub-agent works in a jj workspace
+`../rocq-linlog-wt-NAME` instead of a git worktree jj cannot see, and
+`claude-jj-worktree prune` removes the empty ones.
+
+This repository's own `.claude/`: the formatter hook `format.sh`
+(PostToolUse on Write and Edit; it fails open, reads the payload's
+`cwd`, and is shell; `jq` is not installed on this machine), the
+permission rules in `settings.json` (the `Bash(git *)` deny rule keeps
+git reads out too), the rules file `rocq.md` (loaded for the library's
 files) and `writing.md` (no `paths:`, so it loads at launch, as
 deduxit's does; a change to its four rules belongs in both
-repositories).
-`settings.json` also sets `attribution.sessionUrl` to `false` (the
-author, 2026-11-03, for privacy), so no commit gets a `Claude-Session:`
-link to its claude.ai session, as in deduxit. The hooks fail open, read the payload's `cwd`, and are plain Python or
-shell; `jq` is not installed on this machine. When the repository
-changes shape, amend `.claude/` and this file in the same change.
-
-`jj-worktree.py` runs for `WorktreeCreate` and `WorktreeRemove` in place
-of Claude Code's git worktrees (a sub-agent's `isolation: "worktree"`,
-`--worktree`, a background session, a workflow agent): in this colocated
-repository a git worktree under `.claude/worktrees/` is one jj does not
-know, and a jj command there acts on the main workspace. It makes a jj
-workspace `wt-NAME` in `../rocq-linlog-wt-NAME` on `@-` of the session's
-workspace (committed work only, as git's HEAD), copies what
-`.worktreeinclude` names, and on removal deletes only a workspace it made
-whose `@` is empty, exiting 1 otherwise, since Claude Code's check for
-uncommitted work reads git and sees nothing there. It alone fails
-closed: a creation that goes wrong exits 1 and Claude Code makes no
-worktree, the safe side. Claude Code keeps the workspaces of sub-agents
-and workflow agents and never asks to remove them: once their commits
-are taken, `.claude/hooks/jj-worktree.py prune` removes every empty one.
+repositories). `settings.json` also
+sets `attribution.sessionUrl` to `false` (the author, 2026-11-03, for
+privacy), so no commit gets a `Claude-Session:` link to its claude.ai
+session, as in deduxit, and `autoMemoryDirectory` to
+`~/.claude/memory/rocq-linlog`, the memory both accounts share. When the
+repository changes shape, amend `.claude/` and this file in the same
+change.
