@@ -1,12 +1,14 @@
 # deduxit © Fabian Lukas Grubmüller 2026
 # Licensed under the EUPL
 
-# The library (logical root `Deduxit', today's calculus under
-# `Deduxit.Linear'): the package `rocq-deduxit', built as
+# The library (logical root `Deduxit', linear logic under
+# `Deduxit.Linear', intuitionistic and minimal logic under
+# `Deduxit.Intuitionistic'): the package `rocq-deduxit', built as
 # nixpkgs builds a Rocq library (mkRocqDerivation over the library's own
 # Makefile, the reference manual's wrapper of `rocq makefile' on
 # _RocqProject), and the check `rocq-deduxit', which compiles every
-# certificate under tests/ (logical path `Deduxit.Linear.Tests') against
+# certificate under tests/ (logical path `Deduxit.Linear.Tests', and
+# `Deduxit.Intuitionistic.Tests' for tests/Intuitionistic/) against
 # the installed library and requires
 # `Print Assumptions' of the soundness theorems to answer `Closed under the
 # global context'. Rocq prints nothing for a file it accepts, so any other
@@ -63,7 +65,7 @@
           };
           propagatedBuildInputs = [ rocqPackages.stdlib ];
           meta = {
-            description = "The Rocq library of deduxit: linear logic, proof terms, their checker and its soundness";
+            description = "The Rocq library of deduxit: linear logic, proof terms, their checker and its soundness, and Kripke models of intuitionistic logic";
             homepage = "https://github.com/deduxit/rocq-deduxit";
             license = lib.licenses.eupl12;
           };
@@ -99,6 +101,13 @@
             for file in *.v; do
               [ "$file" = Assumptions.v ] && continue
               rocq compile -Q . Deduxit.Linear.Tests "$file" 2>&1 | tee log
+              if [ -s log ]; then exit 1; fi
+            done
+            # The tests of the other calculi, each in its own namespace.
+            mkdir intuitionistic
+            cp ${tests}/Intuitionistic/*.v intuitionistic/
+            for file in intuitionistic/*.v; do
+              rocq compile -Q intuitionistic Deduxit.Intuitionistic.Tests "$file" 2>&1 | tee log
               if [ -s log ]; then exit 1; fi
             done
             rocq compile -Q . Deduxit.Linear.Tests Assumptions.v >assumptions 2>&1 || { cat assumptions; exit 1; }

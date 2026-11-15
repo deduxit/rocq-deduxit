@@ -20,3 +20,7 @@ theories/Linear/FirstOrderSoundness.v
 theories/Linear/FirstOrderIntuitionistic.v
 theories/Linear/FirstOrderIntuitionisticCheck.v
 theories/Linear/FirstOrderWeights.v
+theories/Intuitionistic/Formulas.v
+theories/Intuitionistic/Calculus.v
+theories/Intuitionistic/Kripke.v
+theories/Intuitionistic/KripkeCheck.v

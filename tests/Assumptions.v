@@ -2,7 +2,8 @@
 (* Licensed under the EUPL *)
 
 (** The soundness theorems (the first-order ones included), the
-    reduction of Mix and the refutations rest on no axiom: Rocq answers
+    reduction of Mix, the refutations and the Kripke semantics of
+    intuitionistic and minimal logic rest on no axiom: Rocq answers
     "Closed under the global context" for each, and the flake's check
     requires that answer. Every theorem is named by its full path,
     since the first-order ones share their names with the propositional
@@ -10,6 +11,7 @@
 
 From Deduxit.Linear Require Soundness IntuitionisticCheck Mix Refutations Weights.
 From Deduxit.Linear Require FirstOrderSoundness FirstOrderIntuitionisticCheck FirstOrderWeights.
+From Deduxit.Intuitionistic Require Kripke KripkeCheck.
 
 Print Assumptions Deduxit.Linear.Soundness.soundness.
 Print Assumptions Deduxit.Linear.Soundness.soundness_classical.
@@ -44,3 +46,7 @@ Print Assumptions Deduxit.Linear.FirstOrderWeights.weighted_balance.
 Print Assumptions Deduxit.Linear.FirstOrderWeights.weighted_refutation.
 Print Assumptions Deduxit.Linear.FirstOrderWeights.ill_ll.
 Print Assumptions Deduxit.Linear.FirstOrderWeights.iweighted_refutation.
+Print Assumptions Deduxit.Intuitionistic.Kripke.kripke_soundness.
+Print Assumptions Deduxit.Intuitionistic.Kripke.kripke_countermodel.
+Print Assumptions Deduxit.Intuitionistic.Kripke.classical_refutation.
+Print Assumptions Deduxit.Intuitionistic.KripkeCheck.kripke_refutation.
