@@ -11,6 +11,12 @@ library of the same version.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-15
+
+Intuitionistic and minimal logic with their Kripke models, beside
+deduxit 0.4.0, whose certificates for `--kernel deduxit` and of a
+Kripke countermodel it checks.
+
 ### Added
 
 - Intuitionistic and minimal logic, under `Deduxit.Intuitionistic`:
@@ -131,5 +137,6 @@ only a first draft of the opam file; nothing of it was published before.
   takes this repository as a pinned input and compiles the certificates
   its exporter writes against it.
 
+[0.4.0]: https://github.com/deduxit/rocq-deduxit/releases/tag/v0.4.0
 [0.3.0]: https://github.com/deduxit/rocq-deduxit/releases/tag/v0.3.0
 [0.2.0]: https://github.com/linlog-prover/rocq-linlog/releases/tag/v0.2.0
