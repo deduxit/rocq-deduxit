@@ -9,6 +9,27 @@ version is deduxit's: a certificate that deduxit writes for `--kernel
 deduxit` (linlog for `--kernel linlog` up to 0.2.0) compiles against the
 library of the same version.
 
+## [Unreleased]
+
+### Added
+
+- Intuitionistic and minimal logic, under `Deduxit.Intuitionistic`:
+  the formulas (`⊤`, `¬A` and `A ↔ B` defined from `⊥`, `∧`, `∨` and
+  `→`) and the calculus `lj R Γ C` (`Calculus.v`), G1i with shared
+  contexts, ex falso (`intuitionistic`, LJ) and cut as options, so
+  `minimal` (LM) has no rule for `⊥`.
+- Kripke models (`Kripke.v`): `kripke_soundness`, every derivable
+  sequent holds at every world of every model of its logic, with cut
+  too; `kripke_countermodel`, a world that forces the hypotheses and
+  not the conclusion shows a sequent underivable; and
+  `classical_refutation`, its one-world case, an assignment.
+- Finite models as data and their checker (`KripkeCheck.v`):
+  `refutes` checks that a model is one of the logic's (a transitive
+  relation, a monotone valuation, no world forcing `⊥` in LJ) and that
+  a world refutes the sequent, and `kripke_refutation` turns its answer
+  into `~ lj R Γ C`, so a certificate states a countermodel and proves
+  it by `vm_compute`.
+
 ## [0.3.0] - 2026-11-09
 
 The library renamed `rocq-deduxit`, under the logical root `Deduxit`,

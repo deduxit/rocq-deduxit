@@ -12,12 +12,14 @@ is not, with a proof by computation. Compile it against this library,
 and Rocq has checked deduxit's answer.
 
 You can also use the library on its own: it defines the sequent
-calculi of linear logic as inductive types, so you can state and prove
-your own theorems about derivability.
+calculi of linear logic, and those of intuitionistic and minimal logic
+with their Kripke models, as inductive types, so you can state and
+prove your own theorems about derivability.
 
 It needs Rocq 9.0, 9.1, 9.2 or 9.3 and its standard library, nothing
-else. Its logical root is `Deduxit`, with a namespace per calculus;
-linear logic is `Deduxit.Linear`.
+else. Its logical root is `Deduxit`, with a namespace per calculus:
+linear logic is `Deduxit.Linear`, intuitionistic and minimal logic
+`Deduxit.Intuitionistic`.
 
 ## Install
 
@@ -99,7 +101,9 @@ not read them:
 - `Terms.v`, `FirstOrderFormulas.v`, `FirstOrderCalculus.v` and
   `Calculus.v` (for its `rules`) for a first-order one-sided sequent;
 - `Terms.v`, `FirstOrderIntuitionistic.v` and `Intuitionistic.v` (for
-  its `irules`) for a first-order two-sided one.
+  its `irules`) for a first-order two-sided one;
+- `Intuitionistic/Formulas.v` and `Intuitionistic/Calculus.v` for a
+  sequent of intuitionistic or minimal logic.
 
 Every theorem rests on no axiom: `Print Assumptions` answers `Closed
 under the global context`. `vm_compute` leaves a cast that the kernel
@@ -150,6 +154,39 @@ The modules of `Deduxit.Linear`:
 - `Mix`: a derivation with Mix becomes one of the same sequent with
   `?(⊥ ⊗ ⊥)` added, without Mix.
 
+`From Deduxit.Intuitionistic Require Import KripkeCheck.` gives the
+calculus `lj` of intuitionistic logic (LJ, `intuitionistic`) and of
+minimal logic (LM, `minimal`), Kripke models, and their checker. A
+finite model whose world forces the hypotheses and not the conclusion
+shows a sequent underivable:
+
+```coq
+From Stdlib Require Import List String.
+From Deduxit.Intuitionistic Require Import KripkeCheck.
+Import ListNotations.
+Open Scope string_scope.
+
+(* Not derivable: world 0 forces neither a nor ~a, since world 1,
+   later than it, forces a. *)
+Lemma excluded_middle : ~ lj intuitionistic [] (vee (var "a") (neg (var "a"))).
+Proof.
+  apply (kripke_refutation String.eqb String.eqb_spec intuitionistic
+    {| later := [[1]; []]; atoms := [[]; ["a"]]; absurd := [] |} 0).
+  vm_compute. reflexivity.
+Qed.
+```
+
+The modules of `Deduxit.Intuitionistic`:
+
+- `Formulas` and `Calculus`: the formulas (`⊤`, `¬` and `↔` defined
+  from `⊥`, `∧`, `∨` and `→`) and the calculus `lj`, with ex falso and
+  cut as options;
+- `Kripke`: Kripke models, forcing, `kripke_soundness` (every
+  derivable sequent holds in every model), `kripke_countermodel`, and
+  `classical_refutation` (the model with one world, an assignment);
+- `KripkeCheck`: finite models as data, the checker `refutes` and
+  `kripke_refutation`.
+
 The documentation of every module is at
 [deduxit.github.io/rocq-deduxit](https://deduxit.github.io/rocq-deduxit/)
 (`nix build .#doc` builds it).
@@ -183,9 +220,11 @@ Soundness.` becomes `From Deduxit.Linear Require Import Soundness.`.
 
 ## The repository
 
-- `theories/Linear/`: the library, `Deduxit.Linear`.
+- `theories/Linear/` and `theories/Intuitionistic/`: the library,
+  `Deduxit.Linear` and `Deduxit.Intuitionistic`.
 - `tests/`: certificates compiled against the installed library
-  (`Deduxit.Linear.Tests`).
+  (`Deduxit.Linear.Tests`, and `Deduxit.Intuitionistic.Tests` for
+  `tests/Intuitionistic/`).
 - `bridges/`: proofs that the calculi derive the same sequents as
   NanoYalla's `nanoll.v` and Yalla's `nanoill.v`
   (`Deduxit.Linear.Bridges`), compiled against the files the flake pins,

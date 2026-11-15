@@ -428,6 +428,52 @@ them against this library, taken as a pinned input. Paths of the form
   throughout. The licence header is two `(* … *)` lines; the conventions
   check covers `.v` files; `implicits` (of `Arguments … : clear
   implicits`) is a word of `typos.toml`.
+- **`Deduxit.Intuitionistic`** (ordinary intuitionistic and minimal
+  logic, `theories/Intuitionistic/`) shares nothing with
+  `Deduxit.Linear`: `Formulas.v` (`var`, `bot`, `wedge`, `vee`, `imp`;
+  `top`, `neg`, `equiv` defined, as Troelstra and Schwichtenberg do, so
+  a deduxit sequent with `⊤`, `¬` or `↔` is written through them) and
+  `Calculus.v` (`rules` with `explosion` and `cut`, `intuitionistic`
+  and `minimal`, `lj R Γ C`) are its trusted base; `Kripke.v` and
+  `KripkeCheck.v` appear in proofs only. The constructors avoid
+  `conj`, `and`, `or` and `iff`, which a user importing the calculus
+  would otherwise lose from the standard library. Its file names repeat
+  `Deduxit.Linear`'s (`Formulas`, `Calculus`) without ambiguity, since
+  every `Require` names its namespace with `From`.
+- **`lj` is G1i with shared contexts**: the axiom on any formula,
+  weakening and contraction, every two-premise rule sharing its context,
+  one conclusion always (an empty succedent is `⊥`, so G1i's weakening
+  on the right is `bot_l`, present only under `explosion`; LM is G1m).
+  It is the larger calculus on purpose: a Kripke refutation of `lj`
+  covers every smaller presentation (G3i, split contexts, cut-free).
+  `cut_r` is optional as in the linear calculi, and Kripke soundness
+  holds with it, so `kripke_refutation` is stated for every `rules`.
+- **Kripke models** (`Kripke.v`): a section over any `world` type, a
+  `Prop` preorder `le`, a valuation `val` and the worlds `absurd` that
+  force `⊥`; `model R` asks both monotone and `absurd` empty under
+  `explosion` (no exploding worlds). `forces` is the textbook
+  recursion, `imp` over every later world. `classical_refutation` is
+  the instance over `unit` with `eval`, `⊥` false.
+- **Finite models and the checker** (`KripkeCheck.v`): worlds are
+  `0 … length later - 1`; `ups w` is `w :: nth w later []`, so
+  reflexivity is free and the order need not list its reflexive pairs;
+  `well_formed` checks transitivity, that every later world is below
+  `size`, and monotone `atoms` and `absurd`, and `absurd = []` under
+  `explosion`. Read over `nat`, a number past the worlds is later only
+  than itself (`ups_past`), which keeps `model` total without a subset
+  type. `forced A` is the vector of worlds forcing `A`, computed bottom
+  up (`O(|A|·n²)` steps with `nth`), so a certificate's cost does not
+  grow with the implications' nesting as a per-world recursion would.
+  The theorem needs `reflect` of the atom equality for the valuation's
+  monotonicity; the certificates pass `String.eqb_spec`.
+- **Its certificates**: `~ lj intuitionistic [Γ] C` (or `minimal`, or a
+  record literal), proved by `apply (kripke_refutation String.eqb
+  String.eqb_spec R {| later := …; atoms := …; absurd := … |} W).
+  vm_compute. reflexivity.`; a sequent with no atom writes `(atom :=
+  string)`. Tests in `tests/Intuitionistic/` compile as
+  `Deduxit.Intuitionistic.Tests` (the check's second loop), with lemmas
+  `refutes … = false` for each condition `well_formed` and `refutes`
+  check.
 - **Where things plug in.** A new rule is a constructor of `ll`, a
   constructor of `proof`, an arm of `derive` and a case of `derive_sound`,
   nothing redone, as cut was; an optional one is also a field of `rules`

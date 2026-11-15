@@ -8,33 +8,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 the collection of logic suites of `github.com/deduxit/deduxit` (named
 linlog, the linear suite, until 0.3.0; the library was `rocq-linlog`,
 logical path `Linlog`, up to 0.2.0). Each calculus has a namespace
-under the root; today's, `Deduxit.Linear`, holds the
+under the root; `Deduxit.Linear` holds the
 one-sided calculus of linear logic with Mix, weakening and cut as
 parameters and the two-sided calculus of intuitionistic linear logic
 and its affine variant as inductives, deduxit's proof terms as
 datatypes, checkers as functions and the theorems that a term they
 accept proves its sequent, the invariants every derivation keeps (the
 refutations), the reduction of Mix to `?(⊥⊗⊥)`, and a first-order
-development beside the propositional one. Rocq 9.0 to 9.3 with its
+development beside the propositional one; `Deduxit.Intuitionistic`
+holds ordinary intuitionistic and minimal logic (LJ and LM), their
+Kripke semantics and a checker of finite countermodels. Rocq 9.0 to 9.3 with its
 standard library and nothing else, each tested by the flake. It lived under `rocq/` of deduxit's
 repository until 2026-11-02; its history up to then is that repository's.
 The local directory is `rocq-deduxit` since 2026-11-14 (`rocq-linlog`
 before).
 
 The library's shape (the author, 2026-11-09): one logical root, a
-namespace per calculus (`Deduxit.Linear` now, `Deduxit.Intuitionistic`
-and `Deduxit.Modal` when those calculi come), each with its own formulas
+namespace per calculus (`Deduxit.Linear`, `Deduxit.Intuitionistic`
+since 2026-11-15, `Deduxit.Modal` when it comes), each with its own formulas
 and rules; theorems that connect calculi in a namespace of their own
 (`Deduxit.Embeddings`); `Deduxit.Base` only once two calculi share a
 lemma. One opam package, split into packages under the same root only
 when a calculus brings a heavy dependency or a long build, or users want
 one part alone, so that no path ever changes.
 
-- `theories/` the library (`theories/Linear/` is `Deduxit.Linear`),
+- `theories/` the library (`theories/Linear/` is `Deduxit.Linear`,
+  `theories/Intuitionistic/` `Deduxit.Intuitionistic`),
   `_RocqProject` and `Makefile` its build, `rocq-deduxit.opam` its
   package (the flake reads its `version:`).
 - `tests/` certificates the check compiles against the installed
-  library, as `Deduxit.Linear.Tests`, `Assumptions.v` the theorems
+  library, as `Deduxit.Linear.Tests` (`tests/Intuitionistic/` as
+  `Deduxit.Intuitionistic.Tests`), `Assumptions.v` the theorems
   whose assumptions must be closed, each by its full name.
 - `bridges/` (`Deduxit.Linear.Bridges`) the equivalences with NanoYalla's `nanoll.v` and Yalla's
   `nanoill.v`, compiled against the flake inputs `nanoyalla` and

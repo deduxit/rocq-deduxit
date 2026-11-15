@@ -10,7 +10,9 @@ proofs and refutations it finds. deduxit is a prover of classical and
 intuitionistic linear logic and of ordinary logic. The library defines
 the sequent calculi of linear logic under Deduxit.Linear, a checker for
 deduxit's proof terms, and the theorems that turn a checked term into a
-derivation.
+derivation; and under Deduxit.Intuitionistic the calculi of
+intuitionistic and minimal logic, their Kripke models and a checker of
+finite countermodels.
 
 The library's definitions, proofs, tests and documentation, like deduxit's,
 were written with substantial AI assistance, by Anthropic's Claude models
@@ -28,6 +30,8 @@ tags: [
   "category:Mathematics/Logic"
   "keyword:linear logic"
   "keyword:sequent calculus"
+  "keyword:intuitionistic logic"
+  "keyword:Kripke semantics"
   "date:2026-11-09"
 ]
 depends: [
