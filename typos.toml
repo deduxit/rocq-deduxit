@@ -14,3 +14,5 @@ falso = "falso"
 implicits = "implicits"
 # The intuitionistic tensor, named as in Yalla.
 itens = "itens"
+# The labelled modal calculus's rule of seriality, Ser.
+ser = "ser"

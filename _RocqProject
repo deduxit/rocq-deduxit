@@ -24,3 +24,10 @@ theories/Intuitionistic/Formulas.v
 theories/Intuitionistic/Calculus.v
 theories/Intuitionistic/Kripke.v
 theories/Intuitionistic/KripkeCheck.v
+theories/Modal/Formulas.v
+theories/Modal/Kripke.v
+theories/Modal/Labelled.v
+theories/Modal/Calculus.v
+theories/Modal/Soundness.v
+theories/Modal/Check.v
+theories/Modal/Countermodel.v
