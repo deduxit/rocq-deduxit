@@ -12,14 +12,15 @@ derivable, or that it is not, with a proof by computation. Compile it against th
 and Rocq has checked deduxit's answer.
 
 You can also use the library on its own: it defines the sequent
-calculi of linear logic, and those of intuitionistic and minimal logic
-with their Kripke models, as inductive types, so you can state and
-prove your own theorems about derivability.
+calculi of linear logic, those of intuitionistic and minimal logic
+with their Kripke models, and the labelled calculus of the modal
+systems K to S5, as inductive types, so you can state and prove your
+own theorems about derivability.
 
 It needs Rocq 9.0, 9.1, 9.2 or 9.3 and its standard library, nothing
 else. Its logical root is `Deduxit`, with a namespace per calculus:
 linear logic is `Deduxit.Linear`, intuitionistic and minimal logic
-`Deduxit.Intuitionistic`.
+`Deduxit.Intuitionistic`, modal logic `Deduxit.Modal`.
 
 ## Install
 
@@ -103,7 +104,9 @@ not read them:
 - `Terms.v`, `FirstOrderIntuitionistic.v` and `Intuitionistic.v` (for
   its `irules`) for a first-order two-sided one;
 - `Intuitionistic/Formulas.v` and `Intuitionistic/Calculus.v` for a
-  sequent of intuitionistic or minimal logic.
+  sequent of intuitionistic or minimal logic;
+- `Modal/Formulas.v` and `Modal/Kripke.v` for a sequent of modal logic,
+  and `Modal/Labelled.v` too for a labelled one.
 
 Every theorem rests on no axiom: `Print Assumptions` answers `Closed
 under the global context`. `vm_compute` leaves a cast that the kernel
@@ -187,6 +190,63 @@ The modules of `Deduxit.Intuitionistic`:
 - `KripkeCheck`: finite models as data, the checker `refutes` and
   `kripke_refutation`.
 
+`From Deduxit.Modal Require Import Check Countermodel.` gives modal
+logic: the systems from K to S5 (`System.K`, `System.S4`, …, each a set
+of conditions on the frames), validity in a system's Kripke models
+(`valid`), proofs in the labelled sequent calculus as terms with their
+checker, and finite countermodels. A statement here is about the
+models, so you need not read the calculus to trust it:
+
+```coq
+From Stdlib Require Import List String.
+From Deduxit.Modal Require Import Check Countermodel.
+Import ListNotations.
+Open Scope string_scope.
+
+(* Valid in S4: a proof with the labels w0, w1 and w2, which uses
+   transitivity. *)
+Lemma four : valid System.S4 [] [imp (box (var "p")) (box (box (var "p")))].
+Proof.
+  apply (modal_soundness String.eqb String.eqb_spec System.S4 "w0"
+    (RImp "w0" (box (var "p")) (box (box (var "p")))
+      (RBox "w0" "w1" (box (var "p"))
+        (RBox "w1" "w2" (var "p")
+          (Trans "w0" "w1" "w2"
+            (LBox "w0" "w2" (var "p") (Ax "w2" (var "p")))))))).
+  vm_compute. reflexivity.
+Qed.
+
+(* Not valid in T: world 0 sees itself and world 1, which sees world 2,
+   where p is false. *)
+Lemma four_needs_transitivity :
+  ~ valid System.T [] [imp (box (var "p")) (box (box (var "p")))].
+Proof.
+  apply (modal_refutation String.eqb
+    {| arrows := [[0; 1]; [1; 2]; [2]]; atoms := [["p"]; ["p"]; []] |}
+    System.T 0).
+  vm_compute. reflexivity.
+Qed.
+```
+
+The logic is classical and the library assumes no axiom, so `valid`
+speaks of the models whose forcing is stable under double negation;
+with the law of excluded middle those are all models
+(`excluded_middle_stable`; `Kripke.v` says more).
+
+The modules of `Deduxit.Modal`:
+
+- `Formulas` and `Kripke`: the formulas, the frame conditions and the
+  fifteen systems, forcing, and `valid`;
+- `Labelled`: labelled sequents, which name several worlds, and their
+  validity `lvalid`;
+- `Calculus`: the labelled sequent calculus `g3`, Negri's G3K with a
+  frame rule per condition;
+- `Soundness`: `g3_sound`, every derivable sequent is valid;
+- `Check`: proof terms, the checker `mcheck`, `modal_soundness` and
+  `labelled_soundness`;
+- `Countermodel`: finite models as data, the test `refutes` and
+  `modal_refutation`.
+
 The documentation of every module is at
 [deduxit.github.io/rocq-deduxit](https://deduxit.github.io/rocq-deduxit/)
 (`nix build .#doc` builds it).
@@ -203,6 +263,9 @@ counts (a count of one sign under an exponential, a Horn program's state
 equation), one-sided and two-sided; weighted counts also for
 first-order sequents; and Kripke countermodels of intuitionistic and
 minimal logic.
+
+`Deduxit.Modal` checks labelled proofs and countermodels of the modal
+systems K to S5. deduxit 0.4.0 writes no certificate for them.
 
 The library has no theorem for deduxit's other refutations, so deduxit
 writes no certificate for them: a saturated set of the inverse method,
@@ -223,11 +286,12 @@ Soundness.` becomes `From Deduxit.Linear Require Import Soundness.`.
 
 ## The repository
 
-- `theories/Linear/` and `theories/Intuitionistic/`: the library,
-  `Deduxit.Linear` and `Deduxit.Intuitionistic`.
+- `theories/Linear/`, `theories/Intuitionistic/` and `theories/Modal/`:
+  the library, `Deduxit.Linear`, `Deduxit.Intuitionistic` and
+  `Deduxit.Modal`.
 - `tests/`: certificates compiled against the installed library
-  (`Deduxit.Linear.Tests`, and `Deduxit.Intuitionistic.Tests` for
-  `tests/Intuitionistic/`).
+  (`Deduxit.Linear.Tests`, `Deduxit.Intuitionistic.Tests` for
+  `tests/Intuitionistic/` and `Deduxit.Modal.Tests` for `tests/Modal/`).
 - `bridges/`: proofs that the calculi derive the same sequents as
   NanoYalla's `nanoll.v` and Yalla's `nanoill.v`
   (`Deduxit.Linear.Bridges`), compiled against the files the flake pins,

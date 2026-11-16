@@ -11,6 +11,28 @@ library of the same version.
 
 ## [Unreleased]
 
+### Added
+
+- Modal logic, under `Deduxit.Modal`: the formulas with `□` and `◇`
+  (`Formulas.v`); the five frame conditions, the fifteen systems from K
+  to S5 as their sets (`System.K`, …, `System.S5`), forcing, and
+  `valid C Γ Δ`, validity of a sequent in the Kripke models of a system
+  (`Kripke.v`); labelled sequents and their validity `lvalid`
+  (`Labelled.v`).
+- The labelled sequent calculus `g3 C L Rt` (`Calculus.v`): Negri's G3K
+  with the frame rule of every condition of the system, the rules of
+  deduxit's calculi `G3K` to `G3S5`. `g3_sound` (`Soundness.v`): every
+  sequent it derives is valid; `g3_valid` reads a derivation at one
+  label as validity of the ordinary sequent.
+- Labelled proofs as terms and their checker (`Check.v`): `mcheck`, and
+  `modal_soundness` and `labelled_soundness`, which turn its answer
+  into `valid C Γ Δ` and `lvalid C L Rt`, so a certificate states
+  validity and proves it by `vm_compute`.
+- Finite modal countermodels (`Countermodel.v`): `refutes` checks that
+  a model's arrows meet the system's conditions and that a world forces
+  the left of a sequent and nothing of its right, and
+  `modal_refutation` turns its answer into `~ valid C Γ Δ`.
+
 ## [0.4.0] - 2026-11-15
 
 Intuitionistic and minimal logic with their Kripke models, beside

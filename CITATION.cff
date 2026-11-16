@@ -17,8 +17,10 @@ abstract: >-
   certificates deduxit writes are checked; the invariants every
   derivation keeps, which give certificates that a sequent is not
   derivable; Kripke models of intuitionistic and minimal logic, with a
-  checker of finite countermodels that proves a sequent underivable; and
-  the reduction of Mix to ?(⊥⊗⊥). Its definitions,
+  checker of finite countermodels that proves a sequent underivable; the
+  labelled sequent calculus of the modal systems from K to S5, its
+  soundness for Kripke models, and checkers of labelled proofs and of
+  finite countermodels; and the reduction of Mix to ?(⊥⊗⊥). Its definitions,
   proofs, tests and documentation were written with substantial AI
   assistance, by Anthropic's Claude models in Claude Code, in steps the
   author planned, directed and accepted, and the author is responsible
@@ -51,6 +53,7 @@ keywords:
   - intuitionistic linear logic
   - intuitionistic logic
   - Kripke semantics
+  - modal logic
   - sequent calculus
   - Rocq
   - proof certificates

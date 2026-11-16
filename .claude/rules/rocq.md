@@ -474,6 +474,109 @@ them against this library, taken as a pinned input. Paths of the form
   `Deduxit.Intuitionistic.Tests` (the check's second loop), with lemmas
   `refutes … = false` for each condition `well_formed` and `refutes`
   check.
+- **`Deduxit.Modal`** (propositional modal logic, the systems from K
+  to S5, `theories/Modal/`) shares nothing with the other namespaces.
+  A certificate states validity in Kripke models, `valid C Γ Δ` or
+  `~ valid C Γ Δ`, never derivability, so its trusted base is
+  `Formulas.v` (ten constructors, one per node of deduxit's modal
+  arena: `var`, `top`, `bot`, `neg`, `wedge`, `vee`, `imp`, `equiv`,
+  `box`, `dia`) and `Kripke.v` (`conditions`, the systems, `frame`,
+  `forces`, `stable`, `valid`), with `Labelled.v` (`label := string`,
+  `item` with `lab x A` and `rel x y`, `holds`, `lvalid`) for a labelled
+  statement. `Calculus.v`, `Soundness.v`, `Check.v` and `Countermodel.v`
+  appear in proofs only. These three trusted files hold definitions
+  alone.
+- **The systems are closed sets of conditions** (`Kripke.v`, `Module
+  System`: `System.K`, `D`, `T`, `KB`, `KDB`, `B`, `K4`, `KD4`, `S4`,
+  `K5`, `KD5`, `K45`, `KD45`, `KB5`, `S5`), the values of deduxit's
+  `modal::System` constants (`core/src/modal/system.rs`, `closed`): T
+  holds `serial` too, S5 all five. A generated certificate writes the
+  record literal with the conditions `System::conditions()` gives, and
+  the two are convertible. They are in a module so that importing the
+  library does not define `K`, `T` and `B` at top level. The
+  conventions check reads a `D` followed by digits in a comment as a
+  plan decision's number: write the serial systems with their `K`
+  there (`KD45`).
+- **Forcing is stable, by hypothesis** (`stable R V`, part of `valid`
+  and `lvalid`): the logic is classical and the library assumes no
+  axiom, so the theorems speak of the models where `~ ~ forces w A ->
+  forces w A`, as Doczkal and Smolka's models do (CPP 2012, section
+  2). With excluded middle every model is one
+  (`excluded_middle_stable`). The soundness proof
+  shows "no placing makes the left true and the right false"
+  (`g3_model`) and uses stability where a right rule must produce a
+  forced formula: `wedge_r`, `imp_r`, `equiv_r`, `box_r`. Without the
+  hypothesis `valid [] [vee p (neg p)]` is unprovable. Never replace it
+  by an axiom or by `Classical`; a finite model meets it
+  (`finite_stable`).
+- **`valid` says "one of `Δ` is forced", `lvalid` "not all of `Rt`
+  fail"**: at one world the disjunction of `Δ` is a formula, so
+  stability gives the positive form (`lvalid_valid`,
+  `forces_disjunction`); items at several worlds have no such formula,
+  and stability of each does not give one of them. Under excluded
+  middle the two read the same.
+- **`g3` is deduxit's rule file** (`core/src/modal/calculus.rs`,
+  `form`), rule for rule: a sequent is two lists of items read as sets,
+  every rule asks membership (`In`) of its principal items and gives
+  the premise as the conclusion with the new items consed on, the
+  two-premise rules in the file's order (`imp_l`: first the premise
+  with `A` on the right; `equiv_l`: first both on the left; `equiv_r`:
+  first `A` left and `B` right). Both sides are lists of `item`, as
+  both zones of the rule file have the sort `item`; a relational atom
+  on the right is never principal. `fresh y L Rt` is the generic
+  checker's condition, "`y` occurs in no member of the conclusion". A
+  change of a rule there is a change of `g3`, its case of `g3_model`,
+  the constructor of `proof`, the arm of `mcheck` and deduxit's
+  exporter.
+- **`ser` has no `x <> y`**, because deduxit's checker accepts `Ser`
+  with one new label for both (`w1 R w1`, tried with `check --calculus
+  G3D`). That instance does not keep validity inside one model (a
+  serial frame may have no world that sees itself), so `g3_model`
+  quantifies over the model inside the induction and, for this case,
+  adds a world beside it that sees itself alone (`beside_R`,
+  `beside_V`): the frame conditions survive (`beside_frame`), the old
+  worlds force what they did (`beside_forces`), and the new world
+  decides every formula, so forcing stays stable (`beside_stable`).
+  A sixth frame condition must survive that addition too, or its
+  systems need `x <> y` back.
+- **A labelled proof holds no sequent** (`Check.v`, `proof`): `mcheck
+  atom_eqb C p L Rt` starts from the sequent to prove and each
+  constructor tests its principal items with `mem` (an `existsb` over
+  `item_eqb`), its side conditions (`freshb`, the system's condition
+  for a frame rule) and checks its premises on the lists with the new
+  items consed on. `mcheck_sound` gives `g3 C L Rt`. The certificate's
+  theorems are `modal_soundness atom_eqb atom_eqb_spec C x p`, with
+  the root label `x` (deduxit's is `"w0"`) before the term, for
+  `valid C Γ Δ` from `mcheck … (map (lab x) Γ) (map (lab x) Δ) = true`,
+  and `labelled_soundness atom_eqb atom_eqb_spec C p` for `lvalid`.
+  Labels are strings compared by `String.eqb`. A subterm shared by a
+  `let` is checked once per use, each time against that use's sequent.
+  The checker scans both lists at every node, so its cost is nodes
+  times sequent length times formula size.
+- **Finite modal countermodels** (`Countermodel.v`): `{| arrows := …;
+  atoms := … |}`, the worlds the numbers below `length arrows`, the
+  arrows the relation as written (deduxit closes nothing either, so a
+  reflexive model lists its loops). The Kripke model is over `{ w |
+  w < size }`, not `nat`, so that a number past the worlds is no world:
+  the frame conditions are checked as written and a stray world would
+  break seriality and reflexivity. Nothing compares two worlds, so no
+  proof irrelevance is needed. `meets C` tests `bounded` (every arrow
+  leads to a world) and each condition of `C`; `forced A` is the table
+  of worlds forcing `A`, computed bottom up from its parts' tables;
+  `refutes atom_eqb m C w Γ Δ` and `modal_refutation atom_eqb m C w`.
+  The valuation is whatever `atom_eqb` finds in `atoms`, so the theorem
+  needs no specification of `atom_eqb`.
+- **Its tests** (`tests/Modal/`, compiled as `Deduxit.Modal.Tests` by
+  the check's third loop): `Certificates.v` (every rule once, a
+  certificate per frame rule, a labelled sequent, and `mcheck … =
+  false` for a frame rule the system lacks, a label that is not new at
+  `R□`, `L◇` and `Ser`, a missing edge, a missing principal formula and
+  an axiom at two labels) and `Countermodels.v` (a model per system
+  shape, and `refutes … = false` for each condition `meets` tests, an
+  arrow or a world out of the model, and a world that forces the wrong
+  side). They name their atoms by `Definition p : formula string :=
+  var "p"`, never by a `Notation`: on Rocq 9.2 and 9.3 that warns, and
+  a test must print nothing. `ser` is a word of `typos.toml`.
 - **Where things plug in.** A new rule is a constructor of `ll`, a
   constructor of `proof`, an arm of `derive` and a case of `derive_sound`,
   nothing redone, as cut was; an optional one is also a field of `rules`
