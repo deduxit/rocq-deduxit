@@ -4,12 +4,20 @@ Every release of the Rocq library `rocq-deduxit` (logical root
 `Deduxit`), named `rocq-linlog` (logical path `Linlog`) up to 0.2.0,
 newest first. The form is that of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
-versions follow [Semantic Versioning](https://semver.org/). The library's
-version is deduxit's: a certificate that deduxit writes for `--kernel
-deduxit` (linlog for `--kernel linlog` up to 0.2.0) compiles against the
-library of the same version.
+versions follow [Semantic Versioning](https://semver.org/). The library
+is released beside deduxit, under deduxit's version number, when it
+changes: a certificate that deduxit writes for `--kernel deduxit`
+(linlog for `--kernel linlog` up to 0.2.0) compiles against the library
+of the same version, or of the latest before it when the library did
+not change. There is no 0.5.0: deduxit 0.5.0's certificates compile
+against 0.4.0.
 
 ## [Unreleased]
+
+## [0.6.0] - 2026-11-16
+
+Modal logic in the fifteen systems from K to S5, beside deduxit 0.6.0,
+whose certificates of modal proofs and countermodels it checks.
 
 ### Added
 
@@ -159,6 +167,7 @@ only a first draft of the opam file; nothing of it was published before.
   takes this repository as a pinned input and compiles the certificates
   its exporter writes against it.
 
+[0.6.0]: https://github.com/deduxit/rocq-deduxit/releases/tag/v0.6.0
 [0.4.0]: https://github.com/deduxit/rocq-deduxit/releases/tag/v0.4.0
 [0.3.0]: https://github.com/deduxit/rocq-deduxit/releases/tag/v0.3.0
 [0.2.0]: https://github.com/linlog-prover/rocq-linlog/releases/tag/v0.2.0

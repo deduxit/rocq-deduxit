@@ -6,10 +6,10 @@
 
 `rocq-deduxit` is the Rocq library that checks the certificates
 [deduxit](https://github.com/deduxit/deduxit) writes. deduxit proves
-and refutes sequents of linear, intuitionistic and classical logic. A
-certificate is a Rocq file: a lemma that states that a sequent is
-derivable, or that it is not, with a proof by computation. Compile it against this library,
-and Rocq has checked deduxit's answer.
+and refutes sequents of linear, intuitionistic, classical and modal
+logic. A certificate is a Rocq file: a lemma that states that a sequent
+is derivable, or that it is not, with a proof by computation. Compile it
+against this library, and Rocq has checked deduxit's answer.
 
 You can also use the library on its own: it defines the sequent
 calculi of linear logic, those of intuitionistic and minimal logic
@@ -30,7 +30,7 @@ once the release is there, or meanwhile from its tag:
 ```sh
 opam repo add rocq-released https://rocq-prover.org/opam/released   # once
 opam install rocq-deduxit                                            # from the archive
-opam pin add rocq-deduxit https://github.com/deduxit/rocq-deduxit.git#v0.4.0   # or from the tag
+opam pin add rocq-deduxit https://github.com/deduxit/rocq-deduxit.git#v0.6.0   # or from the tag
 opam upgrade rocq-deduxit                                            # later: a newer release from the archive
 opam remove rocq-deduxit                                             # and to remove it
 ```
@@ -43,11 +43,11 @@ takes the archive's release instead.
 library built with nixpkgs' Rocq 9.1:
 
 ```sh
-nix build github:deduxit/rocq-deduxit/v0.4.0    # result/lib/coq/9.1/user-contrib/Deduxit
+nix build github:deduxit/rocq-deduxit/v0.6.0    # result/lib/coq/9.1/user-contrib/Deduxit
 ```
 
 In a flake of your own, take it as an input
-(`inputs.rocq-deduxit.url = "github:deduxit/rocq-deduxit/v0.4.0"`)
+(`inputs.rocq-deduxit.url = "github:deduxit/rocq-deduxit/v0.6.0"`)
 and put `rocq-deduxit.packages.${system}.default` beside
 `rocqPackages.rocq-core` and `rocqPackages.stdlib` in a shell's
 packages; nixpkgs' Rocq setup hook puts it on the load path.
@@ -253,19 +253,17 @@ The documentation of every module is at
 
 ## What it covers
 
-Every certificate deduxit 0.4.0 writes for `--kernel deduxit`, and for
-a Kripke countermodel, compiles against this library. That covers
+Every certificate deduxit 0.6.0 writes for `--kernel deduxit`, for a
+Kripke countermodel and for modal logic, compiles against this library. That covers
 proofs in classical, Mix, affine and
 intuitionistic linear logic and its affine variant, with or without cut,
 propositional and first-order. It also covers refutations by the
 classical reading, an atom's balance, the count equation and weighted
 counts (a count of one sign under an exponential, a Horn program's state
 equation), one-sided and two-sided; weighted counts also for
-first-order sequents; and Kripke countermodels of intuitionistic and
-minimal logic.
-
-`Deduxit.Modal` checks labelled proofs and countermodels of the modal
-systems K to S5. deduxit 0.4.0 writes no certificate for them.
+first-order sequents; Kripke countermodels of intuitionistic and
+minimal logic; and, in the modal systems K to S5, labelled proofs and
+finite countermodels.
 
 The library has no theorem for deduxit's other refutations, so deduxit
 writes no certificate for them: a saturated set of the inverse method,
