@@ -2,8 +2,9 @@
 (* Licensed under the EUPL *)
 
 (** The soundness theorems (the first-order ones included), the
-    reduction of Mix, the refutations and the Kripke semantics of
-    intuitionistic and minimal logic rest on no axiom: Rocq answers
+    reduction of Mix, the refutations, the Kripke semantics of
+    intuitionistic and minimal logic and the labelled calculus of modal
+    logic rest on no axiom: Rocq answers
     "Closed under the global context" for each, and the flake's check
     requires that answer. Every theorem is named by its full path,
     since the first-order ones share their names with the propositional
@@ -12,6 +13,7 @@
 From Deduxit.Linear Require Soundness IntuitionisticCheck Mix Refutations Weights.
 From Deduxit.Linear Require FirstOrderSoundness FirstOrderIntuitionisticCheck FirstOrderWeights.
 From Deduxit.Intuitionistic Require Kripke KripkeCheck.
+From Deduxit.Modal Require Soundness Check Countermodel.
 
 Print Assumptions Deduxit.Linear.Soundness.soundness.
 Print Assumptions Deduxit.Linear.Soundness.soundness_classical.
@@ -50,3 +52,11 @@ Print Assumptions Deduxit.Intuitionistic.Kripke.kripke_soundness.
 Print Assumptions Deduxit.Intuitionistic.Kripke.kripke_countermodel.
 Print Assumptions Deduxit.Intuitionistic.Kripke.classical_refutation.
 Print Assumptions Deduxit.Intuitionistic.KripkeCheck.kripke_refutation.
+Print Assumptions Deduxit.Modal.Soundness.g3_sound.
+Print Assumptions Deduxit.Modal.Soundness.lvalid_valid.
+Print Assumptions Deduxit.Modal.Soundness.g3_valid.
+Print Assumptions Deduxit.Modal.Soundness.excluded_middle_stable.
+Print Assumptions Deduxit.Modal.Check.mcheck_sound.
+Print Assumptions Deduxit.Modal.Check.labelled_soundness.
+Print Assumptions Deduxit.Modal.Check.modal_soundness.
+Print Assumptions Deduxit.Modal.Countermodel.modal_refutation.
