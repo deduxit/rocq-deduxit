@@ -528,9 +528,11 @@ them against this library, taken as a pinned input. Paths of the form
   change of a rule there is a change of `g3`, its case of `g3_model`,
   the constructor of `proof`, the arm of `mcheck` and deduxit's
   exporter.
-- **`ser` has no `x <> y`**, because deduxit's checker accepts `Ser`
-  with one new label for both (`w1 R w1`, tried with `check --calculus
-  G3D`). That instance does not keep validity inside one model (a
+- **`ser` has no `x <> y`**: deduxit's checker accepted `Ser` with one
+  new label for both (`w1 R w1`) up to 0.5.0, and refuses it from 0.6.0
+  on, where its `fresh` asks the new name to differ from every other
+  variable of the rule. `g3` keeps the wider rule, so its soundness covers
+  the certificates of both. That instance does not keep validity inside one model (a
   serial frame may have no world that sees itself), so `g3_model`
   quantifies over the model inside the induction and, for this case,
   adds a world beside it that sees itself alone (`beside_R`,

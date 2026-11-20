@@ -20,9 +20,10 @@
     A sequent is two lists read as sets: a rule asks only which items a
     list holds, never where or how often. The rules [box_r], [dia_l] and
     [ser] bring in a label [y] that the conclusion does not mention
-    ([fresh]). In [ser] the label [x] that sees it is any label, as in
-    deduxit's rule: also one the conclusion does not mention, and [y]
-    itself. [g3 C L Rt] is a [Prop]: it says that a derivation
+    ([fresh]). In [ser] the label [x] that sees it is any label: also
+    one the conclusion does not mention, and [y] itself. deduxit's rule
+    asks that [x] differ from [y], so each of its instances is one of
+    [ser]'s. [g3 C L Rt] is a [Prop]: it says that a derivation
     exists. *)
 
 From Stdlib Require Import List String.
