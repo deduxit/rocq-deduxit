@@ -119,10 +119,9 @@ at the same commits); a lock bump is a change of its own,
 
 `.github/workflows/ci.yml` runs `nix flake check` on every push to
 `main`, every pull request, weekly and by dispatch, with nothing
-installed but Nix, and pulls from the public Cachix cache
-`linlog-prover`. It pushes to the cache from `main` only once the
-repository has the secret `CACHIX_AUTH_TOKEN`, which is the author's
-to add; until then it only downloads. Every action is pinned to a full
+installed but Nix, and pulls from the public Cachix cache `deduxit`
+(until 2026-11-20 `linlog-prover`). It pushes to the cache from `main`, with the
+repository secret `CACHIX_AUTH_TOKEN`. Every action is pinned to a full
 commit SHA with the release as a comment (the organization requires
 it); Dependabot proposes the bumps (`.github/dependabot.yml`).
 `permissions: contents: read`, `persist-credentials: false`.
