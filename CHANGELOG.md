@@ -14,7 +14,7 @@ against 0.4.0.
 
 ## [Unreleased]
 
-## [0.6.0] - 2026-11-16
+## [0.6.0] - 2026-11-20
 
 Modal logic in the fifteen systems from K to S5, beside deduxit 0.6.0,
 whose certificates of modal proofs and countermodels it checks.
