@@ -26,7 +26,8 @@ against 0.4.0.
   `persistence`, `kripke_soundness` of LJ and LM, and
   `kripke_countermodel`; the infinite chain, which refutes
   `¬¬∀x. (p(x) ∨ ¬p(x))` (`chain_excluded_middle`) and the
-  double-negation shift (`chain_double_negation_shift`), where no
+  double-negation shift `(∀x. ¬¬p(x)) → ¬¬(∀x. p(x))`
+  (`chain_double_negation_shift`), where no
   finite model does.
 - Finite structures and `classical_soundness` of LK
   (`FirstOrderClassical.v`).

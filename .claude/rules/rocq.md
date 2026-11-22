@@ -543,7 +543,9 @@ them against this library, taken as a pinned input. Paths of the form
   world `k + 1`, every function `0`, no `⊥`. `chain_excluded_middle` and
   `chain_double_negation_shift` hold for every `R` and every predicate
   symbol; deduxit's manual cites them for Glivenko's failure at first
-  order.
+  order. Write the shift `(∀x. ¬¬p(x)) → ¬¬(∀x. p(x))`: in deduxit's
+  syntax a quantifier's scope runs right, so without the brackets the
+  text is another formula, classically invalid.
 - **Its tests** (`tests/Intuitionistic/FirstOrder.v`): certificates in
   the writer's form (Kripke models with a growing domain, a function
   table, minimal `⊥`; structures with and without functions), the

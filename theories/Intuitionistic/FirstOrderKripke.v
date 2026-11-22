@@ -26,7 +26,7 @@
     that the sequent is underivable, with cut or without. The section
     [Chain] is the model with a world for each natural number, which no
     finite model replaces: it refutes [¬¬∀x. (p(x) ∨ ¬p(x))] and the
-    double-negation shift [∀x. ¬¬p(x) → ¬¬∀x. p(x)]. *)
+    double-negation shift [(∀x. ¬¬p(x)) → ¬¬(∀x. p(x))]. *)
 
 From Stdlib Require Import List Permutation Bool Arith Lia.
 From Deduxit.Linear Require Import TermsCheck.
@@ -406,7 +406,7 @@ Proof.
 Qed.
 
 (** The chain refutes the double-negation shift,
-    [⊢ ∀x. ¬¬p(x) → ¬¬∀x. p(x)], in LJ and LM, with cut or without. *)
+    [⊢ (∀x. ¬¬p(x)) → ¬¬(∀x. p(x))], in LJ and LM, with cut or without. *)
 Theorem chain_double_negation_shift : forall R (p : symbol),
   ~ lj R [] (imp (fall (neg (neg (var p [bound 0])))) (neg (neg (fall (var p [bound 0]))))).
 Proof.

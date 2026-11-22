@@ -201,7 +201,7 @@ The modules of `Deduxit.Intuitionistic`:
   `kripke_soundness`, `kripke_countermodel`, and the infinite chain,
   whose theorems `chain_excluded_middle` and
   `chain_double_negation_shift` refute `¬¬∀x. (p(x) ∨ ¬p(x))` and
-  `∀x. ¬¬p(x) → ¬¬∀x. p(x)`, which no finite model refutes;
+  `(∀x. ¬¬p(x)) → ¬¬(∀x. p(x))`, which no finite model refutes;
 - `FirstOrderClassical`: finite structures and `classical_soundness`
   of LK;
 - `FirstOrderCheck`: finite structures and Kripke models as data, their
