@@ -24,6 +24,11 @@ theories/Intuitionistic/Formulas.v
 theories/Intuitionistic/Calculus.v
 theories/Intuitionistic/Kripke.v
 theories/Intuitionistic/KripkeCheck.v
+theories/Intuitionistic/FirstOrderFormulas.v
+theories/Intuitionistic/FirstOrderCalculus.v
+theories/Intuitionistic/FirstOrderKripke.v
+theories/Intuitionistic/FirstOrderClassical.v
+theories/Intuitionistic/FirstOrderCheck.v
 theories/Modal/Formulas.v
 theories/Modal/Kripke.v
 theories/Modal/Labelled.v

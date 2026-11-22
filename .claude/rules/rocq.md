@@ -474,6 +474,81 @@ them against this library, taken as a pinned input. Paths of the form
   `Deduxit.Intuitionistic.Tests` (the check's second loop), with lemmas
   `refutes … = false` for each condition `well_formed` and `refutes`
   check.
+- **First-order `Deduxit.Intuitionistic`** (`FirstOrderFormulas.v`,
+  `FirstOrderCalculus.v` trusted; `FirstOrderKripke.v`,
+  `FirstOrderClassical.v`, `FirstOrderCheck.v` in proofs only) takes its
+  terms from `Deduxit.Linear.Terms` and `term_ind'` from `TermsCheck`,
+  the one place the namespace leans on another: both are
+  symbol-generic, and a copy would give deduxit's two first-order
+  developments two term types. The formulas reuse the propositional
+  names (`formula`, `var`, `lj`), so a certificate imports
+  `FirstOrderCheck` and writes the rules as `Calculus.intuitionistic`
+  or `Calculus.minimal` (`Calculus` is required, not imported).
+- **`lj` and `lk` are the large calculi**: G1i and G1c with shared
+  contexts, `∀L` and `∃R` replacing their principal (G3's forms are a
+  contraction away) with any `tclosed` witness, eigenvariables included,
+  and `∀R`, `∃L` with an eigenvariable fresh for the whole conclusion.
+  `lk c` has `⊥L` always and cut when `c = true`; it has no `rules`
+  record, since ex falso is no option there.
+- **Kripke models with growing domains** (`FirstOrderKripke.v`, a
+  section over any `world` and `element` type): `dom w` the domain, `fn
+  w` and `pred w` per world, `d0` an element of every domain (the value
+  of a bound variable past `ρ`, which keeps `teval` total and makes
+  every domain inhabited). `model_closed` and `model_agree` ask the
+  functions to stay in the domain and to keep the earlier world's
+  values on its elements; persistence of terms (`teval_persist`) rests
+  on both. Forcing takes `η` (eigenvariables) and `ρ` (bound variables,
+  innermost first); `subst` does not shift the indices above `k`, so
+  `forces_subst` holds for every `A` with `length ρ = k`, a bound
+  variable past `k` being `d0` on both sides, and asks the term's value
+  `e` at every later world (a function's value is the world's). The
+  soundness theorem quantifies over `η` into the world's domain;
+  `kripke_countermodel` takes `η := fun _ => d0`.
+- **LK is sound for finite structures, computed** (`FirstOrderClassical.v`):
+  truth is a `bool` with the quantifiers `forallb`/`existsb` over
+  `seq 0 size`, so the induction decides each formula without excluded
+  middle; `fn_closed` asks every value below `size` for every argument
+  list (a finite table meets it: its entries, or `0`). No
+  functional extensionality: `forallb_ext_in`, `existsb_ext_in`.
+- **The finite data** (`FirstOrderCheck.v`): a table `(f, k, values)`
+  by symbol and arity, `f(d₀ … dₖ₋₁)` at `index` (`d₀` most
+  significant, deduxit's order), a missing table or place `0`; facts
+  `(p, tuple)`. `kwell_formed` asks `sizes`, `tables` and `facts` to be
+  as long as `later`, so a number past the worlds has the defaults (one
+  element, no table, no fact) and the model over `nat` stays total, as
+  `KripkeCheck`'s. Agreement is checked per pair of a world and a later
+  one, for every table of either at the earlier world's tuples
+  (`tuples`): a table only the later world has must give `0` there too.
+  `kforces` recurses per world (no bottom-up vectors: the environment
+  of bound variables varies), so its cost is the worlds above times the
+  domain per nested `→` or `∀`. **What a certificate computes is
+  `eval_fast` and `kforces_fast`** (`allb`, `anyb` and `if` in place of
+  `forallb`, `existsb` and `&&`), proved equal to `eval` and `kforces`:
+  under `vm_compute` the standard ones evaluate every member, and a
+  model deduxit's check accepts in 30 ms (eight nested `∀` over eleven
+  elements, false at the first) did not compile in 200 s. The proofs
+  reason about the plain functions. Numbers are unary `nat` and a list
+  literal is read recursively, so deduxit's writer refuses a model past
+  4 096 elements in a domain, 8 192 entries in a list or numbers
+  adding up past 2²⁰ (a table of 20 000 values of 19 999 took 7.4 GB,
+  a list of 24 000 entries overflowed the stack, and Rocq warns of a
+  number from 5 000 on). deduxit states its
+  certificates for
+  the calculi with cut (`cut := true`, `lk true`), which its own
+  checker's LJ needs.
+  `srefutes` needs no specification of `symbol_eqb`: nothing is
+  compared but by computing.
+- **The infinite chain** (`FirstOrderKripke.v`, section `Chain`): worlds
+  `nat` with `le`, domain `0 … n`, a unary predicate true of `k` from
+  world `k + 1`, every function `0`, no `⊥`. `chain_excluded_middle` and
+  `chain_double_negation_shift` hold for every `R` and every predicate
+  symbol; deduxit's manual cites them for Glivenko's failure at first
+  order.
+- **Its tests** (`tests/Intuitionistic/FirstOrder.v`): certificates in
+  the writer's form (Kripke models with a growing domain, a function
+  table, minimal `⊥`; structures with and without functions), the
+  chain lemmas applied, and `krefutes … = false` / `srefutes … = false`
+  for each condition the checks test.
 - **`Deduxit.Modal`** (propositional modal logic, the systems from K
   to S5, `theories/Modal/`) shares nothing with the other namespaces.
   A certificate states validity in Kripke models, `valid C Γ Δ` or

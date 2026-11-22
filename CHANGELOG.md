@@ -14,6 +14,31 @@ against 0.4.0.
 
 ## [Unreleased]
 
+### Added
+
+- First-order intuitionistic, minimal and classical logic, under
+  `Deduxit.Intuitionistic`: the formulas over the terms of
+  `Deduxit.Linear.Terms` (`FirstOrderFormulas.v`) and the calculi `lj`
+  (LJ and LM, with the record `rules` of the propositional calculus) and
+  `lk` (LK), each with the quantifier rules of deduxit's checker
+  (`FirstOrderCalculus.v`).
+- Kripke models with growing domains (`FirstOrderKripke.v`): forcing,
+  `persistence`, `kripke_soundness` of LJ and LM, and
+  `kripke_countermodel`; the infinite chain, which refutes
+  `¬¬∀x. (p(x) ∨ ¬p(x))` (`chain_excluded_middle`) and the
+  double-negation shift (`chain_double_negation_shift`), where no
+  finite model does.
+- Finite structures and `classical_soundness` of LK
+  (`FirstOrderClassical.v`).
+- Finite structures and Kripke models as data (`FirstOrderCheck.v`):
+  the checkers `srefutes` and `krefutes`, and `fo_classical_refutation`
+  and `fo_kripke_refutation`, which turn their answer into
+  `~ lk c Γ Δ` and `~ lj R Γ C`, as deduxit's certificates of
+  first-order countermodels state them. The checkers stop at the first
+  operand or element that decides a formula (`eval_fast`,
+  `kforces_fast`, proved equal to the plain evaluators), as deduxit's
+  own check does.
+
 ## [0.6.0] - 2026-11-20
 
 Modal logic in the fifteen systems from K to S5, beside deduxit 0.6.0,

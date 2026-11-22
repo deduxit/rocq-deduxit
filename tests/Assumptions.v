@@ -13,6 +13,7 @@
 From Deduxit.Linear Require Soundness IntuitionisticCheck Mix Refutations Weights.
 From Deduxit.Linear Require FirstOrderSoundness FirstOrderIntuitionisticCheck FirstOrderWeights.
 From Deduxit.Intuitionistic Require Kripke KripkeCheck.
+From Deduxit.Intuitionistic Require FirstOrderKripke FirstOrderClassical FirstOrderCheck.
 From Deduxit.Modal Require Soundness Check Countermodel.
 
 Print Assumptions Deduxit.Linear.Soundness.soundness.
@@ -52,6 +53,14 @@ Print Assumptions Deduxit.Intuitionistic.Kripke.kripke_soundness.
 Print Assumptions Deduxit.Intuitionistic.Kripke.kripke_countermodel.
 Print Assumptions Deduxit.Intuitionistic.Kripke.classical_refutation.
 Print Assumptions Deduxit.Intuitionistic.KripkeCheck.kripke_refutation.
+Print Assumptions Deduxit.Intuitionistic.FirstOrderKripke.kripke_soundness.
+Print Assumptions Deduxit.Intuitionistic.FirstOrderKripke.kripke_countermodel.
+Print Assumptions Deduxit.Intuitionistic.FirstOrderKripke.chain_excluded_middle.
+Print Assumptions Deduxit.Intuitionistic.FirstOrderKripke.chain_double_negation_shift.
+Print Assumptions Deduxit.Intuitionistic.FirstOrderClassical.classical_soundness.
+Print Assumptions Deduxit.Intuitionistic.FirstOrderClassical.classical_countermodel.
+Print Assumptions Deduxit.Intuitionistic.FirstOrderCheck.fo_classical_refutation.
+Print Assumptions Deduxit.Intuitionistic.FirstOrderCheck.fo_kripke_refutation.
 Print Assumptions Deduxit.Modal.Soundness.g3_sound.
 Print Assumptions Deduxit.Modal.Soundness.lvalid_valid.
 Print Assumptions Deduxit.Modal.Soundness.g3_valid.

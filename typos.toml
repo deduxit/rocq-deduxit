@@ -16,3 +16,5 @@ implicits = "implicits"
 itens = "itens"
 # The labelled modal calculus's rule of seriality, Ser.
 ser = "ser"
+# First order, in the countermodels' theorems (fo_kripke_refutation).
+fo = "fo"

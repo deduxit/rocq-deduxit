@@ -17,7 +17,8 @@ accept proves its sequent, the invariants every derivation keeps (the
 refutations), the reduction of Mix to `?(⊥⊗⊥)`, and a first-order
 development beside the propositional one; `Deduxit.Intuitionistic`
 holds ordinary intuitionistic and minimal logic (LJ and LM), their
-Kripke semantics and a checker of finite countermodels;
+Kripke semantics and a checker of finite countermodels, propositional
+and first-order (with LK and finite structures at first order);
 `Deduxit.Modal` holds the modal systems from K to S5, validity in
 their Kripke models, the labelled sequent calculus G3K with its frame
 rules and its soundness, labelled proofs as terms with their checker,

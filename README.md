@@ -105,6 +105,10 @@ not read them:
   its `irules`) for a first-order two-sided one;
 - `Intuitionistic/Formulas.v` and `Intuitionistic/Calculus.v` for a
   sequent of intuitionistic or minimal logic;
+- `Terms.v`, `Intuitionistic/FirstOrderFormulas.v`,
+  `Intuitionistic/FirstOrderCalculus.v` and `Intuitionistic/Calculus.v`
+  (for its `rules`) for a first-order sequent of intuitionistic, minimal
+  or classical logic;
 - `Modal/Formulas.v` and `Modal/Kripke.v` for a sequent of modal logic,
   and `Modal/Labelled.v` too for a labelled one.
 
@@ -188,7 +192,45 @@ The modules of `Deduxit.Intuitionistic`:
   derivable sequent holds in every model), `kripke_countermodel`, and
   `classical_refutation` (the model with one world, an assignment);
 - `KripkeCheck`: finite models as data, the checker `refutes` and
-  `kripke_refutation`.
+  `kripke_refutation`;
+- `FirstOrderFormulas` and `FirstOrderCalculus`: first-order formulas
+  over deduxit's terms, and the calculi `lj` (LJ and LM) and `lk` (LK)
+  with the quantifier rules. They reuse the propositional names, so
+  import one development and qualify the other's names;
+- `FirstOrderKripke`: Kripke models with growing domains,
+  `kripke_soundness`, `kripke_countermodel`, and the infinite chain,
+  whose theorems `chain_excluded_middle` and
+  `chain_double_negation_shift` refute `¬¬∀x. (p(x) ∨ ¬p(x))` and
+  `∀x. ¬¬p(x) → ¬¬∀x. p(x)`, which no finite model refutes;
+- `FirstOrderClassical`: finite structures and `classical_soundness`
+  of LK;
+- `FirstOrderCheck`: finite structures and Kripke models as data, their
+  checkers `srefutes` and `krefutes`, and `fo_classical_refutation` and
+  `fo_kripke_refutation`. The checkers stop at the first operand or
+  element that decides a formula, as deduxit's own check does.
+
+A first-order certificate of a Kripke model reads (deduxit writes the
+rules as `{| Calculus.explosion := true; Calculus.cut := true |}`, LJ
+with cut, since the theorem holds for every choice):
+
+```coq
+From Stdlib Require Import List String.
+From Deduxit.Intuitionistic Require Import FirstOrderCheck.
+Import ListNotations.
+Open Scope string_scope.
+
+(* Not derivable: world 0 has the element 0, world 1 adds 1 and makes
+   p(0) true, so no world forces ∀x. p(x), and p fails for good of no
+   element of world 0. *)
+Lemma not_forall :
+  ~ lj Calculus.intuitionistic [neg (fall (var "p" [bound 0]))] (fex (neg (var "p" [bound 0]))).
+Proof.
+  apply (fo_kripke_refutation String.eqb String.eqb_spec _
+    {| later := [[1]; []]; sizes := [1; 2]; tables := [[]; []];
+       facts := [[]; [("p", [0])]]; absurd := [] |} 0).
+  vm_compute. reflexivity.
+Qed.
+```
 
 `From Deduxit.Modal Require Import Check Countermodel.` gives modal
 logic: the systems from K to S5 (`System.K`, `System.S4`, …, each a set
@@ -263,7 +305,9 @@ counts (a count of one sign under an exponential, a Horn program's state
 equation), one-sided and two-sided; weighted counts also for
 first-order sequents; Kripke countermodels of intuitionistic and
 minimal logic; and, in the modal systems K to S5, labelled proofs and
-finite countermodels.
+finite countermodels. The next release adds the first-order
+countermodels: finite structures in classical logic and finite Kripke
+models with growing domains in intuitionistic and minimal logic.
 
 The library has no theorem for deduxit's other refutations, so deduxit
 writes no certificate for them: a saturated set of the inverse method,
