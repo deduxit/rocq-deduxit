@@ -10,9 +10,16 @@ changes: a certificate that deduxit writes for `--kernel deduxit`
 (linlog for `--kernel linlog` up to 0.2.0) compiles against the library
 of the same version, or of the latest before it when the library did
 not change. There is no 0.5.0: deduxit 0.5.0's certificates compile
-against 0.4.0.
+against 0.4.0. There is no 0.7.0: deduxit 0.7.0's compile against 0.6.0.
 
 ## [Unreleased]
+
+## [0.8.0] - 2026-11-23
+
+First-order intuitionistic, minimal and classical logic, beside deduxit
+0.8.0, whose certificates of first-order countermodels it checks: finite
+structures in classical logic and finite Kripke models with growing
+domains in intuitionistic and minimal logic.
 
 ### Added
 
@@ -193,6 +200,7 @@ only a first draft of the opam file; nothing of it was published before.
   takes this repository as a pinned input and compiles the certificates
   its exporter writes against it.
 
+[0.8.0]: https://github.com/deduxit/rocq-deduxit/releases/tag/v0.8.0
 [0.6.0]: https://github.com/deduxit/rocq-deduxit/releases/tag/v0.6.0
 [0.4.0]: https://github.com/deduxit/rocq-deduxit/releases/tag/v0.4.0
 [0.3.0]: https://github.com/deduxit/rocq-deduxit/releases/tag/v0.3.0

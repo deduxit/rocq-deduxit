@@ -17,7 +17,10 @@ abstract: >-
   certificates deduxit writes are checked; the invariants every
   derivation keeps, which give certificates that a sequent is not
   derivable; Kripke models of intuitionistic and minimal logic, with a
-  checker of finite countermodels that proves a sequent underivable; the
+  checker of finite countermodels that proves a sequent underivable;
+  first-order intuitionistic, minimal and classical logic, with LJ's and
+  LM's soundness for Kripke models with growing domains, LK's for finite
+  structures, and checkers of both kinds of countermodel; the
   labelled sequent calculus of the modal systems from K to S5, its
   soundness for Kripke models, and checkers of labelled proofs and of
   finite countermodels; and the reduction of Mix to ?(⊥⊗⊥). Its definitions,
@@ -29,8 +32,8 @@ abstract: >-
 authors:
   - given-names: Fabian Lukas
     family-names: Grubmüller
-version: 0.6.0
-date-released: "2026-11-20"
+version: 0.8.0
+date-released: "2026-11-23"
 # The DOI of every version, which resolves to the latest.
 doi: 10.5281/zenodo.23899109
 license: EUPL-1.2
@@ -53,6 +56,7 @@ keywords:
   - intuitionistic linear logic
   - intuitionistic logic
   - Kripke semantics
+  - first-order logic
   - modal logic
   - sequent calculus
   - Rocq

@@ -2,7 +2,7 @@
 # Licensed under the EUPL
 
 opam-version: "2.0"
-version: "0.6.0"
+version: "0.8.0"
 synopsis: "The Rocq library of deduxit, a collection of logic suites"
 description: """
 The Rocq library that checks the certificates deduxit writes for the
@@ -12,7 +12,9 @@ the sequent calculi of linear logic under Deduxit.Linear, a checker for
 deduxit's proof terms, and the theorems that turn a checked term into a
 derivation; under Deduxit.Intuitionistic the calculi of
 intuitionistic and minimal logic, their Kripke models and a checker of
-finite countermodels; and under Deduxit.Modal the modal systems from K
+finite countermodels, and their first-order versions with classical
+logic, Kripke models with growing domains, finite structures and
+checkers of both; and under Deduxit.Modal the modal systems from K
 to S5, their labelled sequent calculus with its soundness for Kripke
 models, a checker of labelled proofs and one of finite countermodels.
 
@@ -34,8 +36,9 @@ tags: [
   "keyword:sequent calculus"
   "keyword:intuitionistic logic"
   "keyword:Kripke semantics"
+  "keyword:first-order logic"
   "keyword:modal logic"
-  "date:2026-11-20"
+  "date:2026-11-23"
 ]
 depends: [
   "rocq-core" {>= "9.0" & < "9.4~"}
