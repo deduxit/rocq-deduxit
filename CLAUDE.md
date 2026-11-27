@@ -89,7 +89,7 @@ library with `ROCQPATH` set.
 make                                    # the library, in place
 nix build                               # the package rocq-deduxit, as nixpkgs builds a Rocq library (result/lib/coq/9.1/user-contrib/Deduxit)
 nix flake check                         # everything below
-nix build .#checks.x86_64-linux.rocq-deduxit   # the library (default warnings as errors, goal selector "!"), every certificate under tests/, the interface, README's examples, the theorems' assumptions closed (nixpkgs' default Rocq)
+nix build .#checks.x86_64-linux.rocq-deduxit   # the library (default warnings as errors, goal selector "!", generated names mangled), every certificate under tests/, the interface, README's examples, the theorems' assumptions closed (nixpkgs' default Rocq)
 nix build .#checks.x86_64-linux.rocq-deduxit-9_0  # the same with Rocq 9.0 (and -9_2, -9_3: every version the opam file admits)
 nix build .#doc                         # rocq doc's pages of every module, result/share/doc/rocq-deduxit
 nix develop .#opam -c scripts/opam-install.sh 9.0.1 9.1.1 9.2.0 9.3.0   # opam lint, then the package installed from its opam file into a fresh switch per Rocq (network, about an hour)

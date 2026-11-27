@@ -143,7 +143,7 @@ Qed.
 Lemma table : forall (f : nat -> bool) n s w,
   w < n -> nth w (map f (seq s n)) false = f (s + w).
 Proof.
-  induction n as [| n IH]; intros s w H; [lia |].
+  intros f n; induction n as [| n IH]; intros s w H; [lia |].
   destruct w as [| w]; cbn [seq map nth].
   - rewrite Nat.add_0_r. reflexivity.
   - rewrite (IH (S s) w) by lia. rewrite Nat.add_succ_r. reflexivity.
@@ -211,7 +211,7 @@ Qed.
 Lemma forced_forces : bounded = true -> forall A (x : world),
   forced_at (forced A) (proj1_sig x) = true <-> forces R V x A.
 Proof.
-  intros Hb.
+  intros Hb A.
   induction A as [a | | | A IHA | A IHA B IHB | A IHA B IHB | A IHA B IHB
     | A IHA B IHB | A IHA | A IHA]; intros x; cbn [forced forces];
     cbv zeta; rewrite forced_table.

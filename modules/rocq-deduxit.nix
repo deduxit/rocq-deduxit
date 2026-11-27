@@ -67,7 +67,10 @@
       # One warning of 9.2 stays a warning, since what it asks for does not
       # exist on 9.0 and 9.1: `register-all' (`Scheme All' for the terms
       # nested in `list'). Rocq ignores a warning name it does not know.
-      strictFlags = ''-set "Default Goal Selector=!" -w +default,register-all'';
+      # And every name a proof uses is one it gave: `-mangle-names' renames
+      # what Rocq generates, so a proof that relies on a generated name
+      # fails here, before a Rocq release changes its naming.
+      strictFlags = ''-set "Default Goal Selector=!" -w +default,register-all -mangle-names M_'';
 
       # The library built with one Rocq, as nixpkgs builds a Rocq library.
       packageFor =

@@ -45,12 +45,21 @@ Lemma take_all_perm : forall (l1 l2 l : list (formula atom)),
 Proof. exact (Multiset.take_all_perm _ (formula_eqb_spec atom_eqb atom_eqb_spec)). Qed.
 
 Lemma remove_all_perm : forall (A : formula atom) l,
-  Permutation l (repeat A ((count_occ (formula_eq_dec atom_eqb atom_eqb_spec)) l A) ++ remove_all atom_eqb A l).
-Proof. exact (Multiset.remove_all_perm _ (formula_eqb_spec atom_eqb atom_eqb_spec) (formula_eq_dec atom_eqb atom_eqb_spec)). Qed.
+  Permutation l
+    (repeat A (count_occ (formula_eq_dec atom_eqb atom_eqb_spec) l A) ++ remove_all atom_eqb A l).
+Proof.
+  exact (Multiset.remove_all_perm _ (formula_eqb_spec atom_eqb atom_eqb_spec)
+    (formula_eq_dec atom_eqb atom_eqb_spec)).
+Qed.
 
 Lemma diff_count : forall (l1 l2 : list (formula atom)) x,
-  (count_occ (formula_eq_dec atom_eqb atom_eqb_spec)) (diff atom_eqb l2 l1) x = (count_occ (formula_eq_dec atom_eqb atom_eqb_spec)) l2 x - (count_occ (formula_eq_dec atom_eqb atom_eqb_spec)) l1 x.
-Proof. exact (Multiset.diff_count _ (formula_eqb_spec atom_eqb atom_eqb_spec) (formula_eq_dec atom_eqb atom_eqb_spec)). Qed.
+  count_occ (formula_eq_dec atom_eqb atom_eqb_spec) (diff atom_eqb l2 l1) x =
+  count_occ (formula_eq_dec atom_eqb atom_eqb_spec) l2 x
+  - count_occ (formula_eq_dec atom_eqb atom_eqb_spec) l1 x.
+Proof.
+  exact (Multiset.diff_count _ (formula_eqb_spec atom_eqb atom_eqb_spec)
+    (formula_eq_dec atom_eqb atom_eqb_spec)).
+Qed.
 
 (** Permutations of lists of formulas, decided by counting every
     formula's occurrences on both sides. *)
@@ -62,11 +71,11 @@ Variable R : rules.
 
 (** Weakening of a list of [?] formulas. *)
 Lemma wk_list : forall (Θ l : list (formula atom)), ll R l -> ll R (map wn Θ ++ l).
-Proof. induction Θ; cbn; intros; [assumption | apply wk_r; auto]. Qed.
+Proof. intros Θ; induction Θ as [| A Θ IH]; cbn; intros l H; [assumption | apply wk_r; auto]. Qed.
 
 Lemma wn_contract_cons : forall (A : formula atom) n (l : list (formula atom)),
   ll R (wn A :: map wn (repeat A n) ++ l) -> ll R (wn A :: l).
-Proof. induction n; cbn; intros l H; [exact H | apply IHn, co_r, H]. Qed.
+Proof. intros A n; induction n as [| n IH]; cbn; intros l H; [exact H | apply IH, co_r, H]. Qed.
 
 (** Any number of copies of [?A], zero included, contract into one. *)
 Lemma wn_contract : forall (A : formula atom) n (l : list (formula atom)),
@@ -85,7 +94,7 @@ Definition sat (theta gamma : list (formula atom)) (any : bool) : Prop :=
 Lemma sat_perm : forall theta gamma gamma' any,
   Permutation gamma gamma' -> sat theta gamma any -> sat theta gamma' any.
 Proof.
-  intros * HP H Δ HΔ. eapply ex_r; [apply H, HΔ | apply Permutation_app_tail, HP].
+  intros theta gamma gamma' any HP H Δ HΔ. eapply ex_r; [apply H, HΔ | apply Permutation_app_tail, HP].
 Qed.
 
 Lemma take_spec : forall A gamma any gamma',
@@ -99,7 +108,7 @@ Lemma take_sat : forall pre A theta gamma any gamma',
   take atom_eqb A gamma any = Some gamma' ->
   sat theta (pre ++ gamma) any -> sat theta (pre ++ A :: gamma') any.
 Proof.
-  intros * T H. destruct (take_spec _ _ _ _ T) as [HP | [-> ->]].
+  intros pre A theta gamma any gamma' T H. destruct (take_spec _ _ _ _ T) as [HP | [-> ->]].
   - apply (sat_perm _ (pre ++ gamma)); [apply Permutation_app_head, HP | exact H].
   - intros Δ _. eapply ex_r; [apply (H (A :: Δ)); easy | perm].
 Qed.
@@ -109,7 +118,7 @@ Qed.
 Theorem derive_sound : forall p s,
   derive atom_eqb R p = Some s -> sat (theta s) (gamma s) (any s).
 Proof.
-  induction p as [a | A B l IHl r IHr | A B q IHq | | q IHq | A B l IHl r IHr
+  intros p; induction p as [a | A B l IHl r IHr | A B q IHq | | q IHq | A B l IHl r IHr
     | A B side q IHq | | A q IHq | A q IHq | A q IHq | A q IHq | l IHl r IHr
     | A l IHl r IHr];
     cbn; intros s H.
@@ -207,9 +216,10 @@ Proof.
     destruct (derive atom_eqb R q) as [[θ γ a] |] eqn:E; [| discriminate].
     injection H as <-; cbn.
     specialize (IHq _ eq_refl); cbn in IHq.
-    intros Δ HΔ. apply (wn_contract A ((count_occ (formula_eq_dec atom_eqb atom_eqb_spec)) θ A)).
+    intros Δ HΔ. apply (wn_contract A (count_occ (formula_eq_dec atom_eqb atom_eqb_spec) θ A)).
     eapply ex_r; [apply IHq, HΔ |].
-    transitivity (γ ++ map wn (repeat A ((count_occ (formula_eq_dec atom_eqb atom_eqb_spec)) θ A) ++ remove_all atom_eqb A θ) ++ Δ).
+    transitivity (γ ++ map wn (repeat A (count_occ (formula_eq_dec atom_eqb atom_eqb_spec) θ A) ++
+      remove_all atom_eqb A θ) ++ Δ).
     + apply Permutation_app_head, Permutation_app_tail, Permutation_map, remove_all_perm.
     + perm.
   - (* Copy *)

@@ -50,7 +50,7 @@ Fixpoint dual (A : formula) : formula :=
   end.
 
 Lemma dual_dual : forall A, dual (dual A) = A.
-Proof. induction A; cbn; congruence. Qed.
+Proof. intros A; induction A; cbn; congruence. Qed.
 
 (** Whether a formula starts with [?]. Every calculus may weaken such
     a formula. *)
@@ -90,7 +90,7 @@ Hypothesis atom_eqb_spec : forall a b, reflect (a = b) (atom_eqb a b).
 
 Lemma formula_eqb_spec : forall A B, reflect (A = B) (formula_eqb A B).
 Proof.
-  induction A; destruct B; cbn; try (constructor; congruence).
+  intros A; induction A; intros B; destruct B; cbn; try (constructor; congruence).
   all: repeat match goal with
        | |- reflect _ (atom_eqb ?a ?b) => destruct (atom_eqb_spec a b)
        | |- reflect _ (formula_eqb ?A ?B && _) =>

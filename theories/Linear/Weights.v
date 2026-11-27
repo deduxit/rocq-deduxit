@@ -256,13 +256,13 @@ Inductive outs : list (formula atom) -> outcome -> Prop :=
 
 Lemma out_exists : forall A, exists o, out A o.
 Proof.
-  induction A as [b|b| | | | |A [a HA] B [b HB]|A [a HA] B [b HB]|A [a HA] B _|A [a HA] B _|A _|A _];
+  intros A; induction A as [b|b| | | | |A [a HA] B [b HB]|A [a HA] B [b HB]|A [a HA] B _|A [a HA] B _|A _|A _];
     eexists; constructor; eassumption.
 Qed.
 
 Lemma outs_exists : forall l, exists o, outs l o.
 Proof.
-  induction l as [|A l [o H]]; [eexists; constructor |].
+  intros l; induction l as [|A l [o H]]; [eexists; constructor |].
   destruct (out_exists A) as [a HA]. eexists. constructor; eassumption.
 Qed.
 
@@ -287,7 +287,7 @@ Qed.
 
 Lemma outs_wn : forall l, outs (map wn l) (num 0).
 Proof.
-  induction l as [|A l IH]; cbn; [constructor |].
+  intros l; induction l as [|A l IH]; cbn; [constructor |].
   change (num 0) with (opar (num 0) (num 0)). constructor; [constructor | exact IH].
 Qed.
 
@@ -298,7 +298,8 @@ Proof.
   intros F a1 H. induction H; intros A' E a2 H2; try discriminate.
   - injection E as <-. now rewrite opar_zero_l.
   - injection E as <-. rewrite <- opar_assoc. apply out_wn_more; [assumption |].
-    now apply IHout2.
+    (* the hypothesis of the [?] premise, by its shape *)
+    match goal with IH : forall _, wn _ = wn _ -> _ |- _ => now apply IH end.
   - now rewrite opar_zero_l.
 Qed.
 
@@ -430,7 +431,10 @@ Definition nodrop (A : formula atom) : bool := false.
 Theorem weighted_balance : forall R l, ll R l -> weakening R = false -> cut R = false ->
   exists o, outs nodrop l o /\ settled o = true.
 Proof.
-  intros R l H W K. induction H.
+  intros R l H W K. induction H as [a | l1 l2 Hl IHll H0 | | l Hl IHll | l | A B l1 l2 Hl1 IHll1 Hl2 IHll2
+    | A B l Hl IHll | A B l Hl1 IHll1 Hl2 IHll2 | A B l Hl IHll | A B l Hl IHll
+    | A l Hl IHll | A l Hl IHll | A l Hl IHll | A l Hl IHll | Hm l1 l2 Hl1 IHll1 Hl2 IHll2
+    | Hw A l Hl IHll | Hc A l1 l2 Hl1 IHll1 Hl2 IHll2].
   - eexists. split; [repeat constructor |].
     destruct (d a), p; cbn; first [reflexivity | apply Z.eqb_eq; lia].
   - destruct IHll as [o [Ho S]]. exists o. split; [eapply outs_perm |]; eassumption.
@@ -549,18 +553,18 @@ Proof. intros A H. destruct A; cbn [shaped] in H; apply andb_prop in H as [H _];
 
 Lemma outputs_all_nonneg : forall l, forallb shaped l = true -> (0 <= outputs_all l)%Z.
 Proof.
-  induction l as [|A l IH]; cbn; [lia |]. intros H. apply andb_prop in H as [HA Hl].
+  intros l; induction l as [|A l IH]; cbn; [lia |]. intros H. apply andb_prop in H as [HA Hl].
   pose proof (shaped_outputs A HA). specialize (IH Hl). lia.
 Qed.
 
 Lemma outputs_all_app : forall l1 l2, outputs_all (l1 ++ l2) = (outputs_all l1 + outputs_all l2)%Z.
-Proof. induction l1 as [|A l1 IH]; intro l2; cbn; [| rewrite IH]; lia. Qed.
+Proof. intros l1; induction l1 as [|A l1 IH]; intro l2; cbn; [| rewrite IH]; lia. Qed.
 
 Lemma outputs_all_perm : forall l1 l2, Permutation l1 l2 -> outputs_all l1 = outputs_all l2.
 Proof. intros l1 l2 H. induction H; cbn; lia. Qed.
 
 Lemma outputs_all_wn : forall l, outputs_all (map wn l) = 0%Z.
-Proof. induction l; cbn; lia. Qed.
+Proof. intros l; induction l; cbn; lia. Qed.
 
 Lemma forallb_shaped_perm : forall l1 l2,
   Permutation l1 l2 -> forallb shaped l1 = forallb shaped l2.
@@ -584,7 +588,12 @@ Theorem affine_balance : forall R l, ll R l -> cut R = false -> forallb shaped l
   (1 <= outputs_all l)%Z /\
   (outputs_all l = 1%Z -> exists o, outs droppable l o /\ settled o = true).
 Proof.
-  intros R l H K. induction H; intro F; cbn [outputs_all outputs] in *.
+  intros R l H K.
+  induction H as [a | l1 l2 Hl IHll H0 | | l Hl IHll | l | A B l1 l2 Hl1 IHll1 Hl2 IHll2
+    | A B l Hl IHll | A B l Hl1 IHll1 Hl2 IHll2 | A B l Hl IHll | A B l Hl IHll
+    | A l Hl IHll | A l Hl IHll | A l Hl IHll | A l Hl IHll | Hm l1 l2 Hl1 IHll1 Hl2 IHll2
+    | Hw A l Hl IHll | Hc A l1 l2 Hl1 IHll1 Hl2 IHll2];
+    intro F; cbn [outputs_all outputs] in *.
   - split; [destruct p; lia |]. intros _. eexists. split; [repeat constructor |].
     destruct (d a), p; cbn; first [reflexivity | apply Z.eqb_eq; lia].
   - rewrite <- (forallb_shaped_perm _ _ H0) in F. destruct (IHll F) as [Q E].

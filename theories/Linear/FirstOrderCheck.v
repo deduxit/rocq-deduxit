@@ -58,7 +58,7 @@ Hypothesis symbol_eqb_spec : forall f g, reflect (f = g) (symbol_eqb f g).
 
 Lemma formula_eqb_spec : forall A B, reflect (A = B) (formula_eqb A B).
 Proof.
-  induction A; destruct B; cbn; try (constructor; congruence).
+  intros A; induction A; intros B; destruct B; cbn; try (constructor; congruence).
   all: repeat match goal with
        | |- reflect _ (symbol_eqb ?a ?b && _) => destruct (symbol_eqb_spec a b)
        | |- reflect _ (terms_eqb _ ?l ?k) => destruct (terms_eqb_spec symbol_eqb symbol_eqb_spec l k)

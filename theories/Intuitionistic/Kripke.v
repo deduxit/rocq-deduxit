@@ -56,7 +56,7 @@ Hypothesis M : model R.
 (** What a world forces, every later world forces. *)
 Lemma persistence : forall A w v, le w v -> forces w A -> forces v A.
 Proof.
-  induction A as [a | | A IHA B IHB | A IHA B IHB | A IHA B IHB];
+  intros A; induction A as [a | | A IHA B IHB | A IHA B IHB | A IHA B IHB];
     intros w v Hle H; cbn in *.
   - exact (model_val _ M _ _ _ Hle H).
   - exact (model_absurd _ M _ _ Hle H).

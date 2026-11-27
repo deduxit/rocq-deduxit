@@ -50,6 +50,11 @@ against 0.4.0. There is no 0.7.0: deduxit 0.7.0's compile against 0.6.0.
   Rocq 9.2): each is written out where it was used, so the library
   compiles on 9.2 and 9.3 without that deprecation's warnings. No
   statement changes.
+- Every proof names what it introduces, so none depends on the names
+  Rocq generates, and the flake's check builds the library with
+  `-mangle-names`. The cut case of the first-order two-sided soundness
+  is a lemma of its own, `FirstOrderIntuitionisticCheck.iderive_sound_cut`,
+  where it was picked by its goal's number. No statement changes.
 - The opam file bounds `rocq-stdlib` above too, below 9.3.
 - A release uploads its source archive and gives that archive's URL and
   SHA-512 for the opam file, in place of GitHub's generated archive of

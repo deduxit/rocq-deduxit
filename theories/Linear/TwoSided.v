@@ -127,7 +127,9 @@ Ltac premise ill ex tac :=
     the context, by counting every formula's occurrences, [eq_dec]
     deciding equality. *)
 Ltac iperm eq_dec :=
-  apply (Permutation_count_occ eq_dec); intros ?x;
+  apply (Permutation_count_occ eq_dec);
+  let x := fresh "x" in
+  intros x;
   repeat match goal with
   | H : Permutation _ _ |- _ =>
       rewrite (Permutation_count_occ eq_dec) in H; specialize (H x)

@@ -84,7 +84,11 @@ Fixpoint size (A : formula symbol) : nat :=
   end.
 
 Lemma size_subst : forall A k t, size (subst k t A) = size A.
-Proof. induction A; intros k t; cbn; rewrite ?IHA, ?IHA1, ?IHA2; reflexivity. Qed.
+Proof.
+  intros A; induction A as [s l | s l | | | | | A1 IHA1 A2 IHA2 | A1 IHA1 A2 IHA2 | A1 IHA1 A2 IHA2 | A1 IHA1 A2 IHA2
+    | A IHA | A IHA | A IHA | A IHA];
+    intros k t; cbn; rewrite ?IHA, ?IHA1, ?IHA2; reflexivity.
+Qed.
 
 Lemma out_exists : forall A, exists o, out A o.
 Proof.
@@ -106,7 +110,7 @@ Qed.
 
 Lemma outs_exists : forall l, exists o, outs l o.
 Proof.
-  induction l as [|A l [o H]]; [eexists; constructor |].
+  intros l; induction l as [|A l [o H]]; [eexists; constructor |].
   destruct (out_exists A) as [a HA]. eexists. constructor; eassumption.
 Qed.
 
@@ -131,7 +135,7 @@ Qed.
 
 Lemma outs_wn : forall l, outs (map wn l) (num 0).
 Proof.
-  induction l as [|A l IH]; cbn; [constructor |].
+  intros l; induction l as [|A l IH]; cbn; [constructor |].
   change (num 0) with (opar (num 0) (num 0)). constructor; [constructor | exact IH].
 Qed.
 
@@ -141,7 +145,8 @@ Proof.
   intros F a1 H. induction H; intros A' E a2 H2; try discriminate.
   - injection E as <-. now rewrite opar_zero_l.
   - injection E as <-. rewrite <- opar_assoc. apply out_wn_more; [assumption |].
-    now apply IHout2.
+    (* the hypothesis of the [?] premise, by its shape *)
+    match goal with IH : forall _, wn _ = wn _ -> _ |- _ => now apply IH end.
 Qed.
 
 (** ** Bounds *)
@@ -205,7 +210,7 @@ Lemma subst_pinned : forall A k u, pinned A = true ->
   pinned (subst k u A) = true /\ least (subst k u A) = least A
   /\ absorbs (subst k u A) = absorbs A.
 Proof.
-  induction A as [p ts|p ts| | | | |A IA B IB|A IA B IB|A IA B IB|A IA B IB|A IA|A IA|A IA|A IA];
+  intros A; induction A as [p ts|p ts| | | | |A IA B IB|A IA B IB|A IA B IB|A IA B IB|A IA|A IA|A IA|A IA];
     intros k u P; cbn [pinned subst least absorbs] in *;
     try (apply andb_prop in P as [PA PB];
          destruct (IA k u PA) as [QA [LA AA]], (IB k u PB) as [QB [LB AB]];
@@ -292,7 +297,10 @@ Theorem weighted_balance : forall R l, ll R l ->
   Calculus.weakening R = false -> Calculus.cut R = false ->
   exists o, outs l o /\ settled o = true.
 Proof.
-  intros R l H W K. induction H.
+  intros R l H W K. induction H as [p ts | l1 l2 Hl IHll H0 | | l Hl IHll | l | A B l1 l2 Hl1 IHll1 Hl2 IHll2
+    | A B l Hl IHll | A B l Hl1 IHll1 Hl2 IHll2 | A B l Hl IHll | A B l Hl IHll
+    | A l Hl IHll | A l Hl IHll | A l Hl IHll | A l Hl IHll | Hm l1 l2 Hl1 IHll1 Hl2 IHll2
+    | Hw A l Hl IHll | Hc A l1 l2 Hl1 IHll1 Hl2 IHll2 | A a l Hf Hl IHll | A t l Ht Hl IHll].
   - eexists. split; [repeat constructor |]. cbn. apply Z.eqb_eq. lia.
   - destruct IHll as [o [Ho S]]. exists o. split; [eapply outs_perm |]; eassumption.
   - eexists. split; [repeat constructor | reflexivity].
@@ -397,13 +405,17 @@ Lemma dual_subst : forall (A : formula symbol) k u, dual (subst k u A) = subst k
 Proof. exact FirstOrderFacts.dual_subst. Qed.
 
 Lemma itr_isubst : forall A k u, itr (isubst k u A) = subst k u (itr A).
-Proof. induction A; intros k u; cbn; rewrite ?IHA, ?IHA1, ?IHA2, ?dual_subst; reflexivity. Qed.
+Proof.
+  intros A; induction A as [s l | | A1 IHA1 A2 IHA2 | A1 IHA1 A2 IHA2 | | A1 IHA1 A2 IHA2 | | A1 IHA1 A2 IHA2
+    | A IHA | A IHA | A IHA];
+    intros k u; cbn; rewrite ?IHA, ?IHA1, ?IHA2, ?dual_subst; reflexivity.
+Qed.
 
 Lemma occurs_dual : forall b (A : formula symbol), occurs b (dual A) = occurs b A.
 Proof. exact FirstOrderFacts.occurs_dual. Qed.
 
 Lemma occurs_itr : forall b A, occurs b (itr A) = ioccurs b A.
-Proof. induction A; cbn; rewrite ?occurs_dual; congruence. Qed.
+Proof. intros b A; induction A; cbn; rewrite ?occurs_dual; congruence. Qed.
 
 (** A fresh eigenvariable stays fresh in the translation. *)
 Lemma fresh_one_sided : forall b G C,
@@ -423,7 +435,15 @@ Proof. intros. eapply ex_r; [eassumption | apply perm_swap]. Qed.
     weakening and cut. *)
 Theorem ill_ll : forall R G C, ill R G C -> ll (Refutations.lrules R) (one_sided G C).
 Proof.
-  intros R G C H. unfold one_sided. induction H; cbn in *.
+  intros R G C H. unfold one_sided.
+  induction H as [p ts | l1 l2 C Hl IHill H0 | | l C Hl IHill | A B l1 l2 Hl1 IHill1 Hl2 IHill2
+    | A B l C Hl IHill | A B l Hl IHill | A B l1 l2 C Hl1 IHill1 Hl2 IHill2 | l
+    | A B l Hl1 IHill1 Hl2 IHill2 | A B l C Hl IHill | A B l C Hl IHill | l C
+    | A B l Hl IHill | A B l Hl IHill | A B l C Hl1 IHill1 Hl2 IHill2 | A l Hl IHill
+    | A l C Hl IHill | A l C Hl IHill | A l C Hl IHill | Hw A l C Hl IHill
+    | Hc A l1 l2 C Hl1 IHill1 Hl2 IHill2
+    | A a l H Hl IHill | A t l C H Hl IHill | A t l H Hl IHill | A a l C H Hl IHill];
+    cbn in *.
   - apply swap, ax_r.
   - eapply ex_r; [exact IHill |]. apply perm_skip, Permutation_map, H0.
   - apply one_r.
@@ -457,7 +477,7 @@ Proof.
     eapply ex_r; [exact IHill |].
     apply perm_trans with (wn (dual (itr A)) :: itr C :: wn (dual (itr A)) :: map (fun A => dual (itr A)) l);
       [apply perm_swap | apply perm_skip, perm_swap].
-  - apply swap, weakening_r; [exact H | exact IHill].
+  - apply swap, weakening_r; [exact Hw | exact IHill].
   - rewrite map_app. eapply ex_r.
     + refine (cut_r (Refutations.lrules R) _ (itr A) (map (fun A => dual (itr A)) l1)
         (itr C :: map (fun A => dual (itr A)) l2) _ _); [assumption | exact IHill1 |].

@@ -61,7 +61,7 @@ Hypothesis symbol_eqb_spec : forall f g, reflect (f = g) (symbol_eqb f g).
 
 Lemma iformula_eqb_spec : forall A B, reflect (A = B) (iformula_eqb A B).
 Proof.
-  induction A; destruct B; cbn; try (constructor; congruence).
+  intros A; induction A; intros B; destruct B; cbn; try (constructor; congruence).
   all: repeat match goal with
        | |- reflect _ (symbol_eqb ?a ?b && _) => destruct (symbol_eqb_spec a b)
        | |- reflect _ (terms_eqb _ ?l ?k) =>
@@ -165,7 +165,8 @@ Definition pick (A : iformula symbol) (l : list (iformula symbol)) : option (lis
   Multiset.remove_one (iformula_eqb symbol_eqb) A l.
 
 (** Whether [l1] and [l2] are the same multiset. *)
-Definition same (l1 l2 : list (iformula symbol)) : bool := Multiset.same (iformula_eqb symbol_eqb) l1 l2.
+Definition same (l1 l2 : list (iformula symbol)) : bool :=
+  Multiset.same (iformula_eqb symbol_eqb) l1 l2.
 
 (** The formulas under the [!] of a list of [!] formulas, or [None] when
     one of them is not a [!] formula. *)
@@ -363,7 +364,7 @@ Proof. exact (Multiset.same_perm _ (iformula_eqb_spec symbol_eqb symbol_eqb_spec
 Lemma unoc_map : forall (l l' : list (iformula symbol)),
   unoc l = Some l' -> l = map ioc l'.
 Proof.
-  induction l as [| A l IH]; cbn; intros l' H.
+  intros l; induction l as [| A l IH]; cbn; intros l' H.
   - injection H as <-. reflexivity.
   - destruct A; try discriminate.
     destruct (unoc l) as [l'' |]; cbn in H; [| discriminate].
@@ -381,7 +382,9 @@ Qed.
 Lemma ioccurs_subst : forall b k u (A : iformula symbol),
   ioccurs b (isubst k u A) = true -> ioccurs b A = true \/ toccurs b u = true.
 Proof.
-  intros b k u A. revert k. induction A; cbn; intros k H; try discriminate;
+  intros b k u A. revert k.
+  induction A as [s l | | A1 IHA1 A2 IHA2 | A1 IHA1 A2 IHA2 | | A1 IHA1 A2 IHA2 | | A1 IHA1 A2 IHA2 | A IHA | A IHA | A IHA];
+    cbn; intros k H; try discriminate;
     try (apply orb_true_iff in H as [H | H];
          [destruct (IHA1 _ H) | destruct (IHA2 _ H)]; rewrite ?orb_true_iff; tauto);
     try exact (IHA _ H).
@@ -394,7 +397,7 @@ Qed.
 Lemma ioccurs_isubst_false : forall b k u (A : iformula symbol),
   ioccurs b A = false -> toccurs b u = false -> ioccurs b (isubst k u A) = false.
 Proof.
-  intros * HA Hu. destruct (ioccurs b (isubst k u A)) eqn:O; [| reflexivity].
+  intros b k u A HA Hu. destruct (ioccurs b (isubst k u A)) eqn:O; [| reflexivity].
   destruct (ioccurs_subst _ _ _ _ O); congruence.
 Qed.
 
@@ -423,7 +426,7 @@ Qed.
 
 Lemma ifresh_perm : forall b (l l' : list (iformula symbol)),
   Permutation l' l -> ifresh b l' -> ifresh b l.
-Proof. intros * P H X HX. apply H, (Permutation_in _ (Permutation_sym P) HX). Qed.
+Proof. intros b l l' P H X HX. apply H, (Permutation_in _ (Permutation_sym P) HX). Qed.
 
 Lemma ifresh_nil : forall b, ifresh (symbol := symbol) b [].
 Proof. intros b A []. Qed.
@@ -556,7 +559,9 @@ Local Ltac ifresh_goal :=
     and each of its formulas is one of the conclusion's or a subformula
     of one. *)
 Local Ltac good_tac G :=
-  intros ?b ?Hb;
+  let b := fresh "b" in
+  let Hb := fresh "Hb" in
+  intros b Hb;
   let HE := fresh "HE" in
   let HF := fresh "HF" in
   destruct (G b ltac:(rewrite ?in_app_iff; cbn; auto)) as [HE HF]; facts;
@@ -569,6 +574,47 @@ Local Ltac good_tac G :=
         end ]
   | ifresh_goal ].
 
+(** The cut case of [iderive_sound]: the cut formula's eigenvariables
+    are in the set, and every other formula of a premise is one of the
+    conclusion's. *)
+Lemma iderive_sound_cut : forall A p1 p2 i lc Cc ec,
+  iintroduced (ICut A p1 p2) = Some i ->
+  iderive symbol_eqb R (ICut A p1 p2) = Some (lc, Cc, ec) -> igood i lc Cc ec ->
+  (forall i l C e, iintroduced p1 = Some i -> iderive symbol_eqb R p1 = Some (l, C, e) ->
+     igood i l C e -> ill R l C) ->
+  (forall i l C e, iintroduced p2 = Some i -> iderive symbol_eqb R p2 = Some (l, C, e) ->
+     igood i l C e -> ill R l C) ->
+  ill R lc Cc.
+Proof.
+  intros A p1 p2 i lc Cc ec I H G IH1 IH2.
+  cbn -[icut_conclusion] in I, H.
+  destruct (iintroduced p1) as [il |] eqn:Il; [| discriminate].
+  destruct (iintroduced p2) as [ir |] eqn:Ir; [| discriminate].
+  injection I as <-.
+  destruct (Intuitionistic.icut R) eqn:K; [| discriminate].
+  destruct (iderive symbol_eqb R p1) as [[[l1 C1] e1] |] eqn:D1; [| discriminate].
+  destruct (iderive symbol_eqb R p2) as [[[l2 C2] e2] |] eqn:D2; [| discriminate].
+  destruct (icut_conclusion symbol_eqb A l1 C1 l2 C2) as [[l C] |] eqn:Ec; [| discriminate].
+  injection H as <- <- <-.
+  assert (FX : forall b X, In b (il ++ ir) -> In X (C1 :: l1) \/ In X (C2 :: l2) ->
+    ioccurs b X = false).
+  { intros b X Hb HX. destruct (G b Hb) as [HE HF].
+    destruct (icut_conclusion_in _ _ _ _ _ _ _ _ Ec HX) as [-> | HX'].
+    - destruct (ioccurs b A) eqn:O; [| reflexivity].
+      exfalso. apply HE, in_or_app. left. apply ieigens_occurs, O.
+    - apply HF, HX'. }
+  assert (G1 : igood il l1 C1 e1).
+  { intros b Hb. destruct (G b (in_or_app _ _ _ (or_introl Hb))) as [HE _]. split.
+    - intros HI. apply HE. rewrite !in_app_iff. auto.
+    - intros X HX. apply (FX b X (in_or_app _ _ _ (or_introl Hb))). auto. }
+  assert (G2 : igood ir l2 C2 e2).
+  { intros b Hb. destruct (G b (in_or_app _ _ _ (or_intror Hb))) as [HE _]. split.
+    - intros HI. apply HE. rewrite !in_app_iff. auto.
+    - intros X HX. apply (FX b X (in_or_app _ _ _ (or_intror Hb))). auto. }
+  exact (icut_conclusion_sound _ _ _ _ _ _ _ K (IH1 _ _ _ _ eq_refl eq_refl G1)
+    (IH2 _ _ _ _ eq_refl eq_refl G2) Ec).
+Qed.
+
 (** Every conclusion [iderive] computes is derivable, when no
     eigenvariable a step of the term introduces is in it or in the set
     it carries. *)
@@ -576,36 +622,9 @@ Lemma iderive_sound : forall p i l C e,
   iintroduced p = Some i -> iderive symbol_eqb R p = Some (l, C, e) -> igood i l C e ->
   ill R l C.
 Proof.
-  induction p; intros i lc Cc ec I H G.
-  21: {
-    (* ICut: the cut formula's eigenvariables are in the set, and every
-       other formula of a premise is one of the conclusion's. *)
-    cbn -[icut_conclusion] in I, H.
-    destruct (iintroduced p1) as [il |] eqn:Il; [| discriminate].
-    destruct (iintroduced p2) as [ir |] eqn:Ir; [| discriminate].
-    injection I as <-.
-    destruct (Intuitionistic.icut R) eqn:K; [| discriminate].
-    destruct (iderive symbol_eqb R p1) as [[[l1 C1] e1] |] eqn:D1; [| discriminate].
-    destruct (iderive symbol_eqb R p2) as [[[l2 C2] e2] |] eqn:D2; [| discriminate].
-    destruct (icut_conclusion symbol_eqb A l1 C1 l2 C2) as [[l C] |] eqn:Ec; [| discriminate].
-    injection H as <- <- <-.
-    assert (FX : forall b X, In b (il ++ ir) -> In X (C1 :: l1) \/ In X (C2 :: l2) ->
-      ioccurs b X = false).
-    { intros b X Hb HX. destruct (G b Hb) as [HE HF].
-      destruct (icut_conclusion_in _ _ _ _ _ _ _ _ Ec HX) as [-> | HX'].
-      - destruct (ioccurs b A) eqn:O; [| reflexivity].
-        exfalso. apply HE, in_or_app. left. apply ieigens_occurs, O.
-      - apply HF, HX'. }
-    assert (G1 : igood il l1 C1 e1).
-    { intros b Hb. destruct (G b (in_or_app _ _ _ (or_introl Hb))) as [HE _]. split.
-      - intros HI. apply HE. rewrite !in_app_iff. auto.
-      - intros X HX. apply (FX b X (in_or_app _ _ _ (or_introl Hb))). auto. }
-    assert (G2 : igood ir l2 C2 e2).
-    { intros b Hb. destruct (G b (in_or_app _ _ _ (or_intror Hb))) as [HE _]. split.
-      - intros HI. apply HE. rewrite !in_app_iff. auto.
-      - intros X HX. apply (FX b X (in_or_app _ _ _ (or_intror Hb))). auto. }
-    exact (icut_conclusion_sound _ _ _ _ _ _ _ K (IHp1 _ _ _ _ eq_refl eq_refl G1)
-      (IHp2 _ _ _ _ eq_refl eq_refl G2) Ec). }
+  intros p; induction p; intros i lc Cc ec I H G.
+  (* The cut, by the shape of its hypotheses. *)
+  all: try (eapply (iderive_sound_cut _ _ _ _ _ _ _ I H G); eassumption).
   all: cbn in I, H; steps; equalities;
     repeat match goal with
     | H : Some (_, _, _) = Some (_, _, _) |- _ => injection H as <- <- <-
@@ -676,7 +695,7 @@ Proof.
   destruct (iintroduced p) as [i |] eqn:I; [| discriminate].
   destruct (iderive symbol_eqb R p) as [[[l C'] e] |] eqn:D; [| discriminate].
   apply andb_prop in H as [H HΓ]. apply andb_prop in H as [HI HC].
-  destruct ((iformula_eqb_spec symbol_eqb symbol_eqb_spec) C' C); [subst | discriminate].
+  destruct (iformula_eqb_spec symbol_eqb symbol_eqb_spec C' C); [subst | discriminate].
   apply same_perm in HΓ.
   rewrite forallb_forall in HI.
   assert (G : igood i l C e).

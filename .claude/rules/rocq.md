@@ -57,6 +57,20 @@ them against this library, taken as a pinned input. Paths of the form
   All`); it leaves the list when 9.0 and 9.1 are dropped. Rocq ignores an
   unknown warning name in `-w` silently, so a name there is checked by
   a planted warning, not by the build.
+- **Proofs name what they introduce** (`-mangle-names M_` in the
+  check's build: Rocq renames every name it generates, so a proof that
+  uses one fails). An `induction` or `destruct` on a statement's
+  variable comes after an `intros` that names it; `intros *` gives way
+  to the names; an induction whose hypotheses the proof uses has an
+  `as` pattern, which keeps the names Rocq used to generate (`IHA1`,
+  `IHll`, `H0`) so the proof reads as before; a tactic that introduces a
+  variable it then uses binds it with `fresh` (`let x := fresh "x" in
+  intros x`), since `intros ?x` gives no name to refer to. A case is
+  never picked by its number: the cut of the first-order two-sided
+  soundness is the lemma `iderive_sound_cut`, applied by the shape of
+  its hypotheses (a new constructor before `ICut` moved the number).
+  The first failure the audit's inventory gave per file was the first
+  of many in 18 files; the check finds the rest.
 - **The certificates' interface** is `tests/Interface/`, a file per
   prelude of deduxit's exporter (`core/src/export/rocq/mod.rs`'s
   `DEDUXIT_*_PRELUDE`), which starts with that prelude verbatim and

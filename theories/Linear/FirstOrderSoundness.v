@@ -60,12 +60,22 @@ Lemma take_all_perm : forall (l1 l2 l : list (formula symbol)),
 Proof. exact (Multiset.take_all_perm _ (formula_eqb_spec symbol_eqb symbol_eqb_spec)). Qed.
 
 Lemma remove_all_perm : forall (A : formula symbol) l,
-  Permutation l (repeat A ((count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec)) l A) ++ remove_all symbol_eqb A l).
-Proof. exact (Multiset.remove_all_perm _ (formula_eqb_spec symbol_eqb symbol_eqb_spec) (formula_eq_dec symbol_eqb symbol_eqb_spec)). Qed.
+  Permutation l
+    (repeat A (count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec) l A)
+     ++ remove_all symbol_eqb A l).
+Proof.
+  exact (Multiset.remove_all_perm _ (formula_eqb_spec symbol_eqb symbol_eqb_spec)
+    (formula_eq_dec symbol_eqb symbol_eqb_spec)).
+Qed.
 
 Lemma diff_count : forall (l1 l2 : list (formula symbol)) x,
-  (count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec)) (diff symbol_eqb l2 l1) x = (count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec)) l2 x - (count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec)) l1 x.
-Proof. exact (Multiset.diff_count _ (formula_eqb_spec symbol_eqb symbol_eqb_spec) (formula_eq_dec symbol_eqb symbol_eqb_spec)). Qed.
+  count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec) (diff symbol_eqb l2 l1) x =
+  count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec) l2 x
+  - count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec) l1 x.
+Proof.
+  exact (Multiset.diff_count _ (formula_eqb_spec symbol_eqb symbol_eqb_spec)
+    (formula_eq_dec symbol_eqb symbol_eqb_spec)).
+Qed.
 
 (** A formula of [l2] is in [l1], or in what is left of [l2] after
     removing [l1]. *)
@@ -95,7 +105,10 @@ Qed.
 Lemma occurs_subst : forall b k u (A : formula symbol),
   occurs b (subst k u A) = true -> occurs b A = true \/ toccurs b u = true.
 Proof.
-  intros b k u A. revert k. induction A; cbn; intros k H; try discriminate;
+  intros b k u A. revert k.
+  induction A as [s l | s l | | | | | A1 IHA1 A2 IHA2 | A1 IHA1 A2 IHA2 | A1 IHA1 A2 IHA2 | A1 IHA1 A2 IHA2
+      | A IHA | A IHA | A IHA | A IHA];
+    cbn; intros k H; try discriminate;
     try (apply orb_true_iff in H as [H | H];
          [destruct (IHA1 _ H) | destruct (IHA2 _ H)]; rewrite ?orb_true_iff; tauto);
     try exact (IHA _ H); try exact (IHA _ H).
@@ -142,14 +155,14 @@ Proof. unfold fresh; auto. Qed.
 Lemma fresh_perm : forall b (l l' : list (formula symbol)),
   Permutation l' l -> fresh b l' -> fresh b l.
 Proof.
-  intros * P H. apply (fresh_incl _ _ l'); [| exact H].
+  intros b l l' P H. apply (fresh_incl _ _ l'); [| exact H].
   intros X HX. apply (Permutation_in _ (Permutation_sym P) HX).
 Qed.
 
 Lemma take_in : forall (A : formula symbol) gamma any g X,
   take symbol_eqb A gamma any = Some g -> In X gamma -> X = A \/ In X g.
 Proof.
-  intros * H HX.
+  intros A gamma any g X H HX.
   destruct (Multiset.take_spec _ (formula_eqb_spec symbol_eqb symbol_eqb_spec) _ _ _ _ H) as [P | [_ ->]]; [| auto].
   apply (Permutation_in _ P) in HX as [-> | HX]; auto.
 Qed.
@@ -159,7 +172,7 @@ Qed.
 Lemma fresh_take : forall b (A : formula symbol) gamma any g,
   take symbol_eqb A gamma any = Some g -> occurs b A = false -> fresh b g -> fresh b gamma.
 Proof.
-  intros * T HA Hg X HX. destruct (take_in _ _ _ _ _ T HX) as [-> | HX']; auto.
+  intros b A gamma any g T HA Hg X HX. destruct (take_in _ _ _ _ _ T HX) as [-> | HX']; auto.
 Qed.
 
 (** Breaks the hypotheses of freshness and absence into ones about
@@ -188,11 +201,11 @@ Variable R : Calculus.rules.
 
 (** Weakening of a list of [?] formulas. *)
 Lemma wk_list : forall (Θ l : list (formula symbol)), ll R l -> ll R (map wn Θ ++ l).
-Proof. induction Θ; cbn; intros; [assumption | apply wk_r; auto]. Qed.
+Proof. intros Θ; induction Θ; cbn; intros; [assumption | apply wk_r; auto]. Qed.
 
 Lemma wn_contract_cons : forall (A : formula symbol) n (l : list (formula symbol)),
   ll R (wn A :: map wn (repeat A n) ++ l) -> ll R (wn A :: l).
-Proof. induction n; cbn; intros l H; [exact H | apply IHn, co_r, H]. Qed.
+Proof. intros A n; induction n as [| n IH]; cbn; intros l H; [exact H | apply IH, co_r, H]. Qed.
 
 (** Any number of copies of [?A], zero included, contract into one. *)
 Lemma wn_contract : forall (A : formula symbol) n (l : list (formula symbol)),
@@ -221,12 +234,12 @@ Lemma good_of : forall i i' s s',
   (forall b, In b i' -> ~ In b (eigens s) -> fresh b (gamma s ++ map wn (theta s)) ->
      ~ In b (eigens s') /\ fresh b (gamma s' ++ map wn (theta s'))) ->
   good i' s'.
-Proof. intros * I G H b Hb. destruct (G b (I b Hb)). auto. Qed.
+Proof. intros i i' s s' I G H b Hb. destruct (G b (I b Hb)). auto. Qed.
 
 Lemma sat_perm : forall i theta gamma gamma' any,
   Permutation gamma gamma' -> sat i theta gamma any -> sat i theta gamma' any.
 Proof.
-  intros * HP H Δ HΔ HD. eapply ex_r; [apply (H Δ HΔ HD) | apply Permutation_app_tail, HP].
+  intros i theta gamma gamma' any HP H Δ HΔ HD. eapply ex_r; [apply (H Δ HΔ HD) | apply Permutation_app_tail, HP].
 Qed.
 
 Lemma take_spec : forall A gamma any gamma',
@@ -243,7 +256,7 @@ Lemma take_sat : forall i pre A theta gamma any gamma',
   (forall b, In b i -> occurs b A = false) ->
   sat i theta (pre ++ gamma) any -> sat i theta (pre ++ A :: gamma') any.
 Proof.
-  intros * T HA H. destruct (take_spec _ _ _ _ T) as [HP | [-> ->]].
+  intros i pre A theta gamma any gamma' T HA H. destruct (take_spec _ _ _ _ T) as [HP | [-> ->]].
   - apply (sat_perm _ _ (pre ++ gamma)); [apply Permutation_app_head, HP | exact H].
   - intros Δ _ HD. eapply ex_r; [apply (H (A :: Δ)); [easy |] | perm].
     intros b Hb. apply fresh_cons_iff. auto.
@@ -265,7 +278,7 @@ Theorem derive_sound : forall p i s,
   introduced p = Some i -> derive symbol_eqb R p = Some s -> good i s ->
   sat i (theta s) (gamma s) (any s).
 Proof.
-  induction p as [a l | A B l IHl r IHr | A B q IHq | | q IHq | A B l IHl r IHr
+  intros p; induction p as [a l | A B l IHl r IHr | A B q IHq | | q IHq | A B l IHl r IHr
     | A B side q IHq | | A q IHq | A q IHq | A q IHq | A q IHq | l IHl r IHr
     | A l IHl r IHr | A a q IHq | A t q IHq];
     cbn; intros i s I H G.
@@ -468,14 +481,16 @@ Proof.
     { apply (good_of _ _ _ _ (fun b H => H) G).
       cbn; intros b _ HE HF; facts.
       split; [assumption | fresh_split; [assumption |]].
-      intros X HX. destruct ((formula_eq_dec symbol_eqb symbol_eqb_spec) X A) as [-> | ne]; [assumption |].
+      intros X HX. destruct (formula_eq_dec symbol_eqb symbol_eqb_spec X A) as [-> | ne]; [assumption |].
       match goal with HT : fresh _ (remove_all _ _ _) |- _ => apply HT end.
       unfold remove_all. apply filter_In. split; [exact HX |].
-      destruct ((formula_eqb_spec symbol_eqb symbol_eqb_spec) A X); [congruence | reflexivity]. }
+      destruct (formula_eqb_spec symbol_eqb symbol_eqb_spec A X); [congruence | reflexivity]. }
     specialize (IHq _ _ I eq_refl Gq); cbn in IHq.
-    intros Δ HΔ HD. apply (wn_contract A ((count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec)) θ A)).
+    intros Δ HΔ HD.
+    apply (wn_contract A (count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec) θ A)).
     eapply ex_r; [apply (IHq Δ HΔ HD) |].
-    transitivity (γ ++ map wn (repeat A ((count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec)) θ A) ++ remove_all symbol_eqb A θ) ++ Δ).
+    transitivity (γ ++ map wn (repeat A (count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec) θ A)
+      ++ remove_all symbol_eqb A θ) ++ Δ).
     + apply Permutation_app_head, Permutation_app_tail, Permutation_map, remove_all_perm.
     + perm.
   - (* Copy *)

@@ -90,14 +90,14 @@ Definition bounded (size : nat) (tables : list table) : bool :=
 (** [nats_eqb] decides equality. *)
 Lemma nats_eqb_eq : forall l k, nats_eqb l k = true <-> l = k.
 Proof.
-  induction l as [| x l IH]; intros [| y k]; cbn; try (split; congruence).
+  intros l; induction l as [| x l IH]; intros [| y k]; cbn; try (split; congruence).
   rewrite andb_true_iff, Nat.eqb_eq, IH. split; [intros [-> ->]; reflexivity | intros E; injection E; auto].
 Qed.
 
 (** Every list of [k] numbers below [n] is one of [tuples k n]. *)
 Lemma tuples_in : forall l n, Forall (fun d => d < n) l -> In l (tuples (length l) n).
 Proof.
-  induction l as [| d l IH]; intros n H; cbn; [left; reflexivity |].
+  intros l; induction l as [| d l IH]; intros n H; cbn; [left; reflexivity |].
   apply Forall_cons_iff in H as [Hd Hl]. apply in_flat_map. exists d. split.
   - apply in_seq. lia.
   - apply in_map. exact (IH n Hl).
@@ -287,7 +287,7 @@ Fixpoint kforces_fast (w : nat) (rho : list nat) (A : formula symbol) : bool :=
 (** [kforces_fast] computes [kforces]. *)
 Lemma kforces_fast_kforces : forall A w rho, kforces_fast w rho A = kforces w rho A.
 Proof.
-  induction A as [p l | | A IHA B IHB | A IHA B IHB | A IHA B IHB | A IHA | A IHA];
+  intros A; induction A as [p l | | A IHA B IHB | A IHA B IHB | A IHA B IHB | A IHA | A IHA];
     intros w rho; cbn [kforces_fast kforces].
   - reflexivity.
   - reflexivity.
@@ -324,7 +324,7 @@ Proof. exact Lists.mem_In. Qed.
 Lemma kforces_forces : forall A w rho,
   kforces w rho A = true <-> forces kle 0 kdom fn_at kpred kabs w (fun _ => 0) rho A.
 Proof.
-  induction A as [p l | | A IHA B IHB | A IHA B IHB | A IHA B IHB | A IHA | A IHA];
+  intros A; induction A as [p l | | A IHA B IHB | A IHA B IHB | A IHA B IHB | A IHA | A IHA];
     intros w rho; cbn [kforces forces]; unfold kle, kdom, kpred, kabs.
   - reflexivity.
   - reflexivity.

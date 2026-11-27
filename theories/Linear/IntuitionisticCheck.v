@@ -58,7 +58,7 @@ Hypothesis atom_eqb_spec : forall a b, reflect (a = b) (atom_eqb a b).
 
 Lemma iformula_eqb_spec : forall A B, reflect (A = B) (iformula_eqb A B).
 Proof.
-  induction A; destruct B; cbn; try (constructor; congruence).
+  intros A; induction A; intros B; destruct B; cbn; try (constructor; congruence).
   all: repeat match goal with
        | |- reflect _ (atom_eqb ?a ?b) => destruct (atom_eqb_spec a b)
        | |- reflect _ (iformula_eqb ?A ?B && _) =>
@@ -141,7 +141,8 @@ Definition pick (A : iformula atom) (l : list (iformula atom)) : option (list (i
   Multiset.remove_one (iformula_eqb atom_eqb) A l.
 
 (** Whether [l1] and [l2] are the same multiset. *)
-Definition same (l1 l2 : list (iformula atom)) : bool := Multiset.same (iformula_eqb atom_eqb) l1 l2.
+Definition same (l1 l2 : list (iformula atom)) : bool :=
+  Multiset.same (iformula_eqb atom_eqb) l1 l2.
 
 (** The formulas under the [!] of a list of [!] formulas, or [None] when
     one of them is not a [!] formula. *)
@@ -289,7 +290,7 @@ Proof. exact (Multiset.same_perm _ (iformula_eqb_spec atom_eqb atom_eqb_spec)). 
 Lemma unoc_map : forall (l l' : list (iformula atom)),
   unoc l = Some l' -> l = map ioc l'.
 Proof.
-  induction l as [| A l IH]; cbn; intros l' H.
+  intros l; induction l as [| A l IH]; cbn; intros l' H.
   - injection H as <-. reflexivity.
   - destruct A; try discriminate.
     destruct (unoc l) as [l'' |]; cbn in H; [| discriminate].
@@ -331,7 +332,7 @@ Qed.
 Lemma iderive_sound : forall p l C,
   iderive atom_eqb R p = Some (l, C) -> ill R l C.
 Proof.
-  induction p; cbn; intros l C H; steps; equalities;
+  intros p; induction p; cbn; intros l C H; steps; equalities;
     repeat match goal with
     | H : Some _ = Some _ |- _ => injection H as <- <-
     | IH : forall l C, Some (?l', ?C') = Some (l, C) -> _ |- _ =>

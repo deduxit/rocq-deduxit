@@ -37,7 +37,10 @@ Theorem mix_to_ll : forall R (l : list (formula atom)),
   ll {| mix := false; weakening := weakening R; cut := cut R |} (wn (tens bot bot) :: l).
 Proof.
   intros R l H. set (R' := {| mix := false; weakening := weakening R; cut := cut R |}).
-  induction H.
+  induction H as [a | l1 l2 Hl IHll H0 | | l Hl IHll | l | A B l1 l2 Hl1 IHll1 Hl2 IHll2
+    | A B l Hl IHll | A B l Hl1 IHll1 Hl2 IHll2 | A B l Hl IHll | A B l Hl IHll
+    | A l Hl IHll | A l Hl IHll | A l Hl IHll | A l Hl IHll | Hm l1 l2 Hl1 IHll1 Hl2 IHll2
+    | Hw A l Hl IHll | Hc A l1 l2 Hl1 IHll1 Hl2 IHll2].
   - apply wk_r, ax_r.
   - eapply ex_r; [exact IHll | apply perm_skip, H0].
   - apply wk_r, one_r.

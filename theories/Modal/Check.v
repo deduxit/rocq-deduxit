@@ -43,7 +43,7 @@ Fixpoint formula_eqb (A B : formula atom) : bool :=
 
 Lemma formula_eqb_eq : forall A B, formula_eqb A B = true -> A = B.
 Proof.
-  induction A as [a | | | A IHA | A1 IH1 A2 IH2 | A1 IH1 A2 IH2
+  intros A; induction A as [a | | | A IHA | A1 IH1 A2 IH2 | A1 IH1 A2 IH2
     | A1 IH1 A2 IH2 | A1 IH1 A2 IH2 | A IHA | A IHA];
     intros [b | | | B | B1 B2 | B1 B2 | B1 B2 | B1 B2 | B | B];
     cbn [formula_eqb]; try discriminate; intro H; try reflexivity.
@@ -211,7 +211,7 @@ Fixpoint mcheck (C : conditions) (p : proof) (L Rt : list (item atom)) {struct p
 (** A term the checker accepts is a derivation of the calculus. *)
 Theorem mcheck_sound : forall C p L Rt, mcheck C p L Rt = true -> g3 C L Rt.
 Proof.
-  intros C.
+  intros C p.
   induction p as [x A | x | x | x A p IH | x A p IH | x A B p IH
     | x A B p IHp q IHq | x A B p IHp q IHq | x A B p IH
     | x A B p IHp q IHq | x A B p IH | x A B p IHp q IHq | x A B p IHp q IHq

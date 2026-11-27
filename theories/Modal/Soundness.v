@@ -126,7 +126,7 @@ Qed.
 Lemma beside_forces : forall (A : formula atom) u,
   forces beside_R beside_V (Some u) A <-> forces R V u A.
 Proof.
-  induction A as [a | | | A IHA | A IHA B IHB | A IHA B IHB | A IHA B IHB
+  intros A; induction A as [a | | | A IHA | A IHA B IHB | A IHA B IHB | A IHA B IHB
     | A IHA B IHB | A IHA | A IHA]; intros u; cbn [forces beside_V];
     try (pose proof (IHA u) as IHAu); try (pose proof (IHB u) as IHBu);
     try tauto.
@@ -144,7 +144,7 @@ Qed.
 Lemma beside_decided : forall A : formula atom,
   forces beside_R beside_V None A \/ ~ forces beside_R beside_V None A.
 Proof.
-  induction A as [a | | | A IHA | A IHA B IHB | A IHA B IHB | A IHA B IHB
+  intros A; induction A as [a | | | A IHA | A IHA B IHB | A IHA B IHB | A IHA B IHB
     | A IHA B IHB | A IHA | A IHA]; cbn [forces beside_V]; try tauto.
   - destruct IHA as [H | H].
     + left. intros [v |] Hv; [destruct Hv | exact H].

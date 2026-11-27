@@ -61,7 +61,8 @@ Fixpoint eval (v : atom -> bool) (A : formula atom) : bool :=
 (** A formula's dual reads as its negation. *)
 Lemma eval_dual : forall v A, eval v (dual A) = negb (eval v A).
 Proof.
-  intros v A. induction A; cbn; rewrite ?IHA, ?IHA1, ?IHA2;
+  intros v A. induction A as [a | a | | | | | A1 IHA1 A2 IHA2 | A1 IHA1 A2 IHA2 | A1 IHA1 A2 IHA2 | A1 IHA1 A2 IHA2 | A IHA | A IHA]; cbn;
+    rewrite ?IHA, ?IHA1, ?IHA2;
     try destruct (eval v A1), (eval v A2); try destruct (v a); reflexivity.
 Qed.
 
@@ -74,7 +75,12 @@ Proof. exact (@Lists.existsb_perm (formula atom)). Qed.
 (** Every derivable sequent, in every calculus, reads as a tautology. *)
 Theorem ll_tautology : forall R l, ll R l -> forall v, existsb (eval v) l = true.
 Proof.
-  intros R l H v. induction H; cbn in *; rewrite ?existsb_app in *.
+  intros R l H v.
+  induction H as [a | l1 l2 Hl IHll H0 | | l Hl IHll | l | A B l1 l2 Hl1 IHll1 Hl2 IHll2
+    | A B l Hl IHll | A B l Hl1 IHll1 Hl2 IHll2 | A B l Hl IHll | A B l Hl IHll
+    | A l Hl IHll | A l Hl IHll | A l Hl IHll | A l Hl IHll | Hm l1 l2 Hl1 IHll1 Hl2 IHll2
+    | Hw A l Hl IHll | Hc A l1 l2 Hl1 IHll1 Hl2 IHll2];
+    cbn in *; rewrite ?existsb_app in *.
   - destruct (v a); reflexivity.
   - now rewrite <- (existsb_perm _ _ _ H0).
   - reflexivity.
@@ -186,14 +192,14 @@ Proof. intros [[]|] [[]|] [[]|]; cbn; try reflexivity. f_equal. f_equal; lia. Qe
 Lemma excesses_app : forall l1 l2,
   excesses (l1 ++ l2) = add (excesses l1) (excesses l2).
 Proof.
-  induction l1 as [|A l1 IH]; intro l2; cbn [app excesses].
+  intros l1; induction l1 as [|A l1 IH]; intro l2; cbn [app excesses].
   - now rewrite add_zero_l.
   - now rewrite IH, add_assoc.
 Qed.
 
 Lemma excesses_perm : forall l1 l2, Permutation l1 l2 -> excesses l1 = excesses l2.
 Proof.
-  intros l1 l2 H. induction H; cbn [excesses].
+  intros l1 l2 H. induction H as [| x l1 l2 H IHPermutation | x y l | l1 l2 l3 H1 IHPermutation1 H2 IHPermutation2]; cbn [excesses].
   - reflexivity.
   - now rewrite IHPermutation.
   - now rewrite !add_assoc, (add_comm (excess y)).
@@ -207,7 +213,7 @@ Proof. intros [[[] []]|]; cbn; first [left; reflexivity | right; split; reflexiv
 Lemma excesses_wn : forall l,
   excesses (map wn l) = None \/ excesses (map wn l) = Some (0%Z, 0%Z).
 Proof.
-  induction l as [|A l IH]; cbn [map excesses excess]; [now right |].
+  intros l; induction l as [|A l IH]; cbn [map excesses excess]; [now right |].
   destruct (bang_cases (excess A)) as [-> | [-> _]]; [now left |].
   rewrite add_zero_l. exact IH.
 Qed.
@@ -217,7 +223,12 @@ Qed.
 Theorem balance : forall R l,
   ll R l -> weakening R = false -> cut R = false -> holds (excesses l).
 Proof.
-  intros R l H W K. induction H; cbn [excesses excess] in *.
+  intros R l H W K.
+  induction H as [a0 | l1 l2 Hl IHll H0 | | l Hl IHll | l | A B l1 l2 Hl1 IHll1 Hl2 IHll2
+    | A B l Hl IHll | A B l Hl1 IHll1 Hl2 IHll2 | A B l Hl IHll | A B l Hl IHll
+    | A l Hl IHll | A l Hl IHll | A l Hl IHll | A l Hl IHll | Hm l1 l2 Hl1 IHll1 Hl2 IHll2
+    | Hw A l Hl IHll | Hc A l1 l2 Hl1 IHll1 Hl2 IHll2];
+    cbn [excesses excess] in *.
   - destruct (atom_eqb a a0); cbn; lia.
   - now rewrite <- (excesses_perm _ _ H0).
   - cbn; lia.
@@ -302,7 +313,7 @@ Fixpoint weights (l : list (formula atom)) : Z :=
   end.
 
 Lemma weights_app : forall l1 l2, weights (l1 ++ l2) = (weights l1 + weights l2)%Z.
-Proof. induction l1 as [|A l1 IH]; intro l2; cbn; [| rewrite IH]; lia. Qed.
+Proof. intros l1; induction l1 as [|A l1 IH]; intro l2; cbn; [| rewrite IH]; lia. Qed.
 
 Lemma weights_perm : forall l1 l2, Permutation l1 l2 -> weights l1 = weights l2.
 Proof. intros l1 l2 H. induction H; cbn; lia. Qed.
@@ -323,7 +334,11 @@ Theorem count_equation : forall R l,
   ll R l -> weakening R = false -> cut R = false -> forallb mll l = true -> counted R l.
 Proof.
   intros R l H W K. unfold counted.
-  induction H; cbn [weights weight length forallb mll andb] in *; intro M.
+  induction H as [b | l1 l2 Hl IHll H0 | | l Hl IHll | l | A B l1 l2 Hl1 IHll1 Hl2 IHll2
+    | A B l Hl IHll | A B l Hl1 IHll1 Hl2 IHll2 | A B l Hl IHll | A B l Hl IHll
+    | A l Hl IHll | A l Hl IHll | A l Hl IHll | A l Hl IHll | Hm l1 l2 Hl1 IHll1 Hl2 IHll2
+    | Hw A l Hl IHll | Hc A l1 l2 Hl1 IHll1 Hl2 IHll2];
+    cbn [weights weight length forallb mll andb] in *; intro M.
   - destruct (mix R); lia.
   - rewrite <- (Permutation_length H0), <- (weights_perm _ _ H0).
     apply IHll. now rewrite (forallb_perm _ _ _ H0).
@@ -410,7 +425,14 @@ Proof. intros. eapply ex_r; [eassumption | apply perm_swap]. Qed.
     weakening and cut. *)
 Theorem ill_ll : forall R G C, ill R G C -> ll (lrules R) (one_sided G C).
 Proof.
-  intros R G C H. unfold one_sided. induction H; cbn in *.
+  intros R G C H. unfold one_sided.
+  induction H as [a | l1 l2 C Hl IHill H0 | | l C Hl IHill | A B l1 l2 Hl1 IHill1 Hl2 IHill2
+    | A B l C Hl IHill | A B l Hl IHill | A B l1 l2 C Hl1 IHill1 Hl2 IHill2 | l
+    | A B l Hl1 IHill1 Hl2 IHill2 | A B l C Hl IHill | A B l C Hl IHill | l C
+    | A B l Hl IHill | A B l Hl IHill | A B l C Hl1 IHill1 Hl2 IHill2 | A l Hl IHill
+    | A l C Hl IHill | A l C Hl IHill | A l C Hl IHill | Hw A l C Hl IHill
+    | Hc A l1 l2 C Hl1 IHill1 Hl2 IHill2];
+    cbn in *.
   - apply swap, ax_r.
   - eapply ex_r; [exact IHill |]. apply perm_skip, Permutation_map, H0.
   - apply one_r.
@@ -444,7 +466,7 @@ Proof.
     eapply ex_r; [exact IHill |].
     apply perm_trans with (wn (dual (itr A)) :: itr C :: wn (dual (itr A)) :: map (fun A => dual (itr A)) l);
       [apply perm_swap | apply perm_skip, perm_swap].
-  - apply swap, weakening_r; [exact H | exact IHill].
+  - apply swap, weakening_r; [exact Hw | exact IHill].
   - rewrite map_app. eapply ex_r.
     + refine (cut_r (lrules R) _ (itr A) (map (fun A => dual (itr A)) l1)
         (itr C :: map (fun A => dual (itr A)) l2) _ _); [assumption | exact IHill1 |].
@@ -467,7 +489,8 @@ Fixpoint ieval (v : atom -> bool) (A : iformula atom) : bool :=
 
 Lemma eval_itr : forall v A, eval v (itr A) = ieval v A.
 Proof.
-  intros v A. induction A; cbn; rewrite ?eval_dual, ?IHA, ?IHA1, ?IHA2; try reflexivity.
+  intros v A. induction A as [a | | A1 IHA1 A2 IHA2 | A1 IHA1 A2 IHA2 | | A1 IHA1 A2 IHA2 | | A1 IHA1 A2 IHA2 | A IHA];
+    cbn; rewrite ?eval_dual, ?IHA, ?IHA1, ?IHA2; try reflexivity.
   destruct (ieval v A1), (ieval v A2); reflexivity.
 Qed.
 

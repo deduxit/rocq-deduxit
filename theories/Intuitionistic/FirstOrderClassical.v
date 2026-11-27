@@ -146,7 +146,7 @@ Qed.
 (** [eval_fast] computes [eval]. *)
 Lemma eval_fast_eval : forall A eta rho, eval_fast eta rho A = eval eta rho A.
 Proof.
-  induction A as [p l | | A IHA B IHB | A IHA B IHB | A IHA B IHB | A IHA | A IHA];
+  intros A; induction A as [p l | | A IHA B IHB | A IHA B IHB | A IHA B IHB | A IHA | A IHA];
     intros eta rho; cbn.
   - reflexivity.
   - reflexivity.

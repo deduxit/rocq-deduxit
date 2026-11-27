@@ -197,7 +197,7 @@ Qed.
 Lemma persistence : forall A w v eta rho, le w v -> (forall a, dom w (eta a)) ->
   Forall (dom w) rho -> forces w eta rho A -> forces v eta rho A.
 Proof.
-  induction A as [p l | | A IHA B IHB | A IHA B IHB | A IHA B IHB | A IHA | A IHA];
+  intros A; induction A as [p l | | A IHA B IHB | A IHA B IHB | A IHA B IHB | A IHA | A IHA];
     intros w v eta rho Hle He Hr H; cbn in *.
   - replace (map (teval v eta rho) l) with (map (teval w eta rho) l).
     + exact (model_pred _ M _ _ _ _ Hle H).
