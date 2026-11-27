@@ -44,6 +44,10 @@ them against this library, taken as a pinned input. Paths of the form
   installs the package as opam users do, into a fresh switch per
   version, outside the flake's checks since it needs the network;
   `opam.yml` runs it on GitHub's runners for CI and the release.
+  An environment variable there must not be named as one the makefile
+  `rocq makefile` writes reads (`ROCQ`, `COQBIN`, `COQEXTRAFLAGS`, …):
+  opam's `make` sees the environment, and the job once set `ROCQ` to the
+  version, which the makefile then ran as the compiler.
 - **The check's build is strict, the package is not.** `checkFor`
   builds the library with `COQEXTRAFLAGS` (`-w +default`, every warning
   Rocq gives by default an error, and `-set "Default Goal Selector=!"`),

@@ -33,7 +33,9 @@ jobs:
         with:
           name: deduxit
           skipPush: true
-      - run: nix develop .#opam -c scripts/opam-install.sh "$ROCQ"
+      # Not `ROCQ': the makefile `rocq makefile' writes reads that variable
+      # as the command that runs Rocq.
+      - run: nix develop .#opam -c scripts/opam-install.sh "$ROCQ_VERSION"
         env:
-          ROCQ: ${{ matrix.rocq }}
+          ROCQ_VERSION: ${{ matrix.rocq }}
           OPAM_JOBS: "4"
