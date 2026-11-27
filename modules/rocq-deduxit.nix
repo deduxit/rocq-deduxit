@@ -10,8 +10,10 @@
 # _RocqProject), and the check `rocq-deduxit', which compiles every
 # certificate under tests/ (logical path `Deduxit.Linear.Tests',
 # `Deduxit.Intuitionistic.Tests' for tests/Intuitionistic/ and
-# `Deduxit.Modal.Tests' for tests/Modal/) against
-# the installed library and requires
+# `Deduxit.Modal.Tests' for tests/Modal/), the certificates' interface
+# (tests/Interface/) and README's Rocq examples against the library,
+# built with every default warning an error (but two, see strictFlags),
+# and requires
 # `Print Assumptions' of the soundness theorems to answer `Closed under the
 # global context'. Rocq prints nothing for a file it accepts, so any other
 # output fails the check, as does an `Admitted', `admit', `Axiom',
@@ -52,6 +54,22 @@
         fileset = lib.fileset.fileFilter (file: file.hasExt "v") ../tests;
       };
 
+      readme = lib.fileset.toSource {
+        root = ../.;
+        fileset = ../README.md;
+      };
+
+      # The check's build: every warning Rocq gives by default is an error,
+      # and a tactic runs on one focused goal unless a selector says
+      # otherwise. The package keeps Rocq's defaults, since a user's newer
+      # Rocq may warn where this one did not. The project file cannot carry
+      # the selector: `rocq makefile' splits an `-arg' at its spaces.
+      # Two warnings of 9.2 stay warnings, since what they ask for does not
+      # exist on 9.0 and 9.1: `notation-for-abbreviation' (`Abbreviation')
+      # and `register-all' (`Scheme All' for the terms nested in `list').
+      # Rocq ignores a warning name it does not know.
+      strictFlags = ''-set "Default Goal Selector=!" -w +default,notation-for-abbreviation,register-all'';
+
       # The library built with one Rocq, as nixpkgs builds a Rocq library.
       packageFor =
         rocqPackages:
@@ -73,14 +91,16 @@
           };
         };
 
-      # The certificates under tests/ compiled against that build, and the
-      # theorems' assumptions closed.
+      # The certificates under tests/ compiled against that build, made
+      # with every default warning an error, and the theorems' assumptions
+      # closed.
       checkFor =
         rocqPackages:
         let
           rocq = rocqPackages.rocq-core;
           inherit (rocqPackages) stdlib;
-          package = packageFor rocqPackages;
+          # `rocq makefile' adds COQEXTRAFLAGS to every compilation.
+          package = (packageFor rocqPackages).overrideAttrs { COQEXTRAFLAGS = strictFlags; };
           userContrib = "lib/coq/${rocq.rocq-version}/user-contrib";
         in
         pkgs.runCommand "check-rocq-deduxit-${rocq.rocq-version}"
@@ -117,6 +137,24 @@
             for file in modal/*.v; do
               rocq compile -Q modal Deduxit.Modal.Tests "$file" 2>&1 | tee log
               if [ -s log ]; then exit 1; fi
+            done
+            # The certificates' interface: every name deduxit's exporter
+            # writes, one file per prelude.
+            mkdir interface
+            cp ${tests}/Interface/*.v interface/
+            for file in interface/*.v; do
+              rocq compile -Q interface Deduxit.Tests.Interface "$file" 2>&1 | tee log
+              if [ -s log ]; then exit 1; fi
+            done
+            # README's Rocq examples, each block a file of its own.
+            mkdir readme
+            awk '/^```coq$/ { n++; file = sprintf("readme/Block%d.v", n); next }
+                 /^```$/ { file = ""; next }
+                 file != "" { print > file }' ${readme}/README.md
+            [ -n "$(ls readme)" ] || { echo "README.md has no Rocq example"; exit 1; }
+            for file in readme/*.v; do
+              rocq compile -Q readme Deduxit.Tests.Readme "$file" 2>&1 | tee log
+              if [ -s log ]; then echo "in $file of README.md"; exit 1; fi
             done
             rocq compile -Q . Deduxit.Linear.Tests Assumptions.v >assumptions 2>&1 || { cat assumptions; exit 1; }
             cat assumptions

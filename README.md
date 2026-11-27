@@ -321,6 +321,34 @@ stated for the calculi without cut, which are the ones deduxit refutes
 in. On Rocq 9.2 and 9.3 it compiles with deprecation warnings
 (`Notation` for an abbreviation, whose replacement 9.0 and 9.1 lack).
 
+## The certificates' interface
+
+A certificate deduxit writes uses the names below, under one of ten
+preludes. They are the library's stable surface: a release that renames
+or changes one breaks certificates already written, and the changelog
+says so. `tests/Interface/` has a file per prelude that uses each name
+at the type a certificate needs, and the flake's check compiles it.
+
+| prelude imports | theorems | what the statement and term are written in |
+|---|---|---|
+| `Deduxit.Linear.Soundness` | `soundness`, `soundness_classical`, `soundness_mix`, `soundness_affine` | `ll`, `classical`, the record `{\| mix; weakening; cut \|}`, the formulas `var` to `wn`, the proof terms `Ax` to `Cut` with `Left` and `Right` |
+| `Deduxit.Linear.IntuitionisticCheck` | `soundness_ill` | `ill`, `intuitionistic`, `affine`, `{\| iweakening; icut \|}`, the formulas `ivar` to `ioc`, the terms `IAx` to `ICut` |
+| `Deduxit.Linear.FirstOrderSoundness`, with `Calculus` required | `soundness`, `soundness_classical`, `soundness_mix`, `soundness_affine` | `ll`, `Calculus.classical`, `{\| Calculus.mix; Calculus.weakening; Calculus.cut \|}`, `bound`, `eigen`, `tapp`, the formulas with `fall` and `fex`, the terms with `Forall` and `Exists` |
+| `Deduxit.Linear.FirstOrderIntuitionisticCheck`, with `Intuitionistic` required | `soundness_ill` | `ill`, `Intuitionistic.intuitionistic`, `Intuitionistic.affine`, `{\| Intuitionistic.iweakening; Intuitionistic.icut \|}`, `bound`, `eigen`, `tapp`, the formulas with `iall` and `iex`, the terms with `IAllR`, `IExL`, `IExR`, `IAllL` |
+| `Deduxit.Linear.Weights` | `classical_refutation`, `unbalanced_refutation`, `equation_refutation`, `weighted_refutation`, `affine_refutation`, and each with `i` for two-sided sequents | `weight_of` and the names of the first two rows |
+| `Deduxit.Linear.FirstOrderCalculus`, `FirstOrderIntuitionistic` and `FirstOrderWeights`, with `Calculus`, `Intuitionistic` and `TermsCheck` required | `FirstOrderWeights.weighted_refutation`, `FirstOrderWeights.iweighted_refutation` | `TermsCheck.terms_eqb` and the first-order names above |
+| `Deduxit.Intuitionistic.KripkeCheck` | `kripke_refutation` | `lj`, `intuitionistic`, `minimal`, the formulas `var`, `bot`, `wedge`, `vee`, `imp`, `top`, `neg`, `equiv`, the record `{\| later; atoms; absurd \|}` |
+| `Deduxit.Intuitionistic.FirstOrderCheck` | `fo_classical_refutation`, `fo_kripke_refutation` | `lj`, `lk`, `{\| Calculus.explosion; Calculus.cut \|}`, `bound`, `tapp`, the formulas of the row above with `fall` and `fex`, `{\| size; functions; predicates \|}`, `{\| later; sizes; tables; facts; absurd \|}` |
+| `Deduxit.Modal.Check` | `modal_soundness`, `labelled_soundness` | `valid`, `lvalid`, `lab`, `rel`, the record `{\| serial; reflexive; symmetric; transitive; euclidean \|}`, the formulas `var` to `dia`, the terms `Ax` to `Eucl` |
+| `Deduxit.Modal.Countermodel` | `modal_refutation` | `valid`, the conditions' record, the formulas, `{\| arrows; atoms \|}` |
+
+Every prelude also imports `List` and `String` of the standard library
+(the refutations `ZArith`, the first-order ones `Bool`), opens
+`ListNotations` and `string_scope`, and takes `String.eqb` and
+`String.eqb_spec` for atoms. deduxit's messages also name
+`chain_excluded_middle` and `chain_double_negation_shift` of
+`Deduxit.Intuitionistic.FirstOrderKripke`.
+
 ## Upgrading from rocq-linlog
 
 Up to 0.2.0 the library was `rocq-linlog`, with the logical path
@@ -335,19 +363,22 @@ Soundness.` becomes `From Deduxit.Linear Require Import Soundness.`.
   `Deduxit.Modal`.
 - `tests/`: certificates compiled against the installed library
   (`Deduxit.Linear.Tests`, `Deduxit.Intuitionistic.Tests` for
-  `tests/Intuitionistic/` and `Deduxit.Modal.Tests` for `tests/Modal/`).
+  `tests/Intuitionistic/` and `Deduxit.Modal.Tests` for `tests/Modal/`),
+  and the certificates' interface (`tests/Interface/`).
 - `bridges/`: proofs that the calculi derive the same sequents as
   NanoYalla's `nanoll.v` and Yalla's `nanoill.v`
   (`Deduxit.Linear.Bridges`), compiled against the files the flake pins,
   never copied.
 
-`nix flake check` builds the library with every Rocq it admits,
-compiles every certificate under `tests/` and the bridges, and requires
-every theorem's assumptions to be closed under the global context.
-deduxit's own flake compiles the certificates its exporter writes
-against this library. `scripts/opam-install.sh` installs the package
-from its opam file into a fresh opam switch per Rocq version, as an
-opam user would.
+`nix flake check` builds the library with every Rocq it admits, each
+default warning an error but two of Rocq 9.2 that 9.0 and 9.1 cannot
+meet, compiles every certificate under `tests/`,
+README's examples and the bridges, and requires every theorem's
+assumptions to be closed under the global context. deduxit's own flake
+compiles the certificates its exporter writes against this library.
+`scripts/opam-install.sh` installs the package from its opam file into
+a fresh opam switch per Rocq version, as an opam user would; CI runs it
+for each version.
 
 The library was part of deduxit's repository, under its first name
 linlog, until it moved here; its history up to the move is that
