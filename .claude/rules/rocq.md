@@ -27,16 +27,55 @@ them against this library, taken as a pinned input. Paths of the form
   certificates against `packages.rocq-deduxit` and requires each
   `certificate`'s assumptions closed.
 - **The Rocq versions.** The opam file admits Rocq 9.0 to 9.3
-  (`rocq-core {>= "9.0" & < "9.4~"}`) and bounds `rocq-stdlib` below
-  only, since the standard library's versions do not follow Rocq's (9.3
-  takes stdlib 9.2.0, 9.0 and 9.1 take 9.0.0); `modules/rocq-deduxit.nix`
+  (`rocq-core {>= "9.0" & < "9.4~"}`) and `rocq-stdlib {>= "9.0" &
+  < "9.3~"}`: the standard library's versions do not follow Rocq's, so
+  its bound is its own (opam had 9.0.0, 9.1.0 and 9.2.0 on 2026-11-27;
+  9.3 takes 9.2.0, which asks `rocq-core >= 9.1`). nixpkgs pairs 9.0 and
+  9.1 with stdlib 9.0.0, so opam's other pairs (9.0 with 9.1.0, 9.1 with
+  9.2.0) are tested by the opam job alone. `modules/rocq-deduxit.nix`
   checks each admitted version through nixpkgs' `rocqPackages_9_N`, and a
-  new Rocq is a line of `admitted` and a raised bound together. On 9.2
+  new Rocq is a line of `admitted`, a raised bound and an entry of
+  `.github/workflows/opam.yml`'s matrix together. On 9.2
   and 9.3 the theories compile with the deprecation of `Notation` for an
   abbreviation; its replacement `Abbreviation` exists only from 9.2, so
   it waits until 9.0 and 9.1 are dropped. `scripts/opam-install.sh`
   installs the package as opam users do, into a fresh switch per
-  version, outside any check since it needs the network.
+  version, outside the flake's checks since it needs the network;
+  `opam.yml` runs it on GitHub's runners for CI and the release.
+- **The check's build is strict, the package is not.** `checkFor`
+  builds the library with `COQEXTRAFLAGS` (`-w +default`, every warning
+  Rocq gives by default an error, and `-set "Default Goal Selector=!"`),
+  which `rocq makefile`'s makefile reads from the environment; the
+  package keeps Rocq's defaults, since an opam user's `make` with a
+  later Rocq may warn where the admitted ones do not. The selector
+  cannot go into `_RocqProject`: `rocq makefile` splits an `-arg` value
+  at its spaces. Two warnings of 9.2 stay plain warnings, by name, since
+  what they ask for does not exist on 9.0 and 9.1:
+  `notation-for-abbreviation` (the abbreviations, above) and
+  `register-all` (`Terms.v`'s `term` is nested in `list`, for which 9.2
+  wants `Scheme All`); each leaves the list when 9.0 and 9.1 are
+  dropped, or the abbreviations are written out. Rocq ignores an
+  unknown warning name in `-w` silently, so a name there is checked by
+  a planted warning, not by the build.
+- **The certificates' interface** is `tests/Interface/`, a file per
+  prelude of deduxit's exporter (`core/src/export/rocq/mod.rs`'s
+  `DEDUXIT_*_PRELUDE`), which starts with that prelude verbatim and
+  uses, by `Definition`s that print nothing, every name a certificate
+  writes: each constructor applied to its arguments, each record as a
+  literal of all its fields (a literal missing a field is refused),
+  each theorem applied as the certificate applies it, with its
+  conclusion stated (`_ = true -> ll (atom := string) … l`). The list
+  was taken from the `.glob` files of every certificate deduxit's tests
+  and flake check write (108 on 2026-11-27) and completed with the
+  constructors no certificate happened to use and the exporter's paths
+  no certificate reached (the first-order `soundness_mix`, which the
+  review found missing): a name the exporter writes is read from its
+  code, not only from the certificates. README's section of the
+  same name lists it; a new name the exporter writes joins both.
+- **README's Rocq examples compile**: the check writes each ```` ```coq
+  ```` block to a file of its own (two define `excluded_middle`) and
+  compiles it in silence. Its `console` block runs deduxit, which this
+  flake does not have, so nothing runs it.
 - **Logical paths.** One root, `Deduxit`, mapped by `-Q theories
   Deduxit`: `-Q` because Rocq loads an installed library so, and every
   `Require` here names its path with `From`, which the reference

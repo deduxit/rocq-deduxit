@@ -2,7 +2,9 @@
 # Licensed under the EUPL
 
 # Everything runs through the flake, so CI checks exactly what `nix flake
-# check` checks locally, with the Rocq and the tools flake.lock pins.
+# check` checks locally, with the Rocq and the tools flake.lock pins; and
+# the package is installed from its opam file on each Rocq it admits
+# (opam.yml).
 name: CI
 
 on:
@@ -42,3 +44,6 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
           skipPush: ${{ github.ref != 'refs/heads/main' }}
       - run: nix flake check --print-build-logs --keep-going
+
+  opam:
+    uses: ./.github/workflows/opam.yml

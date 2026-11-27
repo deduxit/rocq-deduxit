@@ -8,7 +8,8 @@
 # accepts it, and the Rocq opam repository's CI builds with it, while
 # rocq-runtime 9.0 refuses nixpkgs' default OCaml 5.5. gmp is zarith's,
 # which rocq-runtime needs. The switches are built from the network, so
-# none of this runs in a check.
+# none of this runs in a flake check: CI runs it on GitHub's runners
+# (.github/workflows/opam.yml).
 { ... }:
 {
   perSystem =

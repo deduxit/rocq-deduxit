@@ -46,7 +46,11 @@ one part alone, so that no path ever changes.
   library, as `Deduxit.Linear.Tests` (`tests/Intuitionistic/` as
   `Deduxit.Intuitionistic.Tests`, `tests/Modal/` as
   `Deduxit.Modal.Tests`), `Assumptions.v` the theorems
-  whose assumptions must be closed, each by its full name.
+  whose assumptions must be closed, each by its full name, and
+  `tests/Interface/` the certificates' interface: one file per prelude
+  deduxit's exporter writes, using every name its certificates use at
+  the type they need (README's "The certificates' interface" lists
+  them). A change that breaks a file there breaks written certificates.
 - `bridges/` (`Deduxit.Linear.Bridges`) the equivalences with NanoYalla's `nanoll.v` and Yalla's
   `nanoill.v`, compiled against the flake inputs `nanoyalla` and
   `yalla`, never copied (LGPL); not part of the package.
@@ -84,7 +88,7 @@ library with `ROCQPATH` set.
 make                                    # the library, in place
 nix build                               # the package rocq-deduxit, as nixpkgs builds a Rocq library (result/lib/coq/9.1/user-contrib/Deduxit)
 nix flake check                         # everything below
-nix build .#checks.x86_64-linux.rocq-deduxit   # the library, every certificate under tests/, the theorems' assumptions closed (nixpkgs' default Rocq)
+nix build .#checks.x86_64-linux.rocq-deduxit   # the library (default warnings as errors, goal selector "!"), every certificate under tests/, the interface, README's examples, the theorems' assumptions closed (nixpkgs' default Rocq)
 nix build .#checks.x86_64-linux.rocq-deduxit-9_0  # the same with Rocq 9.0 (and -9_2, -9_3: every version the opam file admits)
 nix build .#doc                         # rocq doc's pages of every module, result/share/doc/rocq-deduxit
 nix develop .#opam -c scripts/opam-install.sh 9.0.1 9.1.1 9.2.0 9.3.0   # opam lint, then the package installed from its opam file into a fresh switch per Rocq (network, about an hour)
@@ -120,7 +124,11 @@ at the same commits); a lock bump is a change of its own,
 
 `.github/workflows/ci.yml` runs `nix flake check` on every push to
 `main`, every pull request, weekly and by dispatch, with nothing
-installed but Nix, and pulls from the public Cachix cache `deduxit`
+installed but Nix, and `opam.yml` beside it: `scripts/opam-install.sh`
+for the last release of each Rocq minor version the bounds admit (a
+new Rocq is a line of `admitted` in `modules/rocq-deduxit.nix`, a
+raised bound and an entry of that matrix). It pulls from the public
+Cachix cache `deduxit`
 (until 2026-11-20 `linlog-prover`). It pushes to the cache from `main`, with the
 repository secret `CACHIX_AUTH_TOKEN`. Every action is pinned to a full
 commit SHA with the release as a comment (the organization requires
@@ -128,9 +136,11 @@ it); Dependabot proposes the bumps (`.github/dependabot.yml`).
 `permissions: contents: read`, `persist-credentials: false`.
 `.github/workflows/release.yml` releases a tag `vX.Y.Z`: the tag must
 equal the opam file's and the citation file's version and the changelog
-must have its dated section, then `nix flake check`, a GitHub release
-with the changelog's section and the SHA-512 of the tag's source archive
-(what the Rocq opam archive's file needs), and the documentation on
+must have its dated section, then `nix flake check` and `opam.yml`, a
+GitHub release with the changelog's section and the source archive the
+job makes with `git archive` and uploads as an asset, with its URL and
+SHA-512 (what the Rocq opam archive's file needs; GitHub's generated
+archive of a tag keeps no stable checksum), and the documentation on
 Pages, whose source the author sets to "GitHub Actions" before the
 first tag. The tag, the release's date and the opam-repository pull
 request are the author's.

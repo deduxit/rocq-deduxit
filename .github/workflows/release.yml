@@ -1,10 +1,11 @@
 # deduxit © Fabian Lukas Grubmüller 2026
 # Licensed under the EUPL
 
-# A tag `vX.Y.Z' releases version X.Y.Z: the flake's checks again, a
-# GitHub release with the changelog's section as its notes and the
-# SHA-512 of the tag's source archive, which the Rocq opam archive's file
-# names, and the documentation on the repository's Pages site.
+# A tag `vX.Y.Z' releases version X.Y.Z: the flake's checks and the opam
+# installs again, a GitHub release with the changelog's section as its
+# notes and the tag's source archive as an asset, with the URL and SHA-512
+# the Rocq opam archive's file names, and the documentation on the
+# repository's Pages site.
 name: Release
 
 on:
@@ -58,9 +59,12 @@ jobs:
         with:
           path: result/share/doc/rocq-deduxit
 
+  opam:
+    uses: ./.github/workflows/opam.yml
+
   release:
     name: GitHub release
-    needs: check
+    needs: [check, opam]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -68,9 +72,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # The notes are the changelog's section, and the checksum of the
-      # archive GitHub serves for the tag, which an opam file's `url'
-      # names.
+      # The notes are the changelog's section, and the URL and checksum of
+      # the source archive, which an opam file's `url' names. The archive
+      # is made here and uploaded with the release: GitHub's own archive of
+      # a tag is generated on demand and keeps no stable checksum.
       - name: The release, with the changelog's section as its notes
         env:
           GH_TOKEN: ${{ github.token }}
@@ -84,21 +89,22 @@ jobs:
             on && /^\[[^]]*\]: / { exit }
             on { print }
           ' CHANGELOG.md >notes.md
-          url="https://github.com/$REPOSITORY/archive/refs/tags/$TAG.tar.gz"
-          curl --silent --fail --location --output source.tar.gz "$url"
-          sum=$(sha512sum source.tar.gz | cut -d ' ' -f 1)
+          archive="rocq-deduxit-$version.tar.gz"
+          git archive --format=tar.gz --prefix="rocq-deduxit-$version/" --output="$archive" HEAD
+          url="https://github.com/$REPOSITORY/releases/download/$TAG/$archive"
+          sum=$(sha512sum "$archive" | cut -d ' ' -f 1)
           {
             echo
             echo "The source archive for opam: \`$url\`, \`sha512=$sum\`."
           } >>notes.md
-          gh release create "$TAG" --title "rocq-deduxit $version" --notes-file notes.md \
-            --verify-tag
+          gh release create "$TAG" "$archive" --title "rocq-deduxit $version" \
+            --notes-file notes.md --verify-tag
 
   # The Pages site's source must be "GitHub Actions" (the repository's
   # settings); it holds the documentation of the latest release.
   docs:
     name: documentation on Pages
-    needs: check
+    needs: [check, opam]
     runs-on: ubuntu-latest
     permissions:
       pages: write

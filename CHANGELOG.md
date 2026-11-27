@@ -14,6 +14,26 @@ against 0.4.0. There is no 0.7.0: deduxit 0.7.0's compile against 0.6.0.
 
 ## [Unreleased]
 
+### Added
+
+- The certificates' interface: every name deduxit's certificates use,
+  listed in README ("The certificates' interface") and compiled, one
+  file per certificate prelude, by `tests/Interface/`. A change that
+  breaks it is a breaking change of the library, and this changelog
+  says so.
+- The flake's check compiles README's Rocq examples, and builds the
+  library with every default warning an error (but two of Rocq 9.2
+  whose remedy 9.0 and 9.1 lack) and with `Default Goal Selector "!"`.
+- CI installs the package from its opam file on each Rocq the bounds
+  admit, as the release does before it publishes.
+
+### Changed
+
+- The opam file bounds `rocq-stdlib` above too, below 9.3.
+- A release uploads its source archive and gives that archive's URL and
+  SHA-512 for the opam file, in place of GitHub's generated archive of
+  the tag, whose checksum is not stable.
+
 ## [0.8.0] - 2026-11-23
 
 First-order intuitionistic, minimal and classical logic, beside deduxit
