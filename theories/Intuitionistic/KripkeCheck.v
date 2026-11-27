@@ -25,6 +25,7 @@
 
 From Stdlib Require Import List Bool Arith.
 From Deduxit.Intuitionistic Require Export Kripke.
+From Deduxit.Base Require Lists.
 Import ListNotations.
 
 Section Check.
@@ -43,7 +44,7 @@ Variable atom_eqb : atom -> atom -> bool.
 Variable M : finite_model.
 
 (** [v] is in [l]. *)
-Definition mem (v : nat) (l : list nat) : bool := existsb (Nat.eqb v) l.
+Definition mem (v : nat) (l : list nat) : bool := Lists.mem v l.
 
 (** The number of worlds. *)
 Definition size : nat := length (later M).
@@ -111,11 +112,7 @@ Local Definition abs (w : nat) : Prop := absurd_at w = true.
 
 (** [mem] tests membership. *)
 Lemma mem_In : forall v l, mem v l = true <-> In v l.
-Proof.
-  intros v l. unfold mem. rewrite existsb_exists. split.
-  - intros [x [Hx E]]. apply Nat.eqb_eq in E. subst. exact Hx.
-  - intros H. exists v. split; [exact H | apply Nat.eqb_refl].
-Qed.
+Proof. exact Lists.mem_In. Qed.
 
 (** A number past the worlds has itself alone above it. *)
 Lemma ups_past : forall w, size <= w -> ups w = [w].
@@ -180,7 +177,7 @@ Proof.
     + unfold le, abs in *. apply mem_In in Hle.
       exact (proj2 (proj2 (proj2 (well_formed_at R H w v Hw Hle))) Ha).
     + apply le_past in Hle; [subst; exact Ha | exact Hw].
-  - intros Hexp w Hw. unfold abs, absurd_at, mem in Hw.
+  - intros Hexp w Hw. unfold abs, absurd_at, mem, Lists.mem in Hw.
     apply andb_true_iff in H as [_ H]. rewrite Hexp in H. cbn in H.
     apply Nat.eqb_eq, length_zero_iff_nil in H. rewrite H in Hw. discriminate.
 Qed.

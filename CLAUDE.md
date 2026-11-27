@@ -39,7 +39,8 @@ one part alone, so that no path ever changes.
 
 - `theories/` the library (`theories/Linear/` is `Deduxit.Linear`,
   `theories/Intuitionistic/` `Deduxit.Intuitionistic`,
-  `theories/Modal/` `Deduxit.Modal`),
+  `theories/Modal/` `Deduxit.Modal`, `theories/Base/` `Deduxit.Base`,
+  the lists two namespaces share),
   `_RocqProject` and `Makefile` its build, `rocq-deduxit.opam` its
   package (the flake reads its `version:`).
 - `tests/` certificates the check compiles against the installed

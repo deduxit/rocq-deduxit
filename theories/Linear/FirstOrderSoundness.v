@@ -29,7 +29,16 @@
 From Stdlib Require Import Bool List Permutation Lia.
 From Deduxit.Linear Require Calculus.
 From Deduxit.Linear Require Export FirstOrderCheck.
+From Deduxit.Linear Require Multiset FirstOrderFacts.
 Import ListNotations.
+
+(* The soundness proofs rewrite with the instances' lemmas, so [cbn]
+   leaves the instances folded here; elsewhere it computes them. *)
+Local Arguments remove_one : simpl never.
+Local Arguments remove_all : simpl never.
+Local Arguments take_all : simpl never.
+Local Arguments diff : simpl never.
+Local Arguments take : simpl never.
 
 Section Soundness.
 
@@ -46,84 +55,38 @@ Local Notation count := (count_occ eq_dec).
 
 Lemma remove_one_perm : forall (A : formula) l l',
   remove_one symbol_eqb A l = Some l' -> Permutation l (A :: l').
-Proof.
-  induction l as [| B l IH]; cbn; intros l' H; [discriminate |].
-  destruct (eqb_spec A B) as [<- | _].
-  - injection H as <-. reflexivity.
-  - destruct (remove_one symbol_eqb A l) as [l'' |] eqn:E; cbn in H; [| discriminate].
-    injection H as <-. rewrite (IH l'' eq_refl). apply perm_swap.
-Qed.
+Proof. exact (Multiset.remove_one_perm _ eqb_spec). Qed.
 
 Lemma remove_one_absent : forall (A : formula) l,
   remove_one symbol_eqb A l = None -> ~ In A l.
-Proof.
-  induction l as [| B l IH]; cbn; intros H HI; [exact HI |].
-  destruct (eqb_spec A B) as [_ | ne]; [discriminate |].
-  destruct HI as [-> | HI]; [exact (ne eq_refl) |].
-  destruct (remove_one symbol_eqb A l); [discriminate | exact (IH eq_refl HI)].
-Qed.
+Proof. exact (Multiset.remove_one_absent _ eqb_spec). Qed.
 
 Lemma take_all_perm : forall (l1 l2 l : list formula),
   take_all symbol_eqb l1 l2 = Some l -> Permutation l2 (l1 ++ l).
-Proof.
-  induction l1 as [| A l1 IH]; cbn; intros l2 l H.
-  - injection H as <-. reflexivity.
-  - destruct (remove_one symbol_eqb A l2) as [l2' |] eqn:E; [| discriminate].
-    rewrite (remove_one_perm _ _ _ E). apply perm_skip, IH, H.
-Qed.
+Proof. exact (Multiset.take_all_perm _ eqb_spec). Qed.
 
 Lemma remove_all_perm : forall (A : formula) l,
   Permutation l (repeat A (count l A) ++ remove_all symbol_eqb A l).
-Proof.
-  unfold remove_all. induction l as [| B l IH]; cbn; [reflexivity |].
-  destruct (eq_dec B A) as [e | ne]; destruct (eqb_spec A B) as [e' | ne'];
-    try congruence; cbn.
-  - subst. apply perm_skip, IH.
-  - apply (Permutation_trans (perm_skip B IH)), Permutation_middle.
-Qed.
+Proof. exact (Multiset.remove_all_perm _ eqb_spec eq_dec). Qed.
 
 Lemma diff_count : forall (l1 l2 : list formula) x,
   count (diff symbol_eqb l2 l1) x = count l2 x - count l1 x.
-Proof.
-  induction l1 as [| A l1 IH]; cbn; intros l2 x; [lia |].
-  destruct (remove_one symbol_eqb A l2) as [l2' |] eqn:E; rewrite IH.
-  - apply remove_one_perm in E.
-    rewrite (Permutation_count_occ eq_dec) in E. rewrite (E x). cbn.
-    destruct (eq_dec A x); lia.
-  - apply remove_one_absent, (count_occ_not_In eq_dec) in E.
-    destruct (eq_dec A x); subst; lia.
-Qed.
+Proof. exact (Multiset.diff_count _ eqb_spec eq_dec). Qed.
 
 (** A formula of [l2] is in [l1], or in what is left of [l2] after
     removing [l1]. *)
 Lemma diff_in : forall (l1 l2 : list formula) x,
   In x l2 -> In x l1 \/ In x (diff symbol_eqb l2 l1).
-Proof.
-  intros l1 l2 x H.
-  destruct (in_dec eq_dec x l1) as [I | N]; [left; exact I | right].
-  apply (count_occ_In eq_dec). rewrite diff_count.
-  apply (count_occ_In eq_dec) in H. apply (count_occ_not_In eq_dec) in N. lia.
-Qed.
+Proof. exact (Multiset.diff_in _ eqb_spec eq_dec). Qed.
 
 (** What is left of [l2] is in [l2]. *)
 Lemma diff_incl : forall (l1 l2 : list formula) x,
   In x (diff symbol_eqb l2 l1) -> In x l2.
-Proof.
-  intros l1 l2 x H. apply (count_occ_In eq_dec) in H. rewrite diff_count in H.
-  apply (count_occ_In eq_dec). lia.
-Qed.
+Proof. exact (Multiset.diff_incl _ eqb_spec eq_dec). Qed.
 
 (** Permutations of lists of formulas, decided by counting every
     formula's occurrences on both sides. *)
-Ltac perm :=
-  apply (Permutation_count_occ eq_dec); intros ?x;
-  repeat rewrite map_app; repeat rewrite app_nil_r; cbn [map];
-  repeat first [rewrite count_occ_app | progress cbn [count_occ]];
-  repeat rewrite diff_count;
-  repeat match goal with
-         | |- context [eq_dec ?a ?b] => destruct (eq_dec a b); try subst
-         end;
-  lia.
+Ltac perm := Multiset.perm (formula_eq_dec symbol_eqb symbol_eqb_spec) diff_count.
 
 (** ** Eigenvariables *)
 
@@ -148,7 +111,7 @@ Proof.
 Qed.
 
 Lemma occurs_dual : forall b (A : formula), occurs b (dual A) = occurs b A.
-Proof. induction A; cbn; congruence. Qed.
+Proof. exact FirstOrderFacts.occurs_dual. Qed.
 
 (** ** Freshness *)
 
@@ -192,11 +155,9 @@ Qed.
 Lemma take_in : forall (A : formula) gamma any g X,
   take symbol_eqb A gamma any = Some g -> In X gamma -> X = A \/ In X g.
 Proof.
-  unfold take; intros * H HX.
-  destruct (remove_one symbol_eqb A gamma) eqn:E.
-  - injection H as <-. apply remove_one_perm in E.
-    apply (Permutation_in _ E) in HX as [-> | HX]; auto.
-  - destruct any; [| discriminate]. injection H as <-. auto.
+  intros * H HX.
+  destruct (Multiset.take_spec _ eqb_spec _ _ _ _ H) as [P | [_ ->]]; [| auto].
+  apply (Permutation_in _ P) in HX as [-> | HX]; auto.
 Qed.
 
 (** A premise's zone is fresh when what the rule left of it and the
@@ -277,12 +238,7 @@ Qed.
 Lemma take_spec : forall A gamma any gamma',
   take symbol_eqb A gamma any = Some gamma' ->
   Permutation gamma (A :: gamma') \/ (any = true /\ gamma' = gamma).
-Proof.
-  unfold take; intros * H.
-  destruct (remove_one symbol_eqb A gamma) eqn:E.
-  - injection H as <-. left. apply remove_one_perm, E.
-  - destruct any; [| discriminate]. injection H as <-. auto.
-Qed.
+Proof. exact (Multiset.take_spec _ eqb_spec). Qed.
 
 (** Consuming [A] from a satisfied zone leaves a satisfied zone with
     [A] in front, behind whatever prefix [pre] the rule puts first.

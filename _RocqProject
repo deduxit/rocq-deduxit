@@ -1,11 +1,14 @@
 -Q theories Deduxit
 
+theories/Base/Lists.v
 theories/Linear/Formulas.v
 theories/Linear/Calculus.v
 theories/Linear/Proofs.v
+theories/Linear/Multiset.v
 theories/Linear/Check.v
 theories/Linear/Soundness.v
 theories/Linear/Intuitionistic.v
+theories/Linear/TwoSided.v
 theories/Linear/IntuitionisticCheck.v
 theories/Linear/Mix.v
 theories/Linear/Refutations.v
@@ -13,6 +16,7 @@ theories/Linear/Weights.v
 theories/Linear/Terms.v
 theories/Linear/TermsCheck.v
 theories/Linear/FirstOrderFormulas.v
+theories/Linear/FirstOrderFacts.v
 theories/Linear/FirstOrderCalculus.v
 theories/Linear/FirstOrderProofs.v
 theories/Linear/FirstOrderCheck.v

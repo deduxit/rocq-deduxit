@@ -36,6 +36,7 @@
 From Stdlib Require Import List Bool Arith Lia.
 From Deduxit.Intuitionistic Require Calculus.
 From Deduxit.Intuitionistic Require Export FirstOrderKripke FirstOrderClassical.
+From Deduxit.Base Require Lists.
 Import ListNotations.
 
 Section Tables.
@@ -204,7 +205,7 @@ Record kripke_model : Type := KripkeModel {
 Variable M : kripke_model.
 
 (** [v] is in [l]. *)
-Definition kmem (v : nat) (l : list nat) : bool := existsb (Nat.eqb v) l.
+Definition kmem (v : nat) (l : list nat) : bool := Lists.mem v l.
 
 (** The number of worlds. *)
 Definition nworlds : nat := length (later M).
@@ -317,11 +318,7 @@ Local Definition kabs (w : nat) : Prop := absurd_at w = true.
 
 (** [kmem] tests membership. *)
 Lemma kmem_In : forall v l, kmem v l = true <-> In v l.
-Proof.
-  intros v l. unfold kmem. rewrite existsb_exists. split.
-  - intros [x [Hx E]]. apply Nat.eqb_eq in E. subst. exact Hx.
-  - intros H. exists v. split; [exact H | apply Nat.eqb_refl].
-Qed.
+Proof. exact Lists.mem_In. Qed.
 
 (** [kforces] computes forcing, at every world. *)
 Lemma kforces_forces : forall A w rho,
@@ -465,7 +462,7 @@ Proof.
     + unfold kle in Hle. apply kmem_In in Hle.
       exact (proj1 (proj2 (proj2 (proj2 (proj2 (wf_above w v Hw Hle))))) H).
     + apply kle_past in Hle; [subst; exact H | exact Hw].
-  - intros Hexp w H. unfold kabs, absurd_at, kmem in H.
+  - intros Hexp w H. unfold kabs, absurd_at, kmem, Lists.mem in H.
     rewrite (proj2 (proj2 (proj2 wf_lists)) Hexp) in H. discriminate.
 Qed.
 

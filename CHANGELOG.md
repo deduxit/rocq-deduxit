@@ -27,8 +27,25 @@ against 0.4.0. There is no 0.7.0: deduxit 0.7.0's compile against 0.6.0.
 - CI installs the package from its opam file on each Rocq the bounds
   admit, as the release does before it publishes.
 
+- `Deduxit.Linear.Multiset` (the checkers' multiset operations and
+  their permutation lemmas, for any type with a Boolean equality),
+  `Deduxit.Linear.TwoSided` (the cut's conclusion of the two-sided
+  checkers, its lemmas and their proofs' tactics),
+  `Deduxit.Linear.FirstOrderFacts` (`dual_dual`, `dual_subst`,
+  `occurs_dual` of first-order formulas), `Deduxit.Base.Lists` (`mem`,
+  `existsb_false`, `forallb_perm`, `existsb_perm`) and
+  `TermsCheck.tsubst_closed`.
+
 ### Changed
 
+- What the checkers share is proved once, in the modules above. Every
+  name the library had keeps its statement: `Check.remove_one`,
+  `IntuitionisticCheck.pick`, `KripkeCheck.mem`, `Soundness.diff_count`,
+  … are now instances of the shared ones. `cbn` computes them on a
+  closed term as before; on an open one it may show the shared function
+  (`Multiset.diff …`) where it showed the checker's name. The propositional
+  two-sided checker's pass is written with `let*`, as the first-order
+  one is.
 - The opam file bounds `rocq-stdlib` above too, below 9.3.
 - A release uploads its source archive and gives that archive's URL and
   SHA-512 for the opam file, in place of GitHub's generated archive of

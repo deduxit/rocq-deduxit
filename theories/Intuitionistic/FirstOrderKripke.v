@@ -32,6 +32,7 @@ From Stdlib Require Import List Permutation Bool Arith Lia.
 From Deduxit.Linear Require Import TermsCheck.
 From Deduxit.Intuitionistic Require Calculus.
 From Deduxit.Intuitionistic Require Export FirstOrderCalculus.
+From Deduxit.Base Require Lists.
 Import ListNotations.
 
 Section Kripke.
@@ -127,10 +128,7 @@ Qed.
 
 (** An existential list fails on each member. *)
 Lemma existsb_false : forall {X} (f : X -> bool) l x, existsb f l = false -> In x l -> f x = false.
-Proof.
-  intros X f l x H Hx. destruct (f x) eqn:E; [| reflexivity].
-  assert (existsb f l = true) by (apply existsb_exists; exists x; auto). congruence.
-Qed.
+Proof. exact @Lists.existsb_false. Qed.
 
 (** The value of an eigenvariable that does not occur in [t] does not
     matter. *)

@@ -138,7 +138,7 @@ them against this library, taken as a pinned input. Paths of the form
   `⊢ A, Γ` and `⊢ A⊥, Δ`); `Proofs` (`branch`, `proof`: one constructor per `Node` variant of
   `core/src/proofs/mod.rs`, in the variants' order, naming formulas rather
   than occurrences); `Check` (`remove_one`, `remove_all`, `take_all`,
-  `diff` on lists read as multisets; `state`, `take`, `join_with`,
+  `diff`, `take`, instances of `Multiset`'s; `state`, `join_with`,
   `derive`, `check`); `Soundness` (`sat`, `derive_sound`, `soundness`,
   `soundness_classical`, `soundness_mix`, `soundness_affine`, and `perm`,
   the tactic that decides a permutation of formula lists by `count_occ`
@@ -202,7 +202,8 @@ them against this library, taken as a pinned input. Paths of the form
   the one that proves `A`, then the second; where both apply, both
   goals are `A` and the two conclusions are the same multiset.
 - **The first-order development** stands beside the propositional one
-  and changes none of its files. `Terms.v` (`term`: `bound n` a de
+  and changes none of its trusted files; what both checkers share is
+  written once (`Multiset`, `TwoSided`, `FirstOrderFacts`, below). `Terms.v` (`term`: `bound n` a de
   Bruijn index, `eigen a` an eigenvariable named by a natural, `tapp f
   ts`; `tsubst`, `toccurs`, `tclosed`), `FirstOrderFormulas.v` (`var p
   ts`, `covar p ts`, the connectives under the propositional names,
@@ -212,8 +213,8 @@ them against this library, taken as a pinned input. Paths of the form
   (`proof`, `Ax p ts`, … `Cut`, `Forall A a`, `Exists A t`, the body
   `A` with its bound variable `0`), `TermsCheck.v` (`term_eqb`,
   `terms_eqb`, `term_ind'`, `teigens` and their lemmas),
-  `FirstOrderCheck.v` (`formula_eqb`, `feigens`, the multiset functions
-  again over first-order formulas, `state` with `eigens`, `introduced`,
+  `FirstOrderCheck.v` (`formula_eqb`, `feigens`, the instances of
+  `Multiset` on first-order formulas, `state` with `eigens`, `introduced`,
   `derive`, `check`), `FirstOrderSoundness.v` (`fresh_*` lemmas, `sat`
   with a context fresh for the subterm's eigenvariables, `good`,
   `derive_sound`, the four theorems), `FirstOrderIntuitionistic.v`
@@ -459,7 +460,46 @@ them against this library, taken as a pinned input. Paths of the form
   that imports it sees `take`, `diff`, `remove_one`, `derive`, `check`
   and the rules' constructors unqualified; a development that mixes
   libraries can `Require` without `Import` and qualify. The `let*`
-  notation is local to `Check.v`.
+  notation is `Multiset.Bind`'s, which every checker imports and none
+  exports, so that it clashes with no other library's notation.
+- **What the checkers share is written once**, and each file keeps its
+  names as instances, with the statements they had. `Linear/Multiset.v`
+  has the multiset operations over any type with a Boolean equality
+  (`remove_one`, `remove_all`, `take_all`, `diff`, `take`, `same`) and
+  their permutation lemmas; `Check.remove_one` is `Multiset.remove_one`
+  on formulas, `IntuitionisticCheck.pick` is it on two-sided formulas,
+  and `Soundness.remove_one_perm` is `Multiset.remove_one_perm`
+  applied. `Linear/TwoSided.v` has the cut's conclusion (`cut_by`,
+  `icut_conclusion`), its lemmas over any two-sided relation with
+  exchange and cut, and the tactics of the two-sided soundness proofs
+  (`equalities`, `steps`, `iperm`, each taking the equality or the
+  decision as an argument; a notation cannot be passed, so the term is
+  written out). `Linear/FirstOrderFacts.v` has facts of the trusted
+  `FirstOrderFormulas.v` (`dual_dual`, `dual_subst`, `occurs_dual`), and
+  `TermsCheck.tsubst_closed` the one of terms; `Base/Lists.v`
+  (`Deduxit.Base.Lists`) has `mem` and the facts of `forallb` and
+  `existsb` that the countermodel checkers of two namespaces and the
+  refutations share (`kmem`, `among`, `existsb_false_in`, … are its
+  instances). The soundness proofs set `Local Arguments … : simpl never`
+  on the instances (`Soundness.v`, `FirstOrderSoundness.v`, the two-sided
+  files): without it `cbn` unfolded `diff` to `Multiset.diff` and
+  `perm`'s `rewrite diff_count` failed. The flag is local, so a user's
+  `cbn` still computes `check` on a closed term (a global flag stopped
+  it, the panel's witness of 87r2; `simpl nomatch` does not help, since
+  the unfolding exposes a stuck fixpoint, not a match). Kept apart
+  on purpose: `unoc` (sharing it needs a function for `!`, which costs
+  what it saves), the weighted counts' `outs` (an inductive per file:
+  one shared inductive renames its constructors), the propositional and
+  first-order `wk_list` and `wn_contract` (they name `ll` and `wn`),
+  and the term evaluations of the Kripke models and the finite
+  structures (`teval`, `value`: a shared form needs a design), and the
+  reflection proofs of the four formula equalities (`formula_eqb_spec`
+  and its kin: one is in the trusted `Formulas.v`, which would then
+  require a module of tactics, and the first-order ones add the terms'
+  case). The tactics `perm` (`Multiset.perm`, given the decision and the
+  instance of `diff_count`) and `premise` (`TwoSided.premise`, given the
+  calculus, its exchange and the tactic that decides the permutation, as
+  `ltac:(iperm)`) are shared.
 - **Conventions.** The 9.1 reference manual (the Rocq nixpkgs ships) names
   the project file `_CoqProject` and the generated makefile `CoqMakefile`;
   the 9.3 manual names `_RocqProject` and `RocqMakefile`, which this
@@ -469,7 +509,8 @@ them against this library, taken as a pinned input. Paths of the form
   implicits`) is a word of `typos.toml`.
 - **`Deduxit.Intuitionistic`** (ordinary intuitionistic and minimal
   logic, `theories/Intuitionistic/`) shares nothing with
-  `Deduxit.Linear`: `Formulas.v` (`var`, `bot`, `wedge`, `vee`, `imp`;
+  `Deduxit.Linear` but its terms, and the lists of `Deduxit.Base`:
+  `Formulas.v` (`var`, `bot`, `wedge`, `vee`, `imp`;
   `top`, `neg`, `equiv` defined, as Troelstra and Schwichtenberg do, so
   a deduxit sequent with `⊤`, `¬` or `↔` is written through them) and
   `Calculus.v` (`rules` with `explosion` and `cut`, `intuitionistic`
@@ -591,7 +632,8 @@ them against this library, taken as a pinned input. Paths of the form
   chain lemmas applied, and `krefutes … = false` / `srefutes … = false`
   for each condition the checks test.
 - **`Deduxit.Modal`** (propositional modal logic, the systems from K
-  to S5, `theories/Modal/`) shares nothing with the other namespaces.
+  to S5, `theories/Modal/`) shares nothing with the other namespaces
+  but `Deduxit.Base.Lists`.
   A certificate states validity in Kripke models, `valid C Γ Δ` or
   `~ valid C Γ Δ`, never derivability, so its trusted base is
   `Formulas.v` (ten constructors, one per node of deduxit's modal

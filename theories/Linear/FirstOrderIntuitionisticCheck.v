@@ -27,7 +27,8 @@
 From Stdlib Require Import Bool List Permutation Lia.
 From Deduxit.Linear Require Intuitionistic.
 From Deduxit.Linear Require Export TermsCheck FirstOrderIntuitionistic.
-Import ListNotations.
+From Deduxit.Linear Require Multiset TwoSided.
+Import ListNotations Multiset.Bind.
 
 Section Formulas.
 
@@ -94,12 +95,6 @@ Fixpoint ieigens (A : iformula) : list nat :=
 
 End Formulas.
 
-(** Sequencing of computations that may fail: [k] runs on the value of
-    [e], and [None] is failure. Local to this file. *)
-Local Notation "'let*' x ':=' e 'in' k" :=
-  (match e with Some x => k | None => None end)
-  (at level 10, x pattern, e at level 100, k at level 200).
-
 Section Check.
 
 Context {symbol : Type} (symbol_eqb : symbol -> symbol -> bool).
@@ -165,21 +160,16 @@ Inductive iproof : Type :=
 | IAllL (A : iformula) (t : term) (premise : iproof).
     (** [Γ, ∀x. A ⊢ C] from [Γ, A[t/x] ⊢ C], for a closed term [t] *)
 
-(** ** Multisets, as lists compared through [iformula_eqb] *)
+(** ** Multisets, as lists compared through [iformula_eqb]
+
+    The operations of [Multiset], on formulas. *)
 
 (** Removes one occurrence of [A] from [l], or fails when there is none. *)
-Fixpoint pick (A : iformula) (l : list iformula) : option (list iformula) :=
-  match l with
-  | [] => None
-  | B :: l' => if eqb A B then Some l' else option_map (cons B) (pick A l')
-  end.
+Definition pick (A : iformula) (l : list iformula) : option (list iformula) :=
+  Multiset.remove_one eqb A l.
 
 (** Whether [l1] and [l2] are the same multiset. *)
-Fixpoint same (l1 l2 : list iformula) : bool :=
-  match l1 with
-  | [] => match l2 with [] => true | _ :: _ => false end
-  | A :: l1' => match pick A l2 with Some l2' => same l1' l2' | None => false end
-  end.
+Definition same (l1 l2 : list iformula) : bool := Multiset.same eqb l1 l2.
 
 (** The formulas under the [!] of a list of [!] formulas, or [None] when
     one of them is not a [!] formula. *)
@@ -195,21 +185,13 @@ Fixpoint unoc (l : list iformula) : option (list iformula) :=
     hypothesis; [None] otherwise. *)
 Definition cut_by (A : iformula) (l1 : list iformula) (C1 : iformula)
     (l2 : list iformula) (C2 : iformula) : option (list iformula * iformula) :=
-  if eqb A C1 then
-    match pick A l2 with
-    | Some l2' => Some (l1 ++ l2', C2)
-    | None => None
-    end
-  else None.
+  TwoSided.cut_by eqb A l1 C1 l2 C2.
 
 (** The conclusion of a cut on [A] from its premises [Γ1 ⊢ C1] and
     [Γ2 ⊢ C2], whichever of them proves [A]. *)
 Definition icut_conclusion (A : iformula) (l1 : list iformula) (C1 : iformula)
     (l2 : list iformula) (C2 : iformula) : option (list iformula * iformula) :=
-  match cut_by A l1 C1 l2 C2 with
-  | Some s => Some s
-  | None => cut_by A l2 C2 l1 C1
-  end.
+  TwoSided.icut_conclusion eqb A l1 C1 l2 C2.
 
 (** Removes [a] from a set of eigenvariables. *)
 Definition without (a : nat) (e : list nat) : list nat :=
@@ -362,6 +344,13 @@ End Check.
 
 Arguments iproof symbol : clear implicits.
 
+(* The soundness proof applies the instances' lemmas, so [cbn] leaves
+   the instances folded in this file; elsewhere it computes them. *)
+Local Arguments pick : simpl never.
+Local Arguments same : simpl never.
+Local Arguments cut_by : simpl never.
+Local Arguments icut_conclusion : simpl never.
+
 Section Soundness.
 
 Context {symbol : Type} (symbol_eqb : symbol -> symbol -> bool)
@@ -373,22 +362,11 @@ Local Notation eq_dec := (iformula_eq_dec symbol_eqb symbol_eqb_spec).
 
 Lemma pick_perm : forall (A : iformula) l l',
   pick symbol_eqb A l = Some l' -> Permutation l (A :: l').
-Proof.
-  induction l as [| B l IH]; cbn; intros l' H; [discriminate |].
-  destruct (eqb_spec A B) as [<- | _].
-  - injection H as <-. reflexivity.
-  - destruct (pick symbol_eqb A l) as [l'' |] eqn:E; cbn in H; [| discriminate].
-    injection H as <-. rewrite (IH l'' eq_refl). apply perm_swap.
-Qed.
+Proof. exact (Multiset.remove_one_perm _ eqb_spec). Qed.
 
 Lemma same_perm : forall (l1 l2 : list iformula),
   same symbol_eqb l1 l2 = true -> Permutation l1 l2.
-Proof.
-  induction l1 as [| A l1 IH]; cbn; intros l2 H.
-  - destruct l2; [reflexivity | discriminate].
-  - destruct (pick symbol_eqb A l2) as [l2' |] eqn:E; [| discriminate].
-    rewrite (pick_perm _ _ _ E). apply perm_skip, IH, H.
-Qed.
+Proof. exact (Multiset.same_perm _ eqb_spec). Qed.
 
 Lemma unoc_map : forall (l l' : list iformula),
   unoc l = Some l' -> l = map ioc l'.
@@ -489,21 +467,17 @@ Lemma cut_by_sound : forall A l1 C1 l2 C2 l C,
   Intuitionistic.icut R = true -> ill R l1 C1 -> ill R l2 C2 ->
   cut_by symbol_eqb A l1 C1 l2 C2 = Some (l, C) -> ill R l C.
 Proof.
-  unfold cut_by; intros * K H1 H2 E.
-  destruct (eqb_spec A C1) as [-> | _]; [| discriminate].
-  destruct (pick symbol_eqb C1 l2) as [l2' |] eqn:P; [| discriminate].
-  injection E as <- <-. apply pick_perm in P.
-  apply (cut_ir R K C1 l1 l2' C2); [exact H1 | exact (ex_ir R _ _ _ H2 P)].
+  intros A l1 C1 l2 C2 l C K.
+  exact (TwoSided.cut_by_sound _ eqb_spec (ill R) (ex_ir R) (cut_ir R K) A l1 C1 l2 C2 l C).
 Qed.
 
 Lemma icut_conclusion_sound : forall A l1 C1 l2 C2 l C,
   Intuitionistic.icut R = true -> ill R l1 C1 -> ill R l2 C2 ->
   icut_conclusion symbol_eqb A l1 C1 l2 C2 = Some (l, C) -> ill R l C.
 Proof.
-  unfold icut_conclusion; intros * K H1 H2 E.
-  destruct (cut_by symbol_eqb A l1 C1 l2 C2) as [[l' C'] |] eqn:B.
-  - injection E as <- <-. exact (cut_by_sound _ _ _ _ _ _ _ K H1 H2 B).
-  - exact (cut_by_sound _ _ _ _ _ _ _ K H2 H1 E).
+  intros A l1 C1 l2 C2 l C K.
+  exact (TwoSided.icut_conclusion_sound _ eqb_spec (ill R) (ex_ir R) (cut_ir R K)
+    A l1 C1 l2 C2 l C).
 Qed.
 
 (** The formulas of a cut's premises are those of its conclusion and the
@@ -511,66 +485,22 @@ Qed.
 Lemma cut_by_in : forall A l1 C1 l2 C2 l C X,
   cut_by symbol_eqb A l1 C1 l2 C2 = Some (l, C) ->
   In X (C1 :: l1) \/ In X (C2 :: l2) -> X = A \/ In X (C :: l).
-Proof.
-  unfold cut_by; intros * E HX.
-  destruct (eqb_spec A C1) as [-> | _]; [| discriminate].
-  destruct (pick symbol_eqb C1 l2) as [l2' |] eqn:P; [| discriminate].
-  injection E as <- <-. apply pick_perm in P.
-  destruct HX as [[-> | HX] | [-> | HX]]; [left; reflexivity | right; right; apply in_or_app; auto
-    | right; left; reflexivity |].
-  apply (Permutation_in _ P) in HX as [-> | HX]; [left; reflexivity |].
-  right; right; apply in_or_app; auto.
-Qed.
+Proof. exact (TwoSided.cut_by_in _ eqb_spec). Qed.
 
 Lemma icut_conclusion_in : forall A l1 C1 l2 C2 l C X,
   icut_conclusion symbol_eqb A l1 C1 l2 C2 = Some (l, C) ->
   In X (C1 :: l1) \/ In X (C2 :: l2) -> X = A \/ In X (C :: l).
-Proof.
-  unfold icut_conclusion; intros * E HX.
-  destruct (cut_by symbol_eqb A l1 C1 l2 C2) as [[l' C'] |] eqn:B.
-  - injection E as <- <-. exact (cut_by_in _ _ _ _ _ _ _ _ B HX).
-  - apply (cut_by_in _ _ _ _ _ _ _ _ E). tauto.
-Qed.
+Proof. exact (TwoSided.icut_conclusion_in _ eqb_spec). Qed.
 
-(** Rewrites with the Boolean equalities of formulas a node compared. *)
+(** The tactics of [TwoSided], on these formulas. *)
 Local Ltac equalities :=
-  repeat match goal with
-  | H : (_ && _) = true |- _ => apply andb_prop in H; destruct H
-  | H : iformula_eqb symbol_eqb ?A ?B = true |- _ =>
-      destruct (eqb_spec A B); [subst | discriminate]
-  end.
-
-(** Unfolds a node's [match]es on its subterms' conclusions and on the
-    multiset operations, and keeps what each one computed. *)
-Local Ltac steps :=
-  repeat match goal with
-  | H : match ?e with _ => _ end = Some _ |- _ =>
-      let E := fresh "E" in destruct e eqn:E; try discriminate
-  | H : (if ?b then _ else _) = Some _ |- _ =>
-      let E := fresh "E" in destruct b eqn:E; try discriminate
-  end.
-
-(** Decides a permutation of lists of formulas from the permutations in
-    the context, by counting every formula's occurrences. *)
-Local Ltac iperm :=
-  apply (Permutation_count_occ eq_dec); intros ?x;
-  repeat match goal with
-  | H : Permutation _ _ |- _ =>
-      rewrite (Permutation_count_occ eq_dec) in H; specialize (H x)
-  end;
-  repeat first [rewrite count_occ_app in * | progress cbn [count_occ] in *];
-  repeat match goal with
-  | |- context [eq_dec ?a ?b] => destruct (eq_dec a b)
-  | H : context [eq_dec ?a ?b] |- _ => destruct (eq_dec a b)
-  end;
-  lia.
+  TwoSided.equalities (iformula_eqb symbol_eqb) (iformula_eqb_spec symbol_eqb symbol_eqb_spec).
+Local Ltac steps := TwoSided.steps.
+Local Ltac iperm := TwoSided.iperm (iformula_eq_dec symbol_eqb symbol_eqb_spec).
 
 (** Proves a premise from the derivation of a subterm, up to a
     permutation of its hypotheses. *)
-Local Ltac premise :=
-  match goal with
-  | H : ill R ?l ?C |- ill R _ ?C => apply (ex_ir R l _ C H); iperm
-  end.
+Local Ltac premise := TwoSided.premise (@ill symbol R) (@ex_ir symbol R) ltac:(iperm).
 
 (** Breaks the hypotheses of freshness and absence into ones about
     single formulas and lists. *)

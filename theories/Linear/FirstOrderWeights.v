@@ -25,7 +25,7 @@
 
 From Stdlib Require Import Bool List Permutation ZArith Lia.
 From Deduxit.Linear Require Calculus Intuitionistic TermsCheck.
-From Deduxit.Linear Require Weights.
+From Deduxit.Linear Require Weights FirstOrderFacts.
 Import Weights(outcome(..), otimes, opar, settled, opar_comm, opar_assoc, opar_zero_l,
   opar_zero_r, settled_opar, settled_tensor, low(..), lsum, lmin, lstar, below, positive,
   reach, below_lsum, below_lmin_l, below_lmin_r, below_lstar_zero, below_lstar, reach_below).
@@ -192,12 +192,7 @@ Fixpoint leasts (l : list formula) : low :=
   end.
 
 Lemma tsubst_closed : forall (t : term) k u, tclosed t = true -> tsubst k u t = t.
-Proof.
-  induction t as [n|a|f l IH] using TermsCheck.term_ind'; intros k u C; cbn in *;
-    try discriminate; [reflexivity |].
-  f_equal. induction IH as [|t l Ht _ IHl]; cbn in *; [reflexivity |].
-  apply andb_prop in C as [Ct Cl]. now rewrite Ht, IHl.
-Qed.
+Proof. exact TermsCheck.tsubst_closed. Qed.
 
 Lemma value_subst : forall p ts k u, negb (fixed p) || forallb tclosed ts = true ->
   value p (map (tsubst k u) ts) = value p ts.
@@ -401,16 +396,16 @@ Definition one_sided (G : list iformula) (C : iformula) : list formula :=
   itr C :: map (fun A => dual (itr A)) G.
 
 Lemma dual_dual : forall A : formula, dual (dual A) = A.
-Proof. induction A; cbn; congruence. Qed.
+Proof. exact FirstOrderFacts.dual_dual. Qed.
 
 Lemma dual_subst : forall (A : formula) k u, dual (subst k u A) = subst k u (dual A).
-Proof. induction A; intros k u; cbn; congruence. Qed.
+Proof. exact FirstOrderFacts.dual_subst. Qed.
 
 Lemma itr_isubst : forall A k u, itr (isubst k u A) = subst k u (itr A).
 Proof. induction A; intros k u; cbn; rewrite ?IHA, ?IHA1, ?IHA2, ?dual_subst; reflexivity. Qed.
 
 Lemma occurs_dual : forall b (A : formula), occurs b (dual A) = occurs b A.
-Proof. induction A; cbn; congruence. Qed.
+Proof. exact FirstOrderFacts.occurs_dual. Qed.
 
 Lemma occurs_itr : forall b A, occurs b (itr A) = ioccurs b A.
 Proof. induction A; cbn; rewrite ?occurs_dual; congruence. Qed.

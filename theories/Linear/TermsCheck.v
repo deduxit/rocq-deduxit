@@ -115,4 +115,13 @@ Proof.
     destruct (IH t Hin Ht) as [H | H]; [left; exists t; auto | right; exact H].
 Qed.
 
+(** A substitution leaves a closed term as it is. *)
+Lemma tsubst_closed : forall (t : term) k u, tclosed t = true -> tsubst k u t = t.
+Proof.
+  intros t. induction t as [n | a | f l IH] using term_ind'; intros k u C; cbn in *;
+    try discriminate; [reflexivity |].
+  f_equal. induction IH as [| t l Ht _ IHl]; cbn in *; [reflexivity |].
+  apply andb_prop in C as [Ct Cl]. now rewrite Ht, IHl.
+Qed.
+
 End Eigenvariables.

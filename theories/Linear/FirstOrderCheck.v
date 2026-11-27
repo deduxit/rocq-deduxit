@@ -25,13 +25,8 @@
 
 From Stdlib Require Import Bool List.
 From Deduxit.Linear Require Export TermsCheck FirstOrderCalculus FirstOrderProofs.
-Import ListNotations.
-
-(** Sequencing of computations that may fail: [k] runs on the value of
-    [e], and [None] is failure. Local to this file. *)
-Local Notation "'let*' x ':=' e 'in' k" :=
-  (match e with Some x => k | None => None end)
-  (at level 10, x pattern, e at level 100, k at level 200).
+From Deduxit.Linear Require Multiset.
+Import ListNotations Multiset.Bind.
 
 Section Equality.
 
@@ -119,37 +114,27 @@ Local Notation formula := (formula symbol).
 Local Notation proof := (proof symbol).
 Local Notation eqb := (formula_eqb symbol_eqb).
 
-(** ** Multisets, as lists compared through [formula_eqb] *)
+(** ** Multisets, as lists compared through [formula_eqb]
+
+    The operations of [Multiset], on formulas. *)
 
 (** Removes one occurrence of [A] from [l], or fails when there is none. *)
-Fixpoint remove_one (A : formula) (l : list formula) : option (list formula) :=
-  match l with
-  | [] => None
-  | B :: l' => if eqb A B then Some l' else option_map (cons B) (remove_one A l')
-  end.
+Definition remove_one (A : formula) (l : list formula) : option (list formula) :=
+  Multiset.remove_one eqb A l.
 
 (** Removes every occurrence of [A] from [l]. *)
 Definition remove_all (A : formula) (l : list formula) : list formula :=
-  filter (fun B => negb (eqb A B)) l.
+  Multiset.remove_all eqb A l.
 
 (** Removes each formula of [l1] from [l2]. Returns what is left of
     [l2] when [l1] is included in it as a multiset, [None] otherwise. *)
-Fixpoint take_all (l1 l2 : list formula) : option (list formula) :=
-  match l1 with
-  | [] => Some l2
-  | A :: l1' =>
-      let* l2' := remove_one A l2 in
-      take_all l1' l2'
-  end.
+Definition take_all (l1 l2 : list formula) : option (list formula) :=
+  Multiset.take_all eqb l1 l2.
 
 (** [l2] less [l1]: each formula of [l1] is removed from [l2] where
     [l2] has it. [l1 ++ diff l2 l1] is the multiset union of the two. *)
-Fixpoint diff (l2 l1 : list formula) : list formula :=
-  match l1 with
-  | [] => l2
-  | A :: l1' =>
-      diff (match remove_one A l2 with Some l2' => l2' | None => l2 end) l1'
-  end.
+Definition diff (l2 l1 : list formula) : list formula :=
+  Multiset.diff eqb l2 l1.
 
 (** ** States *)
 
@@ -170,10 +155,7 @@ Record state : Type := State {
     [gamma] has none, a [⊤] above ([any]) supplies it. *)
 Definition take (A : formula) (gamma : list formula) (any : bool)
     : option (list formula) :=
-  match remove_one A gamma with
-  | Some gamma' => Some gamma'
-  | None => if any then Some gamma else None
-  end.
+  Multiset.take eqb A gamma any.
 
 (** The conclusion of a [&] rule from its premises, after each has
     consumed its own subformula. Both premises must prove the same
@@ -325,3 +307,4 @@ Definition check (R : Calculus.rules) (p : proof) (sequent : list formula) : boo
 End Check.
 
 Arguments state symbol : clear implicits.
+

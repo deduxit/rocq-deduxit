@@ -15,6 +15,7 @@
 
 From Stdlib Require Import List Bool Arith Lia.
 From Deduxit.Modal Require Export Kripke.
+From Deduxit.Base Require Lists.
 Import ListNotations.
 
 Section Countermodel.
@@ -43,7 +44,7 @@ Definition sees (w : nat) : list nat := nth w (arrows m) [].
 Definition worlds : list nat := seq 0 size.
 
 (** Whether the list [l] holds the world [w]. *)
-Definition among (w : nat) (l : list nat) : bool := existsb (Nat.eqb w) l.
+Definition among (w : nat) (l : list nat) : bool := Lists.mem w l.
 
 (** Whether the world [w] is marked in the table [l]. *)
 Definition forced_at (l : list bool) (w : nat) : bool := nth w l false.
@@ -128,10 +129,7 @@ Proof.
 Qed.
 
 Lemma among_in : forall w l, among w l = true -> In w l.
-Proof.
-  intros w l H. apply existsb_exists in H as [v [Hv E]].
-  apply Nat.eqb_eq in E. subst. exact Hv.
-Qed.
+Proof. intros w l. apply Lists.mem_In. Qed.
 
 Lemma sees_bounded : bounded = true ->
   forall w v, In v (sees w) -> v < size.

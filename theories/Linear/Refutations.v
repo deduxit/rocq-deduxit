@@ -37,6 +37,7 @@
 From Stdlib Require Import Bool List Permutation ZArith Lia.
 From Deduxit.Linear Require Export Calculus.
 From Deduxit.Linear Require Export Intuitionistic.
+From Deduxit.Base Require Lists.
 Import ListNotations.
 
 Section Refutations.
@@ -70,13 +71,7 @@ Qed.
     permutation keeps that reading. *)
 Lemma existsb_perm : forall (f : formula -> bool) l1 l2,
   Permutation l1 l2 -> existsb f l1 = existsb f l2.
-Proof.
-  intros f l1 l2 H. induction H; cbn.
-  - reflexivity.
-  - now rewrite IHPermutation.
-  - destruct (f x), (f y); reflexivity.
-  - congruence.
-Qed.
+Proof. exact (@Lists.existsb_perm formula). Qed.
 
 (** Every derivable sequent, in every calculus, reads as a tautology. *)
 Theorem ll_tautology : forall R l, ll R l -> forall v, existsb (eval v) l = true.
@@ -318,13 +313,7 @@ Proof. intros l1 l2 H. induction H; cbn; lia. Qed.
 
 Lemma forallb_perm : forall (f : formula -> bool) l1 l2,
   Permutation l1 l2 -> forallb f l1 = forallb f l2.
-Proof.
-  intros f l1 l2 H. induction H; cbn.
-  - reflexivity.
-  - now rewrite IHPermutation.
-  - destruct (f x), (f y); reflexivity.
-  - congruence.
-Qed.
+Proof. exact (@Lists.forallb_perm formula). Qed.
 
 (** What the count equation says of a sequent in a calculus. *)
 Definition counted (R : rules) (l : list formula) : Prop :=

@@ -25,7 +25,8 @@
 
 From Stdlib Require Import Bool List Permutation Lia.
 From Deduxit.Linear Require Export Intuitionistic.
-Import ListNotations.
+From Deduxit.Linear Require Multiset TwoSided.
+Import ListNotations Multiset.Bind.
 
 Section Formulas.
 
@@ -134,21 +135,16 @@ Inductive iproof : Type :=
     (** [Γ, Δ ⊢ C] from [Γ ⊢ A] and [Δ, A ⊢ C], with [icut]; the
         premise that proves [A] may come first or second *)
 
-(** ** Multisets, as lists compared through [iformula_eqb] *)
+(** ** Multisets, as lists compared through [iformula_eqb]
+
+    The operations of [Multiset], on formulas. *)
 
 (** Removes one occurrence of [A] from [l], or fails when there is none. *)
-Fixpoint pick (A : iformula) (l : list iformula) : option (list iformula) :=
-  match l with
-  | [] => None
-  | B :: l' => if eqb A B then Some l' else option_map (cons B) (pick A l')
-  end.
+Definition pick (A : iformula) (l : list iformula) : option (list iformula) :=
+  Multiset.remove_one eqb A l.
 
 (** Whether [l1] and [l2] are the same multiset. *)
-Fixpoint same (l1 l2 : list iformula) : bool :=
-  match l1 with
-  | [] => match l2 with [] => true | _ :: _ => false end
-  | A :: l1' => match pick A l2 with Some l2' => same l1' l2' | None => false end
-  end.
+Definition same (l1 l2 : list iformula) : bool := Multiset.same eqb l1 l2.
 
 (** The formulas under the [!] of a list of [!] formulas, or [None] when
     one of them is not a [!] formula. *)
@@ -164,23 +160,13 @@ Fixpoint unoc (l : list iformula) : option (list iformula) :=
     hypothesis; [None] otherwise. *)
 Definition cut_by (A : iformula) (l1 : list iformula) (C1 : iformula)
     (l2 : list iformula) (C2 : iformula) : option (list iformula * iformula) :=
-  if eqb A C1 then
-    match pick A l2 with
-    | Some l2' => Some (l1 ++ l2', C2)
-    | None => None
-    end
-  else None.
+  TwoSided.cut_by eqb A l1 C1 l2 C2.
 
 (** The conclusion of a cut on [A] from its premises [Γ1 ⊢ C1] and
-    [Γ2 ⊢ C2], whichever of them proves [A]. When both orders apply,
-    [C1] and [C2] are both [A], and the two orders give the same
-    sequent. *)
+    [Γ2 ⊢ C2], whichever of them proves [A]. *)
 Definition icut_conclusion (A : iformula) (l1 : list iformula) (C1 : iformula)
     (l2 : list iformula) (C2 : iformula) : option (list iformula * iformula) :=
-  match cut_by A l1 C1 l2 C2 with
-  | Some s => Some s
-  | None => cut_by A l2 C2 l1 C1
-  end.
+  TwoSided.icut_conclusion eqb A l1 C1 l2 C2.
 
 (** ** The pass *)
 
@@ -191,146 +177,82 @@ Fixpoint iderive (R : irules) (p : iproof) : option (list iformula * iformula) :
   | IAx a => Some ([ivar a], ivar a)
   | IOneR => Some ([], ione)
   | IOneL q =>
-      match iderive R q with
-      | Some (l, C) => Some (ione :: l, C)
-      | None => None
-      end
+      let* (l, C) := iderive R q in
+      Some (ione :: l, C)
   | ITensR A B q r =>
-      match iderive R q, iderive R r with
-      | Some (l1, A'), Some (l2, B') =>
-          if eqb A A' && eqb B B' then Some (l1 ++ l2, itens A B) else None
-      | _, _ => None
-      end
+      let* (l1, A') := iderive R q in
+      let* (l2, B') := iderive R r in
+      if eqb A A' && eqb B B' then Some (l1 ++ l2, itens A B) else None
   | ITensL A B q =>
-      match iderive R q with
-      | Some (l, C) =>
-          match pick A l with
-          | Some l' =>
-              match pick B l' with
-              | Some l'' => Some (itens A B :: l'', C)
-              | None => None
-              end
-          | None => None
-          end
-      | None => None
-      end
+      let* (l, C) := iderive R q in
+      let* l' := pick A l in
+      let* l'' := pick B l' in
+      Some (itens A B :: l'', C)
   | ILmapR A B q =>
-      match iderive R q with
-      | Some (l, B') =>
-          if eqb B B' then
-            match pick A l with
-            | Some l' => Some (l', ilmap A B)
-            | None => None
-            end
-          else None
-      | None => None
-      end
+      let* (l, B') := iderive R q in
+      if eqb B B' then
+        let* l' := pick A l in
+        Some (l', ilmap A B)
+      else None
   | ILmapL A B q r =>
-      match iderive R q, iderive R r with
-      | Some (l1, A'), Some (l2, C) =>
-          if eqb A A' then
-            match pick B l2 with
-            | Some l2' => Some (ilmap A B :: l1 ++ l2', C)
-            | None => None
-            end
-          else None
-      | _, _ => None
-      end
+      let* (l1, A') := iderive R q in
+      let* (l2, C) := iderive R r in
+      if eqb A A' then
+        let* l2' := pick B l2 in
+        Some (ilmap A B :: l1 ++ l2', C)
+      else None
   | ITopR l => Some (l, itop)
   | IWithR A B q r =>
-      match iderive R q, iderive R r with
-      | Some (l1, A'), Some (l2, B') =>
-          if eqb A A' && eqb B B' && same l1 l2 then Some (l1, iwith A B) else None
-      | _, _ => None
-      end
+      let* (l1, A') := iderive R q in
+      let* (l2, B') := iderive R r in
+      if eqb A A' && eqb B B' && same l1 l2 then Some (l1, iwith A B) else None
   | IWithL1 A B q =>
-      match iderive R q with
-      | Some (l, C) =>
-          match pick A l with
-          | Some l' => Some (iwith A B :: l', C)
-          | None => None
-          end
-      | None => None
-      end
+      let* (l, C) := iderive R q in
+      let* l' := pick A l in
+      Some (iwith A B :: l', C)
   | IWithL2 A B q =>
-      match iderive R q with
-      | Some (l, C) =>
-          match pick B l with
-          | Some l' => Some (iwith A B :: l', C)
-          | None => None
-          end
-      | None => None
-      end
+      let* (l, C) := iderive R q in
+      let* l' := pick B l in
+      Some (iwith A B :: l', C)
   | IZeroL l C => Some (izero :: l, C)
   | IPlusR1 A B q =>
-      match iderive R q with
-      | Some (l, A') => if eqb A A' then Some (l, iplus A B) else None
-      | None => None
-      end
+      let* (l, A') := iderive R q in
+      if eqb A A' then Some (l, iplus A B) else None
   | IPlusR2 A B q =>
-      match iderive R q with
-      | Some (l, B') => if eqb B B' then Some (l, iplus A B) else None
-      | None => None
-      end
+      let* (l, B') := iderive R q in
+      if eqb B B' then Some (l, iplus A B) else None
   | IPlusL A B q r =>
-      match iderive R q, iderive R r with
-      | Some (l1, C1), Some (l2, C2) =>
-          match pick A l1, pick B l2 with
-          | Some l1', Some l2' =>
-              if eqb C1 C2 && same l1' l2' then Some (iplus A B :: l1', C1) else None
-          | _, _ => None
-          end
-      | _, _ => None
-      end
+      let* (l1, C1) := iderive R q in
+      let* (l2, C2) := iderive R r in
+      let* l1' := pick A l1 in
+      let* l2' := pick B l2 in
+      if eqb C1 C2 && same l1' l2' then Some (iplus A B :: l1', C1) else None
   | IOcR A q =>
-      match iderive R q with
-      | Some (l, A') =>
-          match unoc l with
-          | Some _ => if eqb A A' then Some (l, ioc A) else None
-          | None => None
-          end
-      | None => None
-      end
+      let* (l, A') := iderive R q in
+      let* _ := unoc l in
+      if eqb A A' then Some (l, ioc A) else None
   | IDe A q =>
-      match iderive R q with
-      | Some (l, C) =>
-          match pick A l with
-          | Some l' => Some (ioc A :: l', C)
-          | None => None
-          end
-      | None => None
-      end
+      let* (l, C) := iderive R q in
+      let* l' := pick A l in
+      Some (ioc A :: l', C)
   | IWk A q =>
-      match iderive R q with
-      | Some (l, C) => Some (ioc A :: l, C)
-      | None => None
-      end
+      let* (l, C) := iderive R q in
+      Some (ioc A :: l, C)
   | ICo A q =>
-      match iderive R q with
-      | Some (l, C) =>
-          match pick (ioc A) l with
-          | Some l' =>
-              match pick (ioc A) l' with
-              | Some l'' => Some (ioc A :: l'', C)
-              | None => None
-              end
-          | None => None
-          end
-      | None => None
-      end
+      let* (l, C) := iderive R q in
+      let* l' := pick (ioc A) l in
+      let* l'' := pick (ioc A) l' in
+      Some (ioc A :: l'', C)
   | IWeaken A q =>
       if iweakening R then
-        match iderive R q with
-        | Some (l, C) => Some (A :: l, C)
-        | None => None
-        end
+        let* (l, C) := iderive R q in
+        Some (A :: l, C)
       else None
   | ICut A q r =>
       if icut R then
-        match iderive R q, iderive R r with
-        | Some (l1, C1), Some (l2, C2) => icut_conclusion A l1 C1 l2 C2
-        | _, _ => None
-        end
+        let* (l1, C1) := iderive R q in
+        let* (l2, C2) := iderive R r in
+        icut_conclusion A l1 C1 l2 C2
       else None
   end.
 
@@ -347,6 +269,13 @@ End Check.
 
 Arguments iproof atom : clear implicits.
 
+(* The soundness proof applies the instances' lemmas, so [cbn] leaves
+   the instances folded in this file; elsewhere it computes them. *)
+Local Arguments pick : simpl never.
+Local Arguments same : simpl never.
+Local Arguments cut_by : simpl never.
+Local Arguments icut_conclusion : simpl never.
+
 Section Soundness.
 
 Context {atom : Type} (atom_eqb : atom -> atom -> bool)
@@ -356,22 +285,11 @@ Local Notation eqb_spec := (iformula_eqb_spec atom_eqb atom_eqb_spec).
 
 Lemma pick_perm : forall (A : iformula) l l',
   pick atom_eqb A l = Some l' -> Permutation l (A :: l').
-Proof.
-  induction l as [| B l IH]; cbn; intros l' H; [discriminate |].
-  destruct (eqb_spec A B) as [<- | _].
-  - injection H as <-. reflexivity.
-  - destruct (pick atom_eqb A l) as [l'' |] eqn:E; cbn in H; [| discriminate].
-    injection H as <-. rewrite (IH l'' eq_refl). apply perm_swap.
-Qed.
+Proof. exact (Multiset.remove_one_perm _ eqb_spec). Qed.
 
 Lemma same_perm : forall (l1 l2 : list iformula),
   same atom_eqb l1 l2 = true -> Permutation l1 l2.
-Proof.
-  induction l1 as [| A l1 IH]; cbn; intros l2 H.
-  - destruct l2; [reflexivity | discriminate].
-  - destruct (pick atom_eqb A l2) as [l2' |] eqn:E; [| discriminate].
-    rewrite (pick_perm _ _ _ E). apply perm_skip, IH, H.
-Qed.
+Proof. exact (Multiset.same_perm _ eqb_spec). Qed.
 
 Lemma unoc_map : forall (l l' : list iformula),
   unoc l = Some l' -> l = map ioc l'.
@@ -385,68 +303,34 @@ Qed.
 
 Local Notation eq_dec := (iformula_eq_dec atom_eqb atom_eqb_spec).
 
-(** Rewrites with the Boolean equalities of formulas a node compared. *)
+(** The tactics of [TwoSided], on these formulas. *)
 Local Ltac equalities :=
-  repeat match goal with
-  | H : (_ && _) = true |- _ => apply andb_prop in H; destruct H
-  | H : iformula_eqb atom_eqb ?A ?B = true |- _ =>
-      destruct (eqb_spec A B); [subst | discriminate]
-  end.
-
-(** Unfolds a node's [match]es on its subterms' conclusions and on the
-    multiset operations, and keeps what each one computed. *)
-Local Ltac steps :=
-  repeat match goal with
-  | H : match ?e with _ => _ end = Some _ |- _ =>
-      let E := fresh "E" in destruct e eqn:E; try discriminate
-  | H : (if ?b then _ else _) = Some _ |- _ =>
-      let E := fresh "E" in destruct b eqn:E; try discriminate
-  end.
-
-(** Decides a permutation of lists of formulas from the permutations in
-    the context, by counting every formula's occurrences. *)
-Local Ltac iperm :=
-  apply (Permutation_count_occ eq_dec); intros ?x;
-  repeat match goal with
-  | H : Permutation _ _ |- _ =>
-      rewrite (Permutation_count_occ eq_dec) in H; specialize (H x)
-  end;
-  repeat first [rewrite count_occ_app in * | progress cbn [count_occ] in *];
-  repeat match goal with
-  | |- context [eq_dec ?a ?b] => destruct (eq_dec a b)
-  | H : context [eq_dec ?a ?b] |- _ => destruct (eq_dec a b)
-  end;
-  lia.
+  TwoSided.equalities (iformula_eqb atom_eqb) (iformula_eqb_spec atom_eqb atom_eqb_spec).
+Local Ltac steps := TwoSided.steps.
+Local Ltac iperm := TwoSided.iperm (iformula_eq_dec atom_eqb atom_eqb_spec).
 
 Variable R : irules.
 
 (** Proves a premise from the derivation of a subterm, up to a
     permutation of its hypotheses. *)
-Local Ltac premise :=
-  match goal with
-  | H : ill R ?l ?C |- ill R _ ?C => apply (ex_ir R l _ C H); iperm
-  end.
+Local Ltac premise := TwoSided.premise (@ill atom R) (@ex_ir atom R) ltac:(iperm).
 
 (** If a cut's premises are derivable, its conclusion is. *)
 Lemma cut_by_sound : forall A l1 C1 l2 C2 l C,
   icut R = true -> ill R l1 C1 -> ill R l2 C2 ->
   cut_by atom_eqb A l1 C1 l2 C2 = Some (l, C) -> ill R l C.
 Proof.
-  unfold cut_by; intros * K H1 H2 E.
-  destruct (eqb_spec A C1) as [-> | _]; [| discriminate].
-  destruct (pick atom_eqb C1 l2) as [l2' |] eqn:P; [| discriminate].
-  injection E as <- <-. apply pick_perm in P.
-  apply (cut_ir R K C1 l1 l2' C2); [exact H1 | exact (ex_ir R _ _ _ H2 P)].
+  intros A l1 C1 l2 C2 l C K.
+  exact (TwoSided.cut_by_sound _ eqb_spec (ill R) (ex_ir R) (cut_ir R K) A l1 C1 l2 C2 l C).
 Qed.
 
 Lemma icut_conclusion_sound : forall A l1 C1 l2 C2 l C,
   icut R = true -> ill R l1 C1 -> ill R l2 C2 ->
   icut_conclusion atom_eqb A l1 C1 l2 C2 = Some (l, C) -> ill R l C.
 Proof.
-  unfold icut_conclusion; intros * K H1 H2 E.
-  destruct (cut_by atom_eqb A l1 C1 l2 C2) as [[l' C'] |] eqn:B.
-  - injection E as <- <-. exact (cut_by_sound _ _ _ _ _ _ _ K H1 H2 B).
-  - exact (cut_by_sound _ _ _ _ _ _ _ K H2 H1 E).
+  intros A l1 C1 l2 C2 l C K.
+  exact (TwoSided.icut_conclusion_sound _ eqb_spec (ill R) (ex_ir R) (cut_ir R K)
+    A l1 C1 l2 C2 l C).
 Qed.
 
 (** Every conclusion [iderive] computes is derivable. *)

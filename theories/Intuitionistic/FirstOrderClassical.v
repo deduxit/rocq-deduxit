@@ -20,6 +20,7 @@
 From Stdlib Require Import List Permutation Bool Arith Lia.
 From Deduxit.Linear Require Import TermsCheck.
 From Deduxit.Intuitionistic Require Export FirstOrderCalculus.
+From Deduxit.Base Require Lists.
 Import ListNotations.
 
 Section Classical.
@@ -188,10 +189,7 @@ Qed.
 
 (** An existential list fails on each member. *)
 Lemma existsb_false_in : forall {X} (f : X -> bool) l x, existsb f l = false -> In x l -> f x = false.
-Proof.
-  intros X f l x H Hx. destruct (f x) eqn:E; [| reflexivity].
-  assert (existsb f l = true) by (apply existsb_exists; exists x; auto). congruence.
-Qed.
+Proof. exact @Lists.existsb_false. Qed.
 
 (** The value of an eigenvariable that does not occur in [t] does not
     matter. *)
@@ -233,20 +231,11 @@ Qed.
 
 (** [forallb] and [existsb] read a list as a set. *)
 Lemma forallb_perm : forall {X} (f : X -> bool) l1 l2, Permutation l1 l2 -> forallb f l1 = forallb f l2.
-Proof.
-  intros X f l1 l2 Hp. apply eq_true_iff_eq. rewrite !forallb_forall. split; intros H x Hx; apply H.
-  - apply Permutation_in with l2; [apply Permutation_sym |]; assumption.
-  - apply Permutation_in with l1; assumption.
-Qed.
+Proof. exact @Lists.forallb_perm. Qed.
 
 (** [existsb] reads a list as a set. *)
 Lemma existsb_perm : forall {X} (f : X -> bool) l1 l2, Permutation l1 l2 -> existsb f l1 = existsb f l2.
-Proof.
-  intros X f l1 l2 Hp. apply eq_true_iff_eq. rewrite !existsb_exists.
-  split; intros [x [Hx E]]; exists x; split; try exact E.
-  - apply Permutation_in with l1; assumption.
-  - apply Permutation_in with l2; [apply Permutation_sym |]; assumption.
-Qed.
+Proof. exact @Lists.existsb_perm. Qed.
 
 Hypothesis size_pos : 0 < size.
 Hypothesis fn_closed : forall f l, fn f l < size.

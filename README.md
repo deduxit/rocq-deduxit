@@ -360,7 +360,8 @@ Soundness.` becomes `From Deduxit.Linear Require Import Soundness.`.
 
 - `theories/Linear/`, `theories/Intuitionistic/` and `theories/Modal/`:
   the library, `Deduxit.Linear`, `Deduxit.Intuitionistic` and
-  `Deduxit.Modal`.
+  `Deduxit.Modal`, and `theories/Base/`, `Deduxit.Base`, what two of them
+  share.
 - `tests/`: certificates compiled against the installed library
   (`Deduxit.Linear.Tests`, `Deduxit.Intuitionistic.Tests` for
   `tests/Intuitionistic/` and `Deduxit.Modal.Tests` for `tests/Modal/`),

@@ -14,7 +14,16 @@
 
 From Stdlib Require Import Bool List Permutation Lia.
 From Deduxit.Linear Require Export Check.
+From Deduxit.Linear Require Multiset.
 Import ListNotations.
+
+(* The soundness proofs rewrite with the instances' lemmas, so [cbn]
+   leaves the instances folded here; elsewhere it computes them. *)
+Local Arguments remove_one : simpl never.
+Local Arguments remove_all : simpl never.
+Local Arguments take_all : simpl never.
+Local Arguments diff : simpl never.
+Local Arguments take : simpl never.
 
 Section Soundness.
 
@@ -29,65 +38,27 @@ Local Notation count := (count_occ eq_dec).
 
 Lemma remove_one_perm : forall (A : formula) l l',
   remove_one atom_eqb A l = Some l' -> Permutation l (A :: l').
-Proof.
-  induction l as [| B l IH]; cbn; intros l' H; [discriminate |].
-  destruct (eqb_spec A B) as [<- | _].
-  - injection H as <-. reflexivity.
-  - destruct (remove_one atom_eqb A l) as [l'' |] eqn:E; cbn in H; [| discriminate].
-    injection H as <-. rewrite (IH l'' eq_refl). apply perm_swap.
-Qed.
+Proof. exact (Multiset.remove_one_perm _ eqb_spec). Qed.
 
 Lemma remove_one_absent : forall (A : formula) l,
   remove_one atom_eqb A l = None -> ~ In A l.
-Proof.
-  induction l as [| B l IH]; cbn; intros H HI; [exact HI |].
-  destruct (eqb_spec A B) as [_ | ne]; [discriminate |].
-  destruct HI as [-> | HI]; [exact (ne eq_refl) |].
-  destruct (remove_one atom_eqb A l); [discriminate | exact (IH eq_refl HI)].
-Qed.
+Proof. exact (Multiset.remove_one_absent _ eqb_spec). Qed.
 
 Lemma take_all_perm : forall (l1 l2 l : list formula),
   take_all atom_eqb l1 l2 = Some l -> Permutation l2 (l1 ++ l).
-Proof.
-  induction l1 as [| A l1 IH]; cbn; intros l2 l H.
-  - injection H as <-. reflexivity.
-  - destruct (remove_one atom_eqb A l2) as [l2' |] eqn:E; [| discriminate].
-    rewrite (remove_one_perm _ _ _ E). apply perm_skip, IH, H.
-Qed.
+Proof. exact (Multiset.take_all_perm _ eqb_spec). Qed.
 
 Lemma remove_all_perm : forall (A : formula) l,
   Permutation l (repeat A (count l A) ++ remove_all atom_eqb A l).
-Proof.
-  unfold remove_all. induction l as [| B l IH]; cbn; [reflexivity |].
-  destruct (eq_dec B A) as [e | ne]; destruct (eqb_spec A B) as [e' | ne'];
-    try congruence; cbn.
-  - subst. apply perm_skip, IH.
-  - apply (Permutation_trans (perm_skip B IH)), Permutation_middle.
-Qed.
+Proof. exact (Multiset.remove_all_perm _ eqb_spec eq_dec). Qed.
 
 Lemma diff_count : forall (l1 l2 : list formula) x,
   count (diff atom_eqb l2 l1) x = count l2 x - count l1 x.
-Proof.
-  induction l1 as [| A l1 IH]; cbn; intros l2 x; [lia |].
-  destruct (remove_one atom_eqb A l2) as [l2' |] eqn:E; rewrite IH.
-  - apply remove_one_perm in E.
-    rewrite (Permutation_count_occ eq_dec) in E. rewrite (E x). cbn.
-    destruct (eq_dec A x); lia.
-  - apply remove_one_absent, (count_occ_not_In eq_dec) in E.
-    destruct (eq_dec A x); subst; lia.
-Qed.
+Proof. exact (Multiset.diff_count _ eqb_spec eq_dec). Qed.
 
 (** Permutations of lists of formulas, decided by counting every
     formula's occurrences on both sides. *)
-Ltac perm :=
-  apply (Permutation_count_occ eq_dec); intros ?x;
-  repeat rewrite map_app; repeat rewrite app_nil_r; cbn [map];
-  repeat first [rewrite count_occ_app | progress cbn [count_occ]];
-  repeat rewrite diff_count;
-  repeat match goal with
-         | |- context [eq_dec ?a ?b] => destruct (eq_dec a b); try subst
-         end;
-  lia.
+Ltac perm := Multiset.perm (formula_eq_dec atom_eqb atom_eqb_spec) diff_count.
 
 (** ** Derived rules of the calculus *)
 
@@ -124,12 +95,7 @@ Qed.
 Lemma take_spec : forall A gamma any gamma',
   take atom_eqb A gamma any = Some gamma' ->
   Permutation gamma (A :: gamma') \/ (any = true /\ gamma' = gamma).
-Proof.
-  unfold take; intros * H.
-  destruct (remove_one atom_eqb A gamma) eqn:E.
-  - injection H as <-. left. apply remove_one_perm, E.
-  - destruct any; [| discriminate]. injection H as <-. auto.
-Qed.
+Proof. exact (Multiset.take_spec _ eqb_spec). Qed.
 
 (** Consuming [A] from a satisfied zone leaves a satisfied zone with
     [A] in front, behind whatever prefix [pre] the rule puts first. *)
