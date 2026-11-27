@@ -33,22 +33,20 @@ Import ListNotations.
 Section Calculus.
 
 Context {atom : Type}.
-Local Notation formula := (formula atom).
-Local Notation item := (item atom).
 
 (** The item [i] mentions the label [y]. *)
-Definition mentions (y : label) (i : item) : Prop :=
+Definition mentions (y : label) (i : item atom) : Prop :=
   match i with
   | lab x _ => x = y
   | rel x z => x = y \/ z = y
   end.
 
 (** No item of the sequent [L ⊢ Rt] mentions the label [y]. *)
-Definition fresh (y : label) (L Rt : list item) : Prop :=
+Definition fresh (y : label) (L Rt : list (item atom)) : Prop :=
   forall i, In i (L ++ Rt) -> ~ mentions y i.
 
 (** The derivable labelled sequents [L ⊢ Rt] of the system of [C]. *)
-Inductive g3 (C : conditions) : list item -> list item -> Prop :=
+Inductive g3 (C : conditions) : list (item atom) -> list (item atom) -> Prop :=
 | ax : forall x A L Rt,
     In (lab x A) L -> In (lab x A) Rt -> g3 C L Rt
 | bot_l : forall x L Rt,

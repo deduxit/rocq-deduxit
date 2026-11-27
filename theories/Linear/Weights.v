@@ -199,8 +199,6 @@ Proof. intros w [|z|] n; cbn; intros; [contradiction | |]; apply orb_true_r. Qed
 Section Weights.
 
 Context {atom : Type}.
-Local Notation formula := (formula atom).
-Local Notation iformula := (iformula atom).
 
 (** The weight a table gives an atom, in the form certificates write:
     the first entry's, or zero for an atom the table does not list. *)
@@ -227,11 +225,11 @@ Section Contributions.
 
 (** The formulas that may be dropped, which then contribute zero; none
     without weakening. *)
-Variable drop : formula -> bool.
+Variable drop : formula atom -> bool.
 
 (** [out A o]: [A] can contribute [o], for some choice of its additive
     alternatives and of the copies of its [?] subformulas. *)
-Inductive out : formula -> outcome -> Prop :=
+Inductive out : formula atom -> outcome -> Prop :=
 | out_var : forall b,
     out (var b) (if d b then (if p then dead else absorb) else num (y b))
 | out_covar : forall b,
@@ -252,7 +250,7 @@ Inductive out : formula -> outcome -> Prop :=
 | out_drop : forall A, drop A = true -> out A (num 0).
 
 (** [outs l o]: the formulas of [l] side by side can contribute [o]. *)
-Inductive outs : list formula -> outcome -> Prop :=
+Inductive outs : list (formula atom) -> outcome -> Prop :=
 | outs_nil : outs [] (num 0)
 | outs_cons : forall A l a o, out A a -> outs l o -> outs (A :: l) (opar a o).
 
@@ -306,11 +304,11 @@ Qed.
 
 (** The bound of a formula, widened to include zero when it may be
     dropped. *)
-Definition keep (A : formula) (x : low) : low :=
+Definition keep (A : formula atom) (x : low) : low :=
   if drop A then lmin (from 0) x else x.
 
 (** A lower bound of the numbers [A] can contribute. *)
-Fixpoint least (A : formula) : low :=
+Fixpoint least (A : formula atom) : low :=
   keep A
     match A with
     | var b => if d b then never else from (y b)
@@ -324,7 +322,7 @@ Fixpoint least (A : formula) : low :=
     end.
 
 (** Whether [A] may absorb. *)
-Fixpoint absorbs (A : formula) : bool :=
+Fixpoint absorbs (A : formula atom) : bool :=
   match A with
   | var b => d b && negb p
   | covar b => d b && p
@@ -337,7 +335,7 @@ Fixpoint absorbs (A : formula) : bool :=
   end.
 
 (** The bound of a sequent: the sum over its formulas. *)
-Fixpoint leasts (l : list formula) : low :=
+Fixpoint leasts (l : list (formula atom)) : low :=
   match l with
   | [] => from 0
   | A :: l => lsum (least A) (leasts l)
@@ -425,7 +423,7 @@ End Contributions.
 (** ** Without weakening *)
 
 (** Nothing is dropped. *)
-Definition nodrop (A : formula) : bool := false.
+Definition nodrop (A : formula atom) : bool := false.
 
 (** Without weakening and without cut, every derivable sequent can
     contribute zero or absorb, Mix allowed. *)
@@ -482,7 +480,7 @@ Qed.
 (** Whether the weights refute a sequent in a calculus: the calculus
     has no weakening and no cut, no formula may absorb, and every
     contribution of the sequent is above zero, or there is none. *)
-Definition overweight (R : rules) (l : list formula) : bool :=
+Definition overweight (R : rules) (l : list (formula atom)) : bool :=
   negb (weakening R) && negb (cut R)
   && negb (existsb (absorbs nodrop) l) && positive (leasts nodrop l).
 
@@ -514,7 +512,7 @@ Section Outputs.
     - for a [⊗], one fewer than its sides together; for a [⅋], as many
       as its sides together; for an additive, as many as the side with
       more. *)
-Fixpoint outputs (A : formula) : Z :=
+Fixpoint outputs (A : formula atom) : Z :=
   match A with
   | var _ => if p then 1 else 0
   | covar _ => if p then 0 else 1
@@ -527,7 +525,7 @@ Fixpoint outputs (A : formula) : Z :=
 
 (** Whether no subformula has fewer than zero outputs, and every
     formula below a [?] has none. *)
-Fixpoint shaped (A : formula) : bool :=
+Fixpoint shaped (A : formula atom) : bool :=
   (0 <=? outputs A)%Z &&
   match A with
   | tens A B | parr A B | awith A B | aplus A B => shaped A && shaped B
@@ -537,14 +535,14 @@ Fixpoint shaped (A : formula) : bool :=
   end.
 
 (** The outputs of a sequent. *)
-Fixpoint outputs_all (l : list formula) : Z :=
+Fixpoint outputs_all (l : list (formula atom)) : Z :=
   match l with
   | [] => 0
   | A :: l => outputs A + outputs_all l
   end.
 
 (** The formulas without an output may be dropped. *)
-Definition droppable (A : formula) : bool := (outputs A =? 0)%Z.
+Definition droppable (A : formula atom) : bool := (outputs A =? 0)%Z.
 
 Lemma shaped_outputs : forall A, shaped A = true -> (0 <= outputs A)%Z.
 Proof. intros A H. destruct A; cbn [shaped] in H; apply andb_prop in H as [H _]; now apply Z.leb_le. Qed.
@@ -667,7 +665,7 @@ Qed.
     one output in all, no formula may absorb, and every contribution of
     the sequent is above zero, or there is none, whether or not the
     formulas without an output are dropped. *)
-Definition overweight_affine (R : rules) (l : list formula) : bool :=
+Definition overweight_affine (R : rules) (l : list (formula atom)) : bool :=
   negb (cut R) && forallb shaped l && (outputs_all l =? 1)%Z
   && negb (existsb (absorbs droppable) l) && positive (leasts droppable l).
 

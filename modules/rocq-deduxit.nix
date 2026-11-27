@@ -12,7 +12,7 @@
 # `Deduxit.Intuitionistic.Tests' for tests/Intuitionistic/ and
 # `Deduxit.Modal.Tests' for tests/Modal/), the certificates' interface
 # (tests/Interface/) and README's Rocq examples against the library,
-# built with every default warning an error (but two, see strictFlags),
+# built with every default warning an error (but one, see strictFlags),
 # and requires
 # `Print Assumptions' of the soundness theorems to answer `Closed under the
 # global context'. Rocq prints nothing for a file it accepts, so any other
@@ -64,11 +64,10 @@
       # otherwise. The package keeps Rocq's defaults, since a user's newer
       # Rocq may warn where this one did not. The project file cannot carry
       # the selector: `rocq makefile' splits an `-arg' at its spaces.
-      # Two warnings of 9.2 stay warnings, since what they ask for does not
-      # exist on 9.0 and 9.1: `notation-for-abbreviation' (`Abbreviation')
-      # and `register-all' (`Scheme All' for the terms nested in `list').
-      # Rocq ignores a warning name it does not know.
-      strictFlags = ''-set "Default Goal Selector=!" -w +default,notation-for-abbreviation,register-all'';
+      # One warning of 9.2 stays a warning, since what it asks for does not
+      # exist on 9.0 and 9.1: `register-all' (`Scheme All' for the terms
+      # nested in `list'). Rocq ignores a warning name it does not know.
+      strictFlags = ''-set "Default Goal Selector=!" -w +default,register-all'';
 
       # The library built with one Rocq, as nixpkgs builds a Rocq library.
       packageFor =

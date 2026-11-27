@@ -31,7 +31,6 @@ Import ListNotations Multiset.Bind.
 Section Formulas.
 
 Context {atom : Type}.
-Local Notation iformula := (iformula atom).
 
 Section Equality.
 
@@ -40,7 +39,7 @@ Variable atom_eqb : atom -> atom -> bool.
 
 (** Structural equality of intuitionistic formulas, comparing atoms
     with [atom_eqb]. *)
-Fixpoint iformula_eqb (A B : iformula) : bool :=
+Fixpoint iformula_eqb (A B : iformula atom) : bool :=
   match A, B with
   | ivar a, ivar b => atom_eqb a b
   | ione, ione => true
@@ -74,7 +73,7 @@ Qed.
 
 (** Equality of intuitionistic formulas as a decision, used in proofs;
     the checker computes with [iformula_eqb]. *)
-Definition iformula_eq_dec (A B : iformula) : {A = B} + {A <> B} :=
+Definition iformula_eq_dec (A B : iformula atom) : {A = B} + {A <> B} :=
   reflect_dec _ _ (iformula_eqb_spec A B).
 
 End Equality.
@@ -84,8 +83,6 @@ End Formulas.
 Section Check.
 
 Context {atom : Type} (atom_eqb : atom -> atom -> bool).
-Local Notation iformula := (iformula atom).
-Local Notation eqb := (iformula_eqb atom_eqb).
 
 (** A two-sided proof term. Below, [Γ ⊢ C] is the node's conclusion,
     its hypotheses read as a multiset. *)
@@ -96,42 +93,42 @@ Inductive iproof : Type :=
     (** [⊢ 1] *)
 | IOneL (premise : iproof)
     (** [Γ, 1 ⊢ C] from [Γ ⊢ C] *)
-| ITensR (A B : iformula) (left right : iproof)
+| ITensR (A B : iformula atom) (left right : iproof)
     (** [Γ, Δ ⊢ A ⊗ B] from [Γ ⊢ A] and [Δ ⊢ B] *)
-| ITensL (A B : iformula) (premise : iproof)
+| ITensL (A B : iformula atom) (premise : iproof)
     (** [Γ, A ⊗ B ⊢ C] from [Γ, A, B ⊢ C] *)
-| ILmapR (A B : iformula) (premise : iproof)
+| ILmapR (A B : iformula atom) (premise : iproof)
     (** [Γ ⊢ A ⊸ B] from [Γ, A ⊢ B] *)
-| ILmapL (A B : iformula) (left right : iproof)
+| ILmapL (A B : iformula atom) (left right : iproof)
     (** [Γ, Δ, A ⊸ B ⊢ C] from [Γ ⊢ A] and [Δ, B ⊢ C] *)
-| ITopR (context : list iformula)
+| ITopR (context : list (iformula atom))
     (** [Γ ⊢ ⊤], with [Γ] the context *)
-| IWithR (A B : iformula) (left right : iproof)
+| IWithR (A B : iformula atom) (left right : iproof)
     (** [Γ ⊢ A & B] from [Γ ⊢ A] and [Γ ⊢ B] *)
-| IWithL1 (A B : iformula) (premise : iproof)
+| IWithL1 (A B : iformula atom) (premise : iproof)
     (** [Γ, A & B ⊢ C] from [Γ, A ⊢ C] *)
-| IWithL2 (A B : iformula) (premise : iproof)
+| IWithL2 (A B : iformula atom) (premise : iproof)
     (** [Γ, A & B ⊢ C] from [Γ, B ⊢ C] *)
-| IZeroL (context : list iformula) (goal : iformula)
+| IZeroL (context : list (iformula atom)) (goal : iformula atom)
     (** [Γ, 0 ⊢ C], with [Γ] the context and [C] the goal *)
-| IPlusR1 (A B : iformula) (premise : iproof)
+| IPlusR1 (A B : iformula atom) (premise : iproof)
     (** [Γ ⊢ A ⊕ B] from [Γ ⊢ A] *)
-| IPlusR2 (A B : iformula) (premise : iproof)
+| IPlusR2 (A B : iformula atom) (premise : iproof)
     (** [Γ ⊢ A ⊕ B] from [Γ ⊢ B] *)
-| IPlusL (A B : iformula) (left right : iproof)
+| IPlusL (A B : iformula atom) (left right : iproof)
     (** [Γ, A ⊕ B ⊢ C] from [Γ, A ⊢ C] and [Γ, B ⊢ C] *)
-| IOcR (A : iformula) (premise : iproof)
+| IOcR (A : iformula atom) (premise : iproof)
     (** promotion, [!Γ ⊢ !A] from [!Γ ⊢ A] *)
-| IDe (A : iformula) (premise : iproof)
+| IDe (A : iformula atom) (premise : iproof)
     (** dereliction, [Γ, !A ⊢ C] from [Γ, A ⊢ C] *)
-| IWk (A : iformula) (premise : iproof)
+| IWk (A : iformula atom) (premise : iproof)
     (** weakening of a [!] hypothesis, [Γ, !A ⊢ C] from [Γ ⊢ C] *)
-| ICo (A : iformula) (premise : iproof)
+| ICo (A : iformula atom) (premise : iproof)
     (** contraction, [Γ, !A ⊢ C] from [Γ, !A, !A ⊢ C] *)
-| IWeaken (A : iformula) (premise : iproof)
+| IWeaken (A : iformula atom) (premise : iproof)
     (** weakening of any hypothesis, [Γ, A ⊢ C] from [Γ ⊢ C], with
         [iweakening] *)
-| ICut (A : iformula) (left right : iproof).
+| ICut (A : iformula atom) (left right : iproof).
     (** [Γ, Δ ⊢ C] from [Γ ⊢ A] and [Δ, A ⊢ C], with [icut]; the
         premise that proves [A] may come first or second *)
 
@@ -140,15 +137,15 @@ Inductive iproof : Type :=
     The operations of [Multiset], on formulas. *)
 
 (** Removes one occurrence of [A] from [l], or fails when there is none. *)
-Definition pick (A : iformula) (l : list iformula) : option (list iformula) :=
-  Multiset.remove_one eqb A l.
+Definition pick (A : iformula atom) (l : list (iformula atom)) : option (list (iformula atom)) :=
+  Multiset.remove_one (iformula_eqb atom_eqb) A l.
 
 (** Whether [l1] and [l2] are the same multiset. *)
-Definition same (l1 l2 : list iformula) : bool := Multiset.same eqb l1 l2.
+Definition same (l1 l2 : list (iformula atom)) : bool := Multiset.same (iformula_eqb atom_eqb) l1 l2.
 
 (** The formulas under the [!] of a list of [!] formulas, or [None] when
     one of them is not a [!] formula. *)
-Fixpoint unoc (l : list iformula) : option (list iformula) :=
+Fixpoint unoc (l : list (iformula atom)) : option (list (iformula atom)) :=
   match l with
   | [] => Some []
   | ioc A :: l' => option_map (cons A) (unoc l')
@@ -158,21 +155,21 @@ Fixpoint unoc (l : list iformula) : option (list iformula) :=
 (** The conclusion [Γ1, Γ2 ⊢ C2] of a cut on [A] when the first premise
     [Γ1 ⊢ C1] proves [A] and the second, [Γ2 ⊢ C2], has [A] as a
     hypothesis; [None] otherwise. *)
-Definition cut_by (A : iformula) (l1 : list iformula) (C1 : iformula)
-    (l2 : list iformula) (C2 : iformula) : option (list iformula * iformula) :=
-  TwoSided.cut_by eqb A l1 C1 l2 C2.
+Definition cut_by (A : iformula atom) (l1 : list (iformula atom)) (C1 : iformula atom)
+    (l2 : list (iformula atom)) (C2 : iformula atom) : option (list (iformula atom) * iformula atom) :=
+  TwoSided.cut_by (iformula_eqb atom_eqb) A l1 C1 l2 C2.
 
 (** The conclusion of a cut on [A] from its premises [Γ1 ⊢ C1] and
     [Γ2 ⊢ C2], whichever of them proves [A]. *)
-Definition icut_conclusion (A : iformula) (l1 : list iformula) (C1 : iformula)
-    (l2 : list iformula) (C2 : iformula) : option (list iformula * iformula) :=
-  TwoSided.icut_conclusion eqb A l1 C1 l2 C2.
+Definition icut_conclusion (A : iformula atom) (l1 : list (iformula atom)) (C1 : iformula atom)
+    (l2 : list (iformula atom)) (C2 : iformula atom) : option (list (iformula atom) * iformula atom) :=
+  TwoSided.icut_conclusion (iformula_eqb atom_eqb) A l1 C1 l2 C2.
 
 (** ** The pass *)
 
 (** The conclusion [Γ ⊢ C] of a term, or [None] at the first node that
     applies its rule wrongly or uses a rule that [R] does not allow. *)
-Fixpoint iderive (R : irules) (p : iproof) : option (list iformula * iformula) :=
+Fixpoint iderive (R : irules) (p : iproof) : option (list (iformula atom) * iformula atom) :=
   match p with
   | IAx a => Some ([ivar a], ivar a)
   | IOneR => Some ([], ione)
@@ -182,7 +179,7 @@ Fixpoint iderive (R : irules) (p : iproof) : option (list iformula * iformula) :
   | ITensR A B q r =>
       let* (l1, A') := iderive R q in
       let* (l2, B') := iderive R r in
-      if eqb A A' && eqb B B' then Some (l1 ++ l2, itens A B) else None
+      if (iformula_eqb atom_eqb) A A' && (iformula_eqb atom_eqb) B B' then Some (l1 ++ l2, itens A B) else None
   | ITensL A B q =>
       let* (l, C) := iderive R q in
       let* l' := pick A l in
@@ -190,14 +187,14 @@ Fixpoint iderive (R : irules) (p : iproof) : option (list iformula * iformula) :
       Some (itens A B :: l'', C)
   | ILmapR A B q =>
       let* (l, B') := iderive R q in
-      if eqb B B' then
+      if (iformula_eqb atom_eqb) B B' then
         let* l' := pick A l in
         Some (l', ilmap A B)
       else None
   | ILmapL A B q r =>
       let* (l1, A') := iderive R q in
       let* (l2, C) := iderive R r in
-      if eqb A A' then
+      if (iformula_eqb atom_eqb) A A' then
         let* l2' := pick B l2 in
         Some (ilmap A B :: l1 ++ l2', C)
       else None
@@ -205,7 +202,7 @@ Fixpoint iderive (R : irules) (p : iproof) : option (list iformula * iformula) :
   | IWithR A B q r =>
       let* (l1, A') := iderive R q in
       let* (l2, B') := iderive R r in
-      if eqb A A' && eqb B B' && same l1 l2 then Some (l1, iwith A B) else None
+      if (iformula_eqb atom_eqb) A A' && (iformula_eqb atom_eqb) B B' && same l1 l2 then Some (l1, iwith A B) else None
   | IWithL1 A B q =>
       let* (l, C) := iderive R q in
       let* l' := pick A l in
@@ -217,20 +214,20 @@ Fixpoint iderive (R : irules) (p : iproof) : option (list iformula * iformula) :
   | IZeroL l C => Some (izero :: l, C)
   | IPlusR1 A B q =>
       let* (l, A') := iderive R q in
-      if eqb A A' then Some (l, iplus A B) else None
+      if (iformula_eqb atom_eqb) A A' then Some (l, iplus A B) else None
   | IPlusR2 A B q =>
       let* (l, B') := iderive R q in
-      if eqb B B' then Some (l, iplus A B) else None
+      if (iformula_eqb atom_eqb) B B' then Some (l, iplus A B) else None
   | IPlusL A B q r =>
       let* (l1, C1) := iderive R q in
       let* (l2, C2) := iderive R r in
       let* l1' := pick A l1 in
       let* l2' := pick B l2 in
-      if eqb C1 C2 && same l1' l2' then Some (iplus A B :: l1', C1) else None
+      if (iformula_eqb atom_eqb) C1 C2 && same l1' l2' then Some (iplus A B :: l1', C1) else None
   | IOcR A q =>
       let* (l, A') := iderive R q in
       let* _ := unoc l in
-      if eqb A A' then Some (l, ioc A) else None
+      if (iformula_eqb atom_eqb) A A' then Some (l, ioc A) else None
   | IDe A q =>
       let* (l, C) := iderive R q in
       let* l' := pick A l in
@@ -258,10 +255,10 @@ Fixpoint iderive (R : irules) (p : iproof) : option (list iformula * iformula) :
 
 (** Whether [p] proves [hypotheses ⊢ goal] in [R]: its conclusion has
     that goal and, as a multiset, those hypotheses. *)
-Definition icheck (R : irules) (p : iproof) (hypotheses : list iformula) (goal : iformula)
+Definition icheck (R : irules) (p : iproof) (hypotheses : list (iformula atom)) (goal : iformula atom)
     : bool :=
   match iderive R p with
-  | Some (l, C) => eqb C goal && same l hypotheses
+  | Some (l, C) => (iformula_eqb atom_eqb) C goal && same l hypotheses
   | None => false
   end.
 
@@ -280,18 +277,16 @@ Section Soundness.
 
 Context {atom : Type} (atom_eqb : atom -> atom -> bool)
   (atom_eqb_spec : forall a b, reflect (a = b) (atom_eqb a b)).
-Local Notation iformula := (iformula atom).
-Local Notation eqb_spec := (iformula_eqb_spec atom_eqb atom_eqb_spec).
 
-Lemma pick_perm : forall (A : iformula) l l',
+Lemma pick_perm : forall (A : iformula atom) l l',
   pick atom_eqb A l = Some l' -> Permutation l (A :: l').
-Proof. exact (Multiset.remove_one_perm _ eqb_spec). Qed.
+Proof. exact (Multiset.remove_one_perm _ (iformula_eqb_spec atom_eqb atom_eqb_spec)). Qed.
 
-Lemma same_perm : forall (l1 l2 : list iformula),
+Lemma same_perm : forall (l1 l2 : list (iformula atom)),
   same atom_eqb l1 l2 = true -> Permutation l1 l2.
-Proof. exact (Multiset.same_perm _ eqb_spec). Qed.
+Proof. exact (Multiset.same_perm _ (iformula_eqb_spec atom_eqb atom_eqb_spec)). Qed.
 
-Lemma unoc_map : forall (l l' : list iformula),
+Lemma unoc_map : forall (l l' : list (iformula atom)),
   unoc l = Some l' -> l = map ioc l'.
 Proof.
   induction l as [| A l IH]; cbn; intros l' H.
@@ -301,7 +296,6 @@ Proof.
     injection H as <-. cbn. f_equal. apply IH. reflexivity.
 Qed.
 
-Local Notation eq_dec := (iformula_eq_dec atom_eqb atom_eqb_spec).
 
 (** The tactics of [TwoSided], on these formulas. *)
 Local Ltac equalities :=
@@ -321,7 +315,7 @@ Lemma cut_by_sound : forall A l1 C1 l2 C2 l C,
   cut_by atom_eqb A l1 C1 l2 C2 = Some (l, C) -> ill R l C.
 Proof.
   intros A l1 C1 l2 C2 l C K.
-  exact (TwoSided.cut_by_sound _ eqb_spec (ill R) (ex_ir R) (cut_ir R K) A l1 C1 l2 C2 l C).
+  exact (TwoSided.cut_by_sound _ (iformula_eqb_spec atom_eqb atom_eqb_spec) (ill R) (ex_ir R) (cut_ir R K) A l1 C1 l2 C2 l C).
 Qed.
 
 Lemma icut_conclusion_sound : forall A l1 C1 l2 C2 l C,
@@ -329,7 +323,7 @@ Lemma icut_conclusion_sound : forall A l1 C1 l2 C2 l C,
   icut_conclusion atom_eqb A l1 C1 l2 C2 = Some (l, C) -> ill R l C.
 Proof.
   intros A l1 C1 l2 C2 l C K.
-  exact (TwoSided.icut_conclusion_sound _ eqb_spec (ill R) (ex_ir R) (cut_ir R K)
+  exact (TwoSided.icut_conclusion_sound _ (iformula_eqb_spec atom_eqb atom_eqb_spec) (ill R) (ex_ir R) (cut_ir R K)
     A l1 C1 l2 C2 l C).
 Qed.
 

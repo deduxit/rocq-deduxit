@@ -19,11 +19,10 @@ Import ListNotations.
 Section Mix.
 
 Context {atom : Type}.
-Local Notation formula := (formula atom).
 
 (** A rule with one premise, applied behind an extra first formula
     [X]. *)
-Lemma behind : forall R (X A B : formula) l,
+Lemma behind : forall R (X A B : formula atom) l,
   (forall m, ll R (A :: m) -> ll R (B :: m)) -> ll R (X :: A :: l) -> ll R (X :: B :: l).
 Proof.
   intros R X A B l rule H.
@@ -33,7 +32,7 @@ Qed.
 (** A derivation of [⊢ Γ] in any calculus gives a derivation of
     [⊢ ?(⊥ ⊗ ⊥), Γ] in the same calculus without Mix, with the same
     [weakening] and [cut]. *)
-Theorem mix_to_ll : forall R (l : list formula),
+Theorem mix_to_ll : forall R (l : list (formula atom)),
   ll R l ->
   ll {| mix := false; weakening := weakening R; cut := cut R |} (wn (tens bot bot) :: l).
 Proof.
@@ -91,7 +90,7 @@ Qed.
 
 (** From Mix to classical linear logic: a derivation of [⊢ Γ] with Mix
     gives one of [⊢ ?(⊥ ⊗ ⊥), Γ] in classical linear logic. *)
-Corollary mix_to_classical : forall l : list formula,
+Corollary mix_to_classical : forall l : list (formula atom),
   ll {| mix := true; weakening := false; cut := false |} l ->
   ll classical (wn (tens bot bot) :: l).
 Proof. intros l H. exact (mix_to_ll _ l H). Qed.

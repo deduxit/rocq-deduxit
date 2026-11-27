@@ -33,11 +33,10 @@ Import ListNotations.
 Section Formulas.
 
 Context {symbol : Type}.
-Local Notation term := (term symbol).
 
 (** A first-order intuitionistic formula. *)
 Inductive iformula : Type :=
-| ivar : symbol -> list term -> iformula     (** a predicate [p(t₁, …, tₙ)] *)
+| ivar : symbol -> list (term symbol) -> iformula     (** a predicate [p(t₁, …, tₙ)] *)
 | ione : iformula                            (** [1] *)
 | itens : iformula -> iformula -> iformula   (** [A ⊗ B] *)
 | ilmap : iformula -> iformula -> iformula   (** [A ⊸ B] *)
@@ -53,7 +52,7 @@ Inductive iformula : Type :=
     that variable is [k] at the top and one more under each quantifier.
     [isubst 0 u A] is the instance at [u] of the body [A] of [∀x. A] or
     [∃x. A]. *)
-Fixpoint isubst (k : nat) (u : term) (A : iformula) : iformula :=
+Fixpoint isubst (k : nat) (u : term symbol) (A : iformula) : iformula :=
   match A with
   | ivar p l => ivar p (map (tsubst k u) l)
   | ione => ione
@@ -88,11 +87,10 @@ Arguments iformula symbol : clear implicits.
 Section Calculus.
 
 Context {symbol : Type}.
-Local Notation iformula := (iformula symbol).
 
 (** The derivable sequents [Γ ⊢ C], where [R] gives the optional
     rules. *)
-Inductive ill (R : Intuitionistic.irules) : list iformula -> iformula -> Prop :=
+Inductive ill (R : Intuitionistic.irules) : list (iformula symbol) -> iformula symbol -> Prop :=
 | ax_ir : forall p l,
     ill R [ivar p l] (ivar p l)
 | ex_ir : forall l1 l2 C,

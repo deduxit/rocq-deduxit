@@ -29,32 +29,28 @@ Section Soundness.
 
 Context {atom : Type} (atom_eqb : atom -> atom -> bool)
   (atom_eqb_spec : forall a b, reflect (a = b) (atom_eqb a b)).
-Local Notation formula := (formula atom).
-Local Notation eqb_spec := (formula_eqb_spec atom_eqb atom_eqb_spec).
-Local Notation eq_dec := (formula_eq_dec atom_eqb atom_eqb_spec).
-Local Notation count := (count_occ eq_dec).
 
 (** ** The multiset functions, as permutations *)
 
-Lemma remove_one_perm : forall (A : formula) l l',
+Lemma remove_one_perm : forall (A : formula atom) l l',
   remove_one atom_eqb A l = Some l' -> Permutation l (A :: l').
-Proof. exact (Multiset.remove_one_perm _ eqb_spec). Qed.
+Proof. exact (Multiset.remove_one_perm _ (formula_eqb_spec atom_eqb atom_eqb_spec)). Qed.
 
-Lemma remove_one_absent : forall (A : formula) l,
+Lemma remove_one_absent : forall (A : formula atom) l,
   remove_one atom_eqb A l = None -> ~ In A l.
-Proof. exact (Multiset.remove_one_absent _ eqb_spec). Qed.
+Proof. exact (Multiset.remove_one_absent _ (formula_eqb_spec atom_eqb atom_eqb_spec)). Qed.
 
-Lemma take_all_perm : forall (l1 l2 l : list formula),
+Lemma take_all_perm : forall (l1 l2 l : list (formula atom)),
   take_all atom_eqb l1 l2 = Some l -> Permutation l2 (l1 ++ l).
-Proof. exact (Multiset.take_all_perm _ eqb_spec). Qed.
+Proof. exact (Multiset.take_all_perm _ (formula_eqb_spec atom_eqb atom_eqb_spec)). Qed.
 
-Lemma remove_all_perm : forall (A : formula) l,
-  Permutation l (repeat A (count l A) ++ remove_all atom_eqb A l).
-Proof. exact (Multiset.remove_all_perm _ eqb_spec eq_dec). Qed.
+Lemma remove_all_perm : forall (A : formula atom) l,
+  Permutation l (repeat A ((count_occ (formula_eq_dec atom_eqb atom_eqb_spec)) l A) ++ remove_all atom_eqb A l).
+Proof. exact (Multiset.remove_all_perm _ (formula_eqb_spec atom_eqb atom_eqb_spec) (formula_eq_dec atom_eqb atom_eqb_spec)). Qed.
 
-Lemma diff_count : forall (l1 l2 : list formula) x,
-  count (diff atom_eqb l2 l1) x = count l2 x - count l1 x.
-Proof. exact (Multiset.diff_count _ eqb_spec eq_dec). Qed.
+Lemma diff_count : forall (l1 l2 : list (formula atom)) x,
+  (count_occ (formula_eq_dec atom_eqb atom_eqb_spec)) (diff atom_eqb l2 l1) x = (count_occ (formula_eq_dec atom_eqb atom_eqb_spec)) l2 x - (count_occ (formula_eq_dec atom_eqb atom_eqb_spec)) l1 x.
+Proof. exact (Multiset.diff_count _ (formula_eqb_spec atom_eqb atom_eqb_spec) (formula_eq_dec atom_eqb atom_eqb_spec)). Qed.
 
 (** Permutations of lists of formulas, decided by counting every
     formula's occurrences on both sides. *)
@@ -65,15 +61,15 @@ Ltac perm := Multiset.perm (formula_eq_dec atom_eqb atom_eqb_spec) diff_count.
 Variable R : rules.
 
 (** Weakening of a list of [?] formulas. *)
-Lemma wk_list : forall (Θ l : list formula), ll R l -> ll R (map wn Θ ++ l).
+Lemma wk_list : forall (Θ l : list (formula atom)), ll R l -> ll R (map wn Θ ++ l).
 Proof. induction Θ; cbn; intros; [assumption | apply wk_r; auto]. Qed.
 
-Lemma wn_contract_cons : forall (A : formula) n (l : list formula),
+Lemma wn_contract_cons : forall (A : formula atom) n (l : list (formula atom)),
   ll R (wn A :: map wn (repeat A n) ++ l) -> ll R (wn A :: l).
 Proof. induction n; cbn; intros l H; [exact H | apply IHn, co_r, H]. Qed.
 
 (** Any number of copies of [?A], zero included, contract into one. *)
-Lemma wn_contract : forall (A : formula) n (l : list formula),
+Lemma wn_contract : forall (A : formula atom) n (l : list (formula atom)),
   ll R (map wn (repeat A n) ++ l) -> ll R (wn A :: l).
 Proof.
   intros A [| n] l H; cbn in H; [apply wk_r, H | apply (wn_contract_cons A n), H].
@@ -83,7 +79,7 @@ Qed.
 
 (** The sequents a state stands for are derivable: [⊢ gamma, ?theta, Δ]
     for every [Δ] when [any] is set, and for the empty [Δ] otherwise. *)
-Definition sat (theta gamma : list formula) (any : bool) : Prop :=
+Definition sat (theta gamma : list (formula atom)) (any : bool) : Prop :=
   forall Δ, (any = false -> Δ = []) -> ll R (gamma ++ map wn theta ++ Δ).
 
 Lemma sat_perm : forall theta gamma gamma' any,
@@ -95,7 +91,7 @@ Qed.
 Lemma take_spec : forall A gamma any gamma',
   take atom_eqb A gamma any = Some gamma' ->
   Permutation gamma (A :: gamma') \/ (any = true /\ gamma' = gamma).
-Proof. exact (Multiset.take_spec _ eqb_spec). Qed.
+Proof. exact (Multiset.take_spec _ (formula_eqb_spec atom_eqb atom_eqb_spec)). Qed.
 
 (** Consuming [A] from a satisfied zone leaves a satisfied zone with
     [A] in front, behind whatever prefix [pre] the rule puts first. *)
@@ -211,9 +207,9 @@ Proof.
     destruct (derive atom_eqb R q) as [[θ γ a] |] eqn:E; [| discriminate].
     injection H as <-; cbn.
     specialize (IHq _ eq_refl); cbn in IHq.
-    intros Δ HΔ. apply (wn_contract A (count θ A)).
+    intros Δ HΔ. apply (wn_contract A ((count_occ (formula_eq_dec atom_eqb atom_eqb_spec)) θ A)).
     eapply ex_r; [apply IHq, HΔ |].
-    transitivity (γ ++ map wn (repeat A (count θ A) ++ remove_all atom_eqb A θ) ++ Δ).
+    transitivity (γ ++ map wn (repeat A ((count_occ (formula_eq_dec atom_eqb atom_eqb_spec)) θ A) ++ remove_all atom_eqb A θ) ++ Δ).
     + apply Permutation_app_head, Permutation_app_tail, Permutation_map, remove_all_perm.
     + perm.
   - (* Copy *)

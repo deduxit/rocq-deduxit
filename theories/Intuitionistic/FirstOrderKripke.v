@@ -38,8 +38,6 @@ Import ListNotations.
 Section Kripke.
 
 Context {symbol : Type}.
-Local Notation term := (term symbol).
-Local Notation formula := (formula symbol).
 
 Variable world : Type.
 Variable le : world -> world -> Prop.
@@ -67,7 +65,7 @@ Record model (R : Calculus.rules) : Prop := {
 }.
 
 (** The value of the term [t] at the world [w]. *)
-Fixpoint teval (w : world) (eta : nat -> element) (rho : list element) (t : term) : element :=
+Fixpoint teval (w : world) (eta : nat -> element) (rho : list element) (t : term symbol) : element :=
   match t with
   | bound n => nth n rho d0
   | eigen a => eta a
@@ -75,7 +73,7 @@ Fixpoint teval (w : world) (eta : nat -> element) (rho : list element) (t : term
   end.
 
 (** The world [w] forces the formula [A]. *)
-Fixpoint forces (w : world) (eta : nat -> element) (rho : list element) (A : formula) : Prop :=
+Fixpoint forces (w : world) (eta : nat -> element) (rho : list element) (A : formula symbol) : Prop :=
   match A with
   | var p l => pred w p (map (teval w eta rho) l)
   | bot => absurd w
@@ -356,7 +354,6 @@ Arguments forces {symbol world} le {element} d0 dom fn pred absurd w eta rho A.
 Section Chain.
 
 Context {symbol : Type}.
-Local Notation formula := (formula symbol).
 
 (** The domain of the world [n]: [0 … n]. *)
 Definition chain_dom (n d : nat) : Prop := d <= n.

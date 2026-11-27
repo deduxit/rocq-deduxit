@@ -77,7 +77,6 @@ Fixpoint same (l1 l2 : list A) : bool :=
 
 Context (eqb_spec : forall x y, reflect (x = y) (eqb x y))
   (eq_dec : forall x y : A, {x = y} + {x <> y}).
-Local Notation count := (count_occ eq_dec).
 
 Lemma remove_one_perm : forall x l l',
   remove_one x l = Some l' -> Permutation l (x :: l').
@@ -107,7 +106,7 @@ Proof.
 Qed.
 
 Lemma remove_all_perm : forall x l,
-  Permutation l (repeat x (count l x) ++ remove_all x l).
+  Permutation l (repeat x ((count_occ eq_dec) l x) ++ remove_all x l).
 Proof.
   intros x l; unfold remove_all. induction l as [| y l IH]; cbn; [reflexivity |].
   destruct (eq_dec y x) as [e | ne]; destruct (eqb_spec x y) as [e' | ne'];
@@ -116,7 +115,7 @@ Proof.
   - apply (Permutation_trans (perm_skip y IH)), Permutation_middle.
 Qed.
 
-Lemma diff_count : forall l1 l2 y, count (diff l2 l1) y = count l2 y - count l1 y.
+Lemma diff_count : forall l1 l2 y, (count_occ eq_dec) (diff l2 l1) y = (count_occ eq_dec) l2 y - (count_occ eq_dec) l1 y.
 Proof.
   intros l1; induction l1 as [| x l1 IH]; cbn; intros l2 y; [lia |].
   destruct (remove_one x l2) as [l2' |] eqn:E; rewrite IH.

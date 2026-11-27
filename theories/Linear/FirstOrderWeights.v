@@ -35,25 +35,22 @@ Import ListNotations.
 Section Weights.
 
 Context {symbol : Type}.
-Local Notation term := (term symbol).
-Local Notation formula := (formula symbol).
-Local Notation iformula := (iformula symbol).
 
 (** The predicates whose literals are weighed one by one, the weights
     of those literals, and the weights of the other predicates. Every
     theorem holds for any three functions. *)
 Variable fixed : symbol -> bool.
-Variable table : symbol -> list term -> Z.
+Variable table : symbol -> list (term symbol) -> Z.
 Variable weight : symbol -> Z.
 
 (** The weight of a literal. *)
-Definition value (p : symbol) (ts : list term) : Z :=
+Definition value (p : symbol) (ts : list (term symbol)) : Z :=
   if fixed p then table p ts else weight p.
 
 (** [out A o]: [A] can contribute [o], for some choice of its additive
     alternatives, of the copies of its [?] subformulas and of the
     instances of its quantifiers. *)
-Inductive out : formula -> outcome -> Prop :=
+Inductive out : formula symbol -> outcome -> Prop :=
 | out_var : forall p ts, out (var p ts) (num (value p ts))
 | out_covar : forall p ts, out (covar p ts) (num (- value p ts))
 | out_one : out one (num 0)
@@ -73,13 +70,13 @@ Inductive out : formula -> outcome -> Prop :=
 | out_fex : forall A t o, out (subst 0 t A) o -> out (fex A) o.
 
 (** [outs l o]: the formulas of [l] side by side can contribute [o]. *)
-Inductive outs : list formula -> outcome -> Prop :=
+Inductive outs : list (formula symbol) -> outcome -> Prop :=
 | outs_nil : outs [] (num 0)
 | outs_cons : forall A l a o, out A a -> outs l o -> outs (A :: l) (opar a o).
 
 (** The size of a formula: its connectives, units and literals. An
     instance has the same size. *)
-Fixpoint size (A : formula) : nat :=
+Fixpoint size (A : formula symbol) : nat :=
   match A with
   | var _ _ | covar _ _ | one | bot | top | zero => 1
   | tens A B | parr A B | awith A B | aplus A B => S (size A + size B)
@@ -151,7 +148,7 @@ Qed.
 
 (** Whether every literal of a fixed predicate in [A] is closed, so
     that no instance changes it. *)
-Fixpoint pinned (A : formula) : bool :=
+Fixpoint pinned (A : formula symbol) : bool :=
   match A with
   | var p ts | covar p ts => negb (fixed p) || forallb tclosed ts
   | one | bot | top | zero => true
@@ -160,7 +157,7 @@ Fixpoint pinned (A : formula) : bool :=
   end.
 
 (** A lower bound of the numbers [A] can contribute. *)
-Fixpoint least (A : formula) : low :=
+Fixpoint least (A : formula symbol) : low :=
   match A with
   | var p ts => from (value p ts)
   | covar p ts => from (- value p ts)
@@ -174,7 +171,7 @@ Fixpoint least (A : formula) : low :=
   end.
 
 (** Whether [A] may absorb. *)
-Fixpoint absorbs (A : formula) : bool :=
+Fixpoint absorbs (A : formula symbol) : bool :=
   match A with
   | top => true
   | tens A B =>
@@ -185,13 +182,13 @@ Fixpoint absorbs (A : formula) : bool :=
   end.
 
 (** The bound of a sequent: the sum over its formulas. *)
-Fixpoint leasts (l : list formula) : low :=
+Fixpoint leasts (l : list (formula symbol)) : low :=
   match l with
   | [] => from 0
   | A :: l => lsum (least A) (leasts l)
   end.
 
-Lemma tsubst_closed : forall (t : term) k u, tclosed t = true -> tsubst k u t = t.
+Lemma tsubst_closed : forall (t : term symbol) k u, tclosed t = true -> tsubst k u t = t.
 Proof. exact TermsCheck.tsubst_closed. Qed.
 
 Lemma value_subst : forall p ts k u, negb (fixed p) || forallb tclosed ts = true ->
@@ -345,7 +342,7 @@ Qed.
     has no weakening and no cut, every literal of a fixed predicate is
     closed, no formula may absorb, and every contribution of the
     sequent is above zero, or there is none. *)
-Definition overweight (R : Calculus.rules) (l : list formula) : bool :=
+Definition overweight (R : Calculus.rules) (l : list (formula symbol)) : bool :=
   negb (Calculus.weakening R) && negb (Calculus.cut R) && forallb pinned l
   && negb (existsb absorbs l) && positive (leasts l).
 
@@ -371,12 +368,10 @@ End Weights.
 Section Translation.
 
 Context {symbol : Type}.
-Local Notation formula := (formula symbol).
-Local Notation iformula := (iformula symbol).
 
 (** A first-order intuitionistic formula as a one-sided formula:
     [A ⊸ B] becomes [A⊥ ⅋ B]. *)
-Fixpoint itr (A : iformula) : formula :=
+Fixpoint itr (A : iformula symbol) : formula symbol :=
   match A with
   | ivar p ts => var p ts
   | ione => one
@@ -392,19 +387,19 @@ Fixpoint itr (A : iformula) : formula :=
   end.
 
 (** A two-sided sequent [Γ ⊢ C] as the one-sided sequent [⊢ C, Γ⊥]. *)
-Definition one_sided (G : list iformula) (C : iformula) : list formula :=
+Definition one_sided (G : list (iformula symbol)) (C : iformula symbol) : list (formula symbol) :=
   itr C :: map (fun A => dual (itr A)) G.
 
-Lemma dual_dual : forall A : formula, dual (dual A) = A.
+Lemma dual_dual : forall A : formula symbol, dual (dual A) = A.
 Proof. exact FirstOrderFacts.dual_dual. Qed.
 
-Lemma dual_subst : forall (A : formula) k u, dual (subst k u A) = subst k u (dual A).
+Lemma dual_subst : forall (A : formula symbol) k u, dual (subst k u A) = subst k u (dual A).
 Proof. exact FirstOrderFacts.dual_subst. Qed.
 
 Lemma itr_isubst : forall A k u, itr (isubst k u A) = subst k u (itr A).
 Proof. induction A; intros k u; cbn; rewrite ?IHA, ?IHA1, ?IHA2, ?dual_subst; reflexivity. Qed.
 
-Lemma occurs_dual : forall b (A : formula), occurs b (dual A) = occurs b A.
+Lemma occurs_dual : forall b (A : formula symbol), occurs b (dual A) = occurs b A.
 Proof. exact FirstOrderFacts.occurs_dual. Qed.
 
 Lemma occurs_itr : forall b A, occurs b (itr A) = ioccurs b A.
@@ -420,7 +415,7 @@ Proof.
 Qed.
 
 (** The first two formulas exchanged. *)
-Local Lemma swap : forall R (A B : formula) l, ll R (A :: B :: l) -> ll R (B :: A :: l).
+Local Lemma swap : forall R (A B : formula symbol) l, ll R (A :: B :: l) -> ll R (B :: A :: l).
 Proof. intros. eapply ex_r; [eassumption | apply perm_swap]. Qed.
 
 (** Every derivation in the two-sided calculus gives a derivation of

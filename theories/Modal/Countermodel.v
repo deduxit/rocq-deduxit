@@ -21,7 +21,6 @@ Import ListNotations.
 Section Countermodel.
 
 Context {atom : Type}.
-Local Notation formula := (formula atom).
 
 Variable atom_eqb : atom -> atom -> bool.
 
@@ -52,7 +51,7 @@ Definition forced_at (l : list bool) (w : nat) : bool := nth w l false.
 (** For each world, whether it forces [A]. The table of a formula is
     computed once from the tables of its parts, so the cost does not
     grow with the nesting of the modalities. *)
-Fixpoint forced (A : formula) : list bool :=
+Fixpoint forced (A : formula atom) : list bool :=
   match A with
   | var a => map (fun w => existsb (atom_eqb a) (nth w (atoms m) [])) worlds
   | top => map (fun _ => true) worlds
@@ -109,7 +108,7 @@ Definition meets (C : conditions) : bool :=
 
 (** Whether the model is one of the system of [C] whose world [w]
     forces every formula of [Γ] and none of [Δ]. *)
-Definition refutes (C : conditions) (w : nat) (Γ Δ : list formula) : bool :=
+Definition refutes (C : conditions) (w : nat) (Γ Δ : list (formula atom)) : bool :=
   meets C && (w <? size)
   && forallb (fun A => forced_at (forced A) w) Γ
   && forallb (fun B => negb (forced_at (forced B) w)) Δ.
@@ -258,7 +257,7 @@ Qed.
 
 (** A model of the system with a world that forces every formula of [Γ]
     and none of [Δ] shows the sequent [Γ ⊢ Δ] not valid. *)
-Theorem modal_refutation : forall C w (Γ Δ : list formula),
+Theorem modal_refutation : forall C w (Γ Δ : list (formula atom)),
   refutes C w Γ Δ = true -> ~ valid C Γ Δ.
 Proof.
   intros C w Γ Δ H Hv. unfold refutes in H.

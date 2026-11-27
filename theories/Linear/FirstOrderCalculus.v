@@ -32,14 +32,13 @@ Import ListNotations.
 Section Calculus.
 
 Context {symbol : Type}.
-Local Notation formula := (formula symbol).
 
 (** The eigenvariable [a] occurs in no formula of [l]. *)
-Definition fresh (a : nat) (l : list formula) : Prop :=
+Definition fresh (a : nat) (l : list (formula symbol)) : Prop :=
   forall A, In A l -> occurs a A = false.
 
 (** The derivable sequents, where [R] gives the optional rules. *)
-Inductive ll (R : Calculus.rules) : list formula -> Prop :=
+Inductive ll (R : Calculus.rules) : list (formula symbol) -> Prop :=
 | ax_r : forall p l,
     ll R [covar p l; var p l]
 | ex_r : forall l1 l2,

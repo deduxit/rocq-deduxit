@@ -36,11 +36,10 @@ Import ListNotations.
 Section Calculus.
 
 Context {symbol : Type}.
-Local Notation formula := (formula symbol).
 
 (** The derivable sequents [Γ ⊢ C] of LJ and LM, where [R] gives the
     optional rules. *)
-Inductive lj (R : Calculus.rules) : list formula -> formula -> Prop :=
+Inductive lj (R : Calculus.rules) : list (formula symbol) -> formula symbol -> Prop :=
 | ax : forall A,
     lj R [A] A
 | ex : forall l1 l2 C,
@@ -77,7 +76,7 @@ Inductive lj (R : Calculus.rules) : list formula -> formula -> Prop :=
     fresh a (fex A :: C :: l) -> lj R (subst 0 (eigen a) A :: l) C -> lj R (fex A :: l) C.
 
 (** The derivable sequents [Γ ⊢ Δ] of LK, with cut when [c = true]. *)
-Inductive lk (c : bool) : list formula -> list formula -> Prop :=
+Inductive lk (c : bool) : list (formula symbol) -> list (formula symbol) -> Prop :=
 | kax : forall A,
     lk c [A] [A]
 | kex_l : forall l1 l2 d,

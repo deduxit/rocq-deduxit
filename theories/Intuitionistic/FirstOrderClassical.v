@@ -26,8 +26,6 @@ Import ListNotations.
 Section Classical.
 
 Context {symbol : Type}.
-Local Notation term := (term symbol).
-Local Notation formula := (formula symbol).
 
 Variable size : nat.
 Variable fn : symbol -> list nat -> nat.
@@ -35,7 +33,7 @@ Variable pred : symbol -> list nat -> bool.
 
 (** The value of the term [t]. A bound variable that no quantifier
     binds takes the value [0]. *)
-Fixpoint value (eta : nat -> nat) (rho : list nat) (t : term) : nat :=
+Fixpoint value (eta : nat -> nat) (rho : list nat) (t : term symbol) : nat :=
   match t with
   | bound n => nth n rho 0
   | eigen a => eta a
@@ -43,7 +41,7 @@ Fixpoint value (eta : nat -> nat) (rho : list nat) (t : term) : nat :=
   end.
 
 (** Whether the formula [A] is true. *)
-Fixpoint eval (eta : nat -> nat) (rho : list nat) (A : formula) : bool :=
+Fixpoint eval (eta : nat -> nat) (rho : list nat) (A : formula symbol) : bool :=
   match A with
   | var p l => pred p (map (value eta rho) l)
   | bot => false
@@ -86,7 +84,7 @@ Qed.
 
 (** [eval], stopping at the first operand or element that decides a
     connective or a quantifier: what a certificate computes. *)
-Fixpoint eval_fast (eta : nat -> nat) (rho : list nat) (A : formula) : bool :=
+Fixpoint eval_fast (eta : nat -> nat) (rho : list nat) (A : formula symbol) : bool :=
   match A with
   | var p l => pred p (map (value eta rho) l)
   | bot => false

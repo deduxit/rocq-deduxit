@@ -31,11 +31,9 @@ Import ListNotations Multiset.Bind.
 Section Equality.
 
 Context {symbol : Type} (symbol_eqb : symbol -> symbol -> bool).
-Local Notation term := (term symbol).
-Local Notation formula := (formula symbol).
 
 (** Structural equality of formulas. *)
-Fixpoint formula_eqb (A B : formula) : bool :=
+Fixpoint formula_eqb (A B : formula symbol) : bool :=
   match A, B with
   | var p l, var q k => symbol_eqb p q && terms_eqb symbol_eqb l k
   | covar p l, covar q k => symbol_eqb p q && terms_eqb symbol_eqb l k
@@ -76,7 +74,7 @@ Qed.
 
 (** Equality of formulas as a decision, used in proofs; the checker
     computes with [formula_eqb]. *)
-Definition formula_eq_dec (A B : formula) : {A = B} + {A <> B} :=
+Definition formula_eq_dec (A B : formula symbol) : {A = B} + {A <> B} :=
   reflect_dec _ _ (formula_eqb_spec A B).
 
 End Equality.
@@ -84,11 +82,9 @@ End Equality.
 Section Eigenvariables.
 
 Context {symbol : Type}.
-Local Notation term := (term symbol).
-Local Notation formula := (formula symbol).
 
 (** The eigenvariables of a formula, with repetitions. *)
-Fixpoint feigens (A : formula) : list nat :=
+Fixpoint feigens (A : formula symbol) : list nat :=
   match A with
   | var _ l | covar _ l => flat_map teigens l
   | one | bot | top | zero => []
@@ -98,7 +94,7 @@ Fixpoint feigens (A : formula) : list nat :=
 
 (** Whether a formula starts with [?]. Every calculus may weaken such
     a formula. *)
-Definition is_wn (A : formula) : bool :=
+Definition is_wn (A : formula symbol) : bool :=
   match A with
   | wn _ => true
   | _ => false
@@ -109,32 +105,28 @@ End Eigenvariables.
 Section Check.
 
 Context {symbol : Type} (symbol_eqb : symbol -> symbol -> bool).
-Local Notation term := (term symbol).
-Local Notation formula := (formula symbol).
-Local Notation proof := (proof symbol).
-Local Notation eqb := (formula_eqb symbol_eqb).
 
 (** ** Multisets, as lists compared through [formula_eqb]
 
     The operations of [Multiset], on formulas. *)
 
 (** Removes one occurrence of [A] from [l], or fails when there is none. *)
-Definition remove_one (A : formula) (l : list formula) : option (list formula) :=
-  Multiset.remove_one eqb A l.
+Definition remove_one (A : formula symbol) (l : list (formula symbol)) : option (list (formula symbol)) :=
+  Multiset.remove_one (formula_eqb symbol_eqb) A l.
 
 (** Removes every occurrence of [A] from [l]. *)
-Definition remove_all (A : formula) (l : list formula) : list formula :=
-  Multiset.remove_all eqb A l.
+Definition remove_all (A : formula symbol) (l : list (formula symbol)) : list (formula symbol) :=
+  Multiset.remove_all (formula_eqb symbol_eqb) A l.
 
 (** Removes each formula of [l1] from [l2]. Returns what is left of
     [l2] when [l1] is included in it as a multiset, [None] otherwise. *)
-Definition take_all (l1 l2 : list formula) : option (list formula) :=
-  Multiset.take_all eqb l1 l2.
+Definition take_all (l1 l2 : list (formula symbol)) : option (list (formula symbol)) :=
+  Multiset.take_all (formula_eqb symbol_eqb) l1 l2.
 
 (** [l2] less [l1]: each formula of [l1] is removed from [l2] where
     [l2] has it. [l1 ++ diff l2 l1] is the multiset union of the two. *)
-Definition diff (l2 l1 : list formula) : list formula :=
-  Multiset.diff eqb l2 l1.
+Definition diff (l2 l1 : list (formula symbol)) : list (formula symbol) :=
+  Multiset.diff (formula_eqb symbol_eqb) l2 l1.
 
 (** ** States *)
 
@@ -145,24 +137,24 @@ Definition diff (l2 l1 : list formula) : list formula :=
     eigenvariables that its [∃] steps' witnesses and its cut formulas
     bring in, and that no [∀] step below them removes. *)
 Record state : Type := State {
-  theta : list formula;  (** the unrestricted zone the subterm needs *)
-  gamma : list formula;  (** the linear zone *)
+  theta : list (formula symbol);  (** the unrestricted zone the subterm needs *)
+  gamma : list (formula symbol);  (** the linear zone *)
   any : bool;            (** whether a [⊤] above absorbs more *)
   eigens : list nat;     (** the eigenvariables carried to the root *)
 }.
 
 (** Consumes one copy of [A] from a premise's linear zone [gamma]. When
     [gamma] has none, a [⊤] above ([any]) supplies it. *)
-Definition take (A : formula) (gamma : list formula) (any : bool)
-    : option (list formula) :=
-  Multiset.take eqb A gamma any.
+Definition take (A : formula symbol) (gamma : list (formula symbol)) (any : bool)
+    : option (list (formula symbol)) :=
+  Multiset.take (formula_eqb symbol_eqb) A gamma any.
 
 (** The conclusion of a [&] rule from its premises, after each has
     consumed its own subformula. Both premises must prove the same
     context. A premise without [any] fixes the context, and one with
     [any] adapts to the other; when both have [any], the conclusion has
     the union of their zones and [any] set. *)
-Definition join_with (A B : formula) (sl sr : state) : option state :=
+Definition join_with (A B : formula symbol) (sl sr : state) : option state :=
   let theta := theta sl ++ theta sr in
   let eigens := eigens sl ++ eigens sr in
   match any sl, any sr with
@@ -185,7 +177,7 @@ Definition join_with (A B : formula) (sl sr : state) : option state :=
 
 (** The eigenvariables the [∀] steps of [p] introduce, or [None] when a
     [∀] step's eigenvariable is introduced again above that step. *)
-Fixpoint introduced (p : proof) : option (list nat) :=
+Fixpoint introduced (p : proof symbol) : option (list nat) :=
   match p with
   | Ax _ _ | One | Top => Some []
   | Par _ _ q | Bot q | Plus _ _ _ q | Bang _ q | Quest _ q | Copy _ q | Weaken _ q
@@ -203,7 +195,7 @@ Fixpoint introduced (p : proof) : option (list nat) :=
 
 (** Computes what a term proves. Fails at the first node that applies
     its rule wrongly or uses a rule that [R] does not allow. *)
-Fixpoint derive (R : Calculus.rules) (p : proof) : option state :=
+Fixpoint derive (R : Calculus.rules) (p : proof symbol) : option state :=
   match p with
   | Ax a l =>
       Some (State [] [covar a l; var a l] false [])
@@ -291,7 +283,7 @@ Fixpoint derive (R : Calculus.rules) (p : proof) : option state :=
     - its root needs no unrestricted zone and proves exactly the
       sequent's formulas, or a part of them when a [⊤] absorbs the
       rest. *)
-Definition check (R : Calculus.rules) (p : proof) (sequent : list formula) : bool :=
+Definition check (R : Calculus.rules) (p : proof symbol) (sequent : list (formula symbol)) : bool :=
   match introduced p, derive R p with
   | Some i, Some (State [] gamma any e) =>
       forallb (fun a => negb (existsb (Nat.eqb a) e)

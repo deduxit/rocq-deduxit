@@ -35,10 +35,9 @@ Definition classical : rules := {| mix := false; weakening := false; cut := fals
 Section Calculus.
 
 Context {atom : Type}.
-Local Notation formula := (formula atom).
 
 (** The derivable sequents, where [R] gives the optional rules. *)
-Inductive ll (R : rules) : list formula -> Prop :=
+Inductive ll (R : rules) : list (formula atom) -> Prop :=
 | ax_r : forall a,
     ll R [covar a; var a]
 | ex_r : forall l1 l2,

@@ -23,13 +23,12 @@ Import ListNotations.
 Section Formulas.
 
 Context {symbol : Type}.
-Local Notation term := (term symbol).
 
 (** A formula: a literal, a unit, a binary connective, an exponential or
     a quantifier. *)
 Inductive formula : Type :=
-| var : symbol -> list term -> formula    (** a predicate [p(t₁, …, tₙ)] *)
-| covar : symbol -> list term -> formula  (** its negation [p(t₁, …, tₙ)⊥] *)
+| var : symbol -> list (term symbol) -> formula    (** a predicate [p(t₁, …, tₙ)] *)
+| covar : symbol -> list (term symbol) -> formula  (** its negation [p(t₁, …, tₙ)⊥] *)
 | one : formula                           (** [1] *)
 | bot : formula                           (** [⊥] *)
 | top : formula                           (** [⊤] *)
@@ -68,7 +67,7 @@ Fixpoint dual (A : formula) : formula :=
     that variable is [k] at the top and one more under each quantifier.
     [subst 0 u A] is the instance at [u] of the body [A] of [∀x. A] or
     [∃x. A]. *)
-Fixpoint subst (k : nat) (u : term) (A : formula) : formula :=
+Fixpoint subst (k : nat) (u : term symbol) (A : formula) : formula :=
   match A with
   | var p l => var p (map (tsubst k u) l)
   | covar p l => covar p (map (tsubst k u) l)

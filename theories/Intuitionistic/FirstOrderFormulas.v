@@ -27,11 +27,10 @@ Import ListNotations.
 Section Formulas.
 
 Context {symbol : Type}.
-Local Notation term := (term symbol).
 
 (** A first-order formula. *)
 Inductive formula : Type :=
-| var : symbol -> list term -> formula     (** a predicate [p(t₁, …, tₙ)] *)
+| var : symbol -> list (term symbol) -> formula     (** a predicate [p(t₁, …, tₙ)] *)
 | bot : formula                            (** [⊥] *)
 | wedge : formula -> formula -> formula    (** [A ∧ B] *)
 | vee : formula -> formula -> formula      (** [A ∨ B] *)
@@ -52,7 +51,7 @@ Definition equiv (A B : formula) : formula := wedge (imp A B) (imp B A).
     that variable is [k] at the top and one more under each quantifier.
     [subst 0 u A] is the instance at [u] of the body [A] of [∀x. A] or
     [∃x. A]. *)
-Fixpoint subst (k : nat) (u : term) (A : formula) : formula :=
+Fixpoint subst (k : nat) (u : term symbol) (A : formula) : formula :=
   match A with
   | var p l => var p (map (tsubst k u) l)
   | bot => bot

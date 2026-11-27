@@ -125,7 +125,6 @@ End System.
 Section Kripke.
 
 Context {atom : Type}.
-Local Notation formula := (formula atom).
 
 Variable world : Type.
 Variable R : world -> world -> Prop.
@@ -143,7 +142,7 @@ Record frame (C : conditions) : Prop := {
 }.
 
 (** The world [w] forces the formula [A]: [A] is true there. *)
-Fixpoint forces (w : world) (A : formula) : Prop :=
+Fixpoint forces (w : world) (A : formula atom) : Prop :=
   match A with
   | var a => V w a
   | top => True

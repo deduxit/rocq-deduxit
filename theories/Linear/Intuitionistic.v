@@ -67,11 +67,10 @@ Definition affine : irules := {| iweakening := true; icut := false |}.
 Section Calculus.
 
 Context {atom : Type}.
-Local Notation iformula := (iformula atom).
 
 (** The derivable sequents [Γ ⊢ C], where [R] gives the optional
     rules. *)
-Inductive ill (R : irules) : list iformula -> iformula -> Prop :=
+Inductive ill (R : irules) : list (iformula atom) -> iformula atom -> Prop :=
 | ax_ir : forall a,
     ill R [ivar a] (ivar a)
 | ex_ir : forall l1 l2 C,

@@ -22,7 +22,7 @@ against 0.4.0. There is no 0.7.0: deduxit 0.7.0's compile against 0.6.0.
   breaks it is a breaking change of the library, and this changelog
   says so.
 - The flake's check compiles README's Rocq examples, and builds the
-  library with every default warning an error (but two of Rocq 9.2
+  library with every default warning an error (but one of Rocq 9.2
   whose remedy 9.0 and 9.1 lack) and with `Default Goal Selector "!"`.
 - CI installs the package from its opam file on each Rocq the bounds
   admit, as the release does before it publishes.
@@ -46,6 +46,10 @@ against 0.4.0. There is no 0.7.0: deduxit 0.7.0's compile against 0.6.0.
   (`Multiset.diff …`) where it showed the checker's name. The propositional
   two-sided checker's pass is written with `let*`, as the first-order
   one is.
+- No file declares an abbreviation with `Notation` (deprecated from
+  Rocq 9.2): each is written out where it was used, so the library
+  compiles on 9.2 and 9.3 without that deprecation's warnings. No
+  statement changes.
 - The opam file bounds `rocq-stdlib` above too, below 9.3.
 - A release uploads its source archive and gives that archive's URL and
   SHA-512 for the opam file, in place of GitHub's generated archive of

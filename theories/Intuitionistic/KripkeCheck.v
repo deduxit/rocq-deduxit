@@ -31,7 +31,6 @@ Import ListNotations.
 Section Check.
 
 Context {atom : Type}.
-Local Notation formula := (formula atom).
 
 (** A finite Kripke model. *)
 Record finite_model : Type := FiniteModel {
@@ -79,7 +78,7 @@ Definition well_formed (R : rules) : bool :=
   && implb (explosion R) (length (absurd M) =? 0).
 
 (** For each world in order, whether it forces [A]. *)
-Fixpoint forced (A : formula) : list bool :=
+Fixpoint forced (A : formula atom) : list bool :=
   match A with
   | var a => map (fun w => forces_atom w a) worlds
   | bot => map absurd_at worlds
@@ -96,7 +95,7 @@ Fixpoint forced (A : formula) : list bool :=
 
 (** The model is one of [R]'s and its world [w] forces every formula of
     [G] and not [C]. *)
-Definition refutes (R : rules) (w : nat) (G : list formula) (C : formula) : bool :=
+Definition refutes (R : rules) (w : nat) (G : list (formula atom)) (C : formula atom) : bool :=
   well_formed R && (w <? size)
   && forallb (fun A => nth w (forced A) false) G
   && negb (nth w (forced C) false).

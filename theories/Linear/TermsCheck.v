@@ -15,17 +15,16 @@ Import ListNotations.
 Section Equality.
 
 Context {symbol : Type} (symbol_eqb : symbol -> symbol -> bool).
-Local Notation term := (term symbol).
 
 (** Structural equality of terms, comparing symbols with
     [symbol_eqb]. *)
-Fixpoint term_eqb (t u : term) : bool :=
+Fixpoint term_eqb (t u : term symbol) : bool :=
   match t, u with
   | bound n, bound m => Nat.eqb n m
   | eigen a, eigen b => Nat.eqb a b
   | tapp f l, tapp g k =>
       symbol_eqb f g &&
-      (fix terms_eqb (l k : list term) : bool :=
+      (fix terms_eqb (l k : list (term symbol)) : bool :=
          match l, k with
          | [], [] => true
          | t :: l, u :: k => term_eqb t u && terms_eqb l k
@@ -35,7 +34,7 @@ Fixpoint term_eqb (t u : term) : bool :=
   end.
 
 (** Equality of lists of terms. *)
-Fixpoint terms_eqb (l k : list term) : bool :=
+Fixpoint terms_eqb (l k : list (term symbol)) : bool :=
   match l, k with
   | [], [] => true
   | t :: l, u :: k => term_eqb t u && terms_eqb l k
@@ -44,7 +43,7 @@ Fixpoint terms_eqb (l k : list term) : bool :=
 
 (** Induction on terms, with an induction hypothesis for every
     argument of an application. *)
-Lemma term_ind' (P : term -> Prop) :
+Lemma term_ind' (P : term symbol -> Prop) :
   (forall n, P (bound n)) -> (forall a, P (eigen a)) ->
   (forall f l, List.Forall P l -> P (tapp f l)) -> forall t, P t.
 Proof.
@@ -85,17 +84,16 @@ End Equality.
 Section Eigenvariables.
 
 Context {symbol : Type}.
-Local Notation term := (term symbol).
 
 (** The eigenvariables of a term, with repetitions. *)
-Fixpoint teigens (t : term) : list nat :=
+Fixpoint teigens (t : term symbol) : list nat :=
   match t with
   | bound _ => []
   | eigen a => [a]
   | tapp _ l => flat_map teigens l
   end.
 
-Lemma teigens_occurs : forall a (t : term), In a (teigens t) <-> toccurs a t = true.
+Lemma teigens_occurs : forall a (t : term symbol), In a (teigens t) <-> toccurs a t = true.
 Proof.
   intros a t. induction t as [n | b | f l IH] using term_ind'; cbn.
   - split; [contradiction | discriminate].
@@ -104,7 +102,7 @@ Proof.
     split; intros [t [Hin Ht]]; exists t; split; try exact Hin; apply IH; assumption.
 Qed.
 
-Lemma toccurs_tsubst : forall b k (u t : term),
+Lemma toccurs_tsubst : forall b k (u t : term symbol),
   toccurs b (tsubst k u t) = true -> toccurs b t = true \/ toccurs b u = true.
 Proof.
   intros b k u t. induction t as [n | a | f l IH] using term_ind'; cbn.
@@ -116,7 +114,7 @@ Proof.
 Qed.
 
 (** A substitution leaves a closed term as it is. *)
-Lemma tsubst_closed : forall (t : term) k u, tclosed t = true -> tsubst k u t = t.
+Lemma tsubst_closed : forall (t : term symbol) k u, tclosed t = true -> tsubst k u t = t.
 Proof.
   intros t. induction t as [n | a | f l IH] using term_ind'; intros k u C; cbn in *;
     try discriminate; [reflexivity |].

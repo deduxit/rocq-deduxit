@@ -33,7 +33,6 @@ Import ListNotations Multiset.Bind.
 Section Formulas.
 
 Context {symbol : Type}.
-Local Notation iformula := (iformula symbol).
 
 Section Equality.
 
@@ -41,7 +40,7 @@ Variable symbol_eqb : symbol -> symbol -> bool.
 
 (** Structural equality of intuitionistic formulas, comparing symbols
     with [symbol_eqb]. *)
-Fixpoint iformula_eqb (A B : iformula) : bool :=
+Fixpoint iformula_eqb (A B : iformula symbol) : bool :=
   match A, B with
   | ivar p l, ivar q k => symbol_eqb p q && terms_eqb symbol_eqb l k
   | ione, ione => true
@@ -79,13 +78,13 @@ Qed.
 
 (** Equality of intuitionistic formulas as a decision, used in proofs;
     the checker computes with [iformula_eqb]. *)
-Definition iformula_eq_dec (A B : iformula) : {A = B} + {A <> B} :=
+Definition iformula_eq_dec (A B : iformula symbol) : {A = B} + {A <> B} :=
   reflect_dec _ _ (iformula_eqb_spec A B).
 
 End Equality.
 
 (** The eigenvariables of a formula, with repetitions. *)
-Fixpoint ieigens (A : iformula) : list nat :=
+Fixpoint ieigens (A : iformula symbol) : list nat :=
   match A with
   | ivar _ l => flat_map teigens l
   | ione | itop | izero => []
@@ -98,66 +97,63 @@ End Formulas.
 Section Check.
 
 Context {symbol : Type} (symbol_eqb : symbol -> symbol -> bool).
-Local Notation term := (term symbol).
-Local Notation iformula := (iformula symbol).
-Local Notation eqb := (iformula_eqb symbol_eqb).
 
 (** A two-sided proof term. Below, [Γ ⊢ C] is the node's conclusion,
     its hypotheses read as a multiset. *)
 Inductive iproof : Type :=
-| IAx (p : symbol) (l : list term)
+| IAx (p : symbol) (l : list (term symbol))
     (** the axiom [p(l) ⊢ p(l)] *)
 | IOneR
     (** [⊢ 1] *)
 | IOneL (premise : iproof)
     (** [Γ, 1 ⊢ C] from [Γ ⊢ C] *)
-| ITensR (A B : iformula) (left right : iproof)
+| ITensR (A B : iformula symbol) (left right : iproof)
     (** [Γ, Δ ⊢ A ⊗ B] from [Γ ⊢ A] and [Δ ⊢ B] *)
-| ITensL (A B : iformula) (premise : iproof)
+| ITensL (A B : iformula symbol) (premise : iproof)
     (** [Γ, A ⊗ B ⊢ C] from [Γ, A, B ⊢ C] *)
-| ILmapR (A B : iformula) (premise : iproof)
+| ILmapR (A B : iformula symbol) (premise : iproof)
     (** [Γ ⊢ A ⊸ B] from [Γ, A ⊢ B] *)
-| ILmapL (A B : iformula) (left right : iproof)
+| ILmapL (A B : iformula symbol) (left right : iproof)
     (** [Γ, Δ, A ⊸ B ⊢ C] from [Γ ⊢ A] and [Δ, B ⊢ C] *)
-| ITopR (context : list iformula)
+| ITopR (context : list (iformula symbol))
     (** [Γ ⊢ ⊤], with [Γ] the context *)
-| IWithR (A B : iformula) (left right : iproof)
+| IWithR (A B : iformula symbol) (left right : iproof)
     (** [Γ ⊢ A & B] from [Γ ⊢ A] and [Γ ⊢ B] *)
-| IWithL1 (A B : iformula) (premise : iproof)
+| IWithL1 (A B : iformula symbol) (premise : iproof)
     (** [Γ, A & B ⊢ C] from [Γ, A ⊢ C] *)
-| IWithL2 (A B : iformula) (premise : iproof)
+| IWithL2 (A B : iformula symbol) (premise : iproof)
     (** [Γ, A & B ⊢ C] from [Γ, B ⊢ C] *)
-| IZeroL (context : list iformula) (goal : iformula)
+| IZeroL (context : list (iformula symbol)) (goal : iformula symbol)
     (** [Γ, 0 ⊢ C], with [Γ] the context and [C] the goal *)
-| IPlusR1 (A B : iformula) (premise : iproof)
+| IPlusR1 (A B : iformula symbol) (premise : iproof)
     (** [Γ ⊢ A ⊕ B] from [Γ ⊢ A] *)
-| IPlusR2 (A B : iformula) (premise : iproof)
+| IPlusR2 (A B : iformula symbol) (premise : iproof)
     (** [Γ ⊢ A ⊕ B] from [Γ ⊢ B] *)
-| IPlusL (A B : iformula) (left right : iproof)
+| IPlusL (A B : iformula symbol) (left right : iproof)
     (** [Γ, A ⊕ B ⊢ C] from [Γ, A ⊢ C] and [Γ, B ⊢ C] *)
-| IOcR (A : iformula) (premise : iproof)
+| IOcR (A : iformula symbol) (premise : iproof)
     (** promotion, [!Γ ⊢ !A] from [!Γ ⊢ A] *)
-| IDe (A : iformula) (premise : iproof)
+| IDe (A : iformula symbol) (premise : iproof)
     (** dereliction, [Γ, !A ⊢ C] from [Γ, A ⊢ C] *)
-| IWk (A : iformula) (premise : iproof)
+| IWk (A : iformula symbol) (premise : iproof)
     (** weakening of a [!] hypothesis, [Γ, !A ⊢ C] from [Γ ⊢ C] *)
-| ICo (A : iformula) (premise : iproof)
+| ICo (A : iformula symbol) (premise : iproof)
     (** contraction, [Γ, !A ⊢ C] from [Γ, !A, !A ⊢ C] *)
-| IWeaken (A : iformula) (premise : iproof)
+| IWeaken (A : iformula symbol) (premise : iproof)
     (** weakening of any hypothesis, [Γ, A ⊢ C] from [Γ ⊢ C], with
         [iweakening] *)
-| ICut (A : iformula) (left right : iproof)
+| ICut (A : iformula symbol) (left right : iproof)
     (** [Γ, Δ ⊢ C] from [Γ ⊢ A] and [Δ, A ⊢ C], with [icut]; the
         premise that proves [A] may come first or second *)
-| IAllR (A : iformula) (a : nat) (premise : iproof)
+| IAllR (A : iformula symbol) (a : nat) (premise : iproof)
     (** [Γ ⊢ ∀x. A] from [Γ ⊢ A[a/x]], where the eigenvariable [a]
         occurs in no formula of the conclusion *)
-| IExL (A : iformula) (a : nat) (premise : iproof)
+| IExL (A : iformula symbol) (a : nat) (premise : iproof)
     (** [Γ, ∃x. A ⊢ C] from [Γ, A[a/x] ⊢ C], where the eigenvariable
         [a] occurs in no formula of the conclusion *)
-| IExR (A : iformula) (t : term) (premise : iproof)
+| IExR (A : iformula symbol) (t : term symbol) (premise : iproof)
     (** [Γ ⊢ ∃x. A] from [Γ ⊢ A[t/x]], for a closed term [t] *)
-| IAllL (A : iformula) (t : term) (premise : iproof).
+| IAllL (A : iformula symbol) (t : term symbol) (premise : iproof).
     (** [Γ, ∀x. A ⊢ C] from [Γ, A[t/x] ⊢ C], for a closed term [t] *)
 
 (** ** Multisets, as lists compared through [iformula_eqb]
@@ -165,15 +161,15 @@ Inductive iproof : Type :=
     The operations of [Multiset], on formulas. *)
 
 (** Removes one occurrence of [A] from [l], or fails when there is none. *)
-Definition pick (A : iformula) (l : list iformula) : option (list iformula) :=
-  Multiset.remove_one eqb A l.
+Definition pick (A : iformula symbol) (l : list (iformula symbol)) : option (list (iformula symbol)) :=
+  Multiset.remove_one (iformula_eqb symbol_eqb) A l.
 
 (** Whether [l1] and [l2] are the same multiset. *)
-Definition same (l1 l2 : list iformula) : bool := Multiset.same eqb l1 l2.
+Definition same (l1 l2 : list (iformula symbol)) : bool := Multiset.same (iformula_eqb symbol_eqb) l1 l2.
 
 (** The formulas under the [!] of a list of [!] formulas, or [None] when
     one of them is not a [!] formula. *)
-Fixpoint unoc (l : list iformula) : option (list iformula) :=
+Fixpoint unoc (l : list (iformula symbol)) : option (list (iformula symbol)) :=
   match l with
   | [] => Some []
   | ioc A :: l' => option_map (cons A) (unoc l')
@@ -183,15 +179,15 @@ Fixpoint unoc (l : list iformula) : option (list iformula) :=
 (** The conclusion [Γ1, Γ2 ⊢ C2] of a cut on [A] when the first premise
     [Γ1 ⊢ C1] proves [A] and the second, [Γ2 ⊢ C2], has [A] as a
     hypothesis; [None] otherwise. *)
-Definition cut_by (A : iformula) (l1 : list iformula) (C1 : iformula)
-    (l2 : list iformula) (C2 : iformula) : option (list iformula * iformula) :=
-  TwoSided.cut_by eqb A l1 C1 l2 C2.
+Definition cut_by (A : iformula symbol) (l1 : list (iformula symbol)) (C1 : iformula symbol)
+    (l2 : list (iformula symbol)) (C2 : iformula symbol) : option (list (iformula symbol) * iformula symbol) :=
+  TwoSided.cut_by (iformula_eqb symbol_eqb) A l1 C1 l2 C2.
 
 (** The conclusion of a cut on [A] from its premises [Γ1 ⊢ C1] and
     [Γ2 ⊢ C2], whichever of them proves [A]. *)
-Definition icut_conclusion (A : iformula) (l1 : list iformula) (C1 : iformula)
-    (l2 : list iformula) (C2 : iformula) : option (list iformula * iformula) :=
-  TwoSided.icut_conclusion eqb A l1 C1 l2 C2.
+Definition icut_conclusion (A : iformula symbol) (l1 : list (iformula symbol)) (C1 : iformula symbol)
+    (l2 : list (iformula symbol)) (C2 : iformula symbol) : option (list (iformula symbol) * iformula symbol) :=
+  TwoSided.icut_conclusion (iformula_eqb symbol_eqb) A l1 C1 l2 C2.
 
 (** Removes [a] from a set of eigenvariables. *)
 Definition without (a : nat) (e : list nat) : list nat :=
@@ -222,7 +218,7 @@ Fixpoint iintroduced (p : iproof) : option (list nat) :=
     to the root, or [None] at the first node that applies its rule
     wrongly or uses a rule that [R] does not allow. *)
 Fixpoint iderive (R : Intuitionistic.irules) (p : iproof)
-    : option (list iformula * iformula * list nat) :=
+    : option (list (iformula symbol) * iformula symbol * list nat) :=
   match p with
   | IAx a l => Some ([ivar a l], ivar a l, [])
   | IOneR => Some ([], ione, [])
@@ -232,7 +228,7 @@ Fixpoint iderive (R : Intuitionistic.irules) (p : iproof)
   | ITensR A B q r =>
       let* (l1, A', e1) := iderive R q in
       let* (l2, B', e2) := iderive R r in
-      if eqb A A' && eqb B B' then Some (l1 ++ l2, itens A B, e1 ++ e2) else None
+      if (iformula_eqb symbol_eqb) A A' && (iformula_eqb symbol_eqb) B B' then Some (l1 ++ l2, itens A B, e1 ++ e2) else None
   | ITensL A B q =>
       let* (l, C, e) := iderive R q in
       let* l' := pick A l in
@@ -240,14 +236,14 @@ Fixpoint iderive (R : Intuitionistic.irules) (p : iproof)
       Some (itens A B :: l'', C, e)
   | ILmapR A B q =>
       let* (l, B', e) := iderive R q in
-      if eqb B B' then
+      if (iformula_eqb symbol_eqb) B B' then
         let* l' := pick A l in
         Some (l', ilmap A B, e)
       else None
   | ILmapL A B q r =>
       let* (l1, A', e1) := iderive R q in
       let* (l2, C, e2) := iderive R r in
-      if eqb A A' then
+      if (iformula_eqb symbol_eqb) A A' then
         let* l2' := pick B l2 in
         Some (ilmap A B :: l1 ++ l2', C, e1 ++ e2)
       else None
@@ -255,7 +251,7 @@ Fixpoint iderive (R : Intuitionistic.irules) (p : iproof)
   | IWithR A B q r =>
       let* (l1, A', e1) := iderive R q in
       let* (l2, B', e2) := iderive R r in
-      if eqb A A' && eqb B B' && same l1 l2 then Some (l1, iwith A B, e1 ++ e2) else None
+      if (iformula_eqb symbol_eqb) A A' && (iformula_eqb symbol_eqb) B B' && same l1 l2 then Some (l1, iwith A B, e1 ++ e2) else None
   | IWithL1 A B q =>
       let* (l, C, e) := iderive R q in
       let* l' := pick A l in
@@ -267,20 +263,20 @@ Fixpoint iderive (R : Intuitionistic.irules) (p : iproof)
   | IZeroL l C => Some (izero :: l, C, [])
   | IPlusR1 A B q =>
       let* (l, A', e) := iderive R q in
-      if eqb A A' then Some (l, iplus A B, e) else None
+      if (iformula_eqb symbol_eqb) A A' then Some (l, iplus A B, e) else None
   | IPlusR2 A B q =>
       let* (l, B', e) := iderive R q in
-      if eqb B B' then Some (l, iplus A B, e) else None
+      if (iformula_eqb symbol_eqb) B B' then Some (l, iplus A B, e) else None
   | IPlusL A B q r =>
       let* (l1, C1, e1) := iderive R q in
       let* (l2, C2, e2) := iderive R r in
       let* l1' := pick A l1 in
       let* l2' := pick B l2 in
-      if eqb C1 C2 && same l1' l2' then Some (iplus A B :: l1', C1, e1 ++ e2) else None
+      if (iformula_eqb symbol_eqb) C1 C2 && same l1' l2' then Some (iplus A B :: l1', C1, e1 ++ e2) else None
   | IOcR A q =>
       let* (l, A', e) := iderive R q in
       let* _ := unoc l in
-      if eqb A A' then Some (l, ioc A, e) else None
+      if (iformula_eqb symbol_eqb) A A' then Some (l, ioc A, e) else None
   | IDe A q =>
       let* (l, C, e) := iderive R q in
       let* l' := pick A l in
@@ -307,7 +303,7 @@ Fixpoint iderive (R : Intuitionistic.irules) (p : iproof)
       else None
   | IAllR A a q =>
       let* (l, B, e) := iderive R q in
-      if eqb (isubst 0 (eigen a) A) B then Some (l, iall A, without a e) else None
+      if (iformula_eqb symbol_eqb) (isubst 0 (eigen a) A) B then Some (l, iall A, without a e) else None
   | IExL A a q =>
       let* (l, C, e) := iderive R q in
       let* l' := pick (isubst 0 (eigen a) A) l in
@@ -315,7 +311,7 @@ Fixpoint iderive (R : Intuitionistic.irules) (p : iproof)
   | IExR A t q =>
       if tclosed t then
         let* (l, B, e) := iderive R q in
-        if eqb (isubst 0 t A) B then Some (l, iex A, teigens t ++ e) else None
+        if (iformula_eqb symbol_eqb) (isubst 0 t A) B then Some (l, iex A, teigens t ++ e) else None
       else None
   | IAllL A t q =>
       if tclosed t then
@@ -330,13 +326,13 @@ Fixpoint iderive (R : Intuitionistic.irules) (p : iproof)
       set its root carries, or occurs in the sequent;
     - its conclusion has that goal and, as a multiset, those
       hypotheses. *)
-Definition icheck (R : Intuitionistic.irules) (p : iproof) (hypotheses : list iformula)
-    (goal : iformula) : bool :=
+Definition icheck (R : Intuitionistic.irules) (p : iproof) (hypotheses : list (iformula symbol))
+    (goal : iformula symbol) : bool :=
   match iintroduced p, iderive R p with
   | Some i, Some (l, C, e) =>
       forallb (fun a => negb (existsb (Nat.eqb a) e)
         && forallb (fun A => negb (ioccurs a A)) (goal :: hypotheses)) i &&
-      eqb C goal && same l hypotheses
+      (iformula_eqb symbol_eqb) C goal && same l hypotheses
   | _, _ => false
   end.
 
@@ -355,20 +351,16 @@ Section Soundness.
 
 Context {symbol : Type} (symbol_eqb : symbol -> symbol -> bool)
   (symbol_eqb_spec : forall f g, reflect (f = g) (symbol_eqb f g)).
-Local Notation term := (term symbol).
-Local Notation iformula := (iformula symbol).
-Local Notation eqb_spec := (iformula_eqb_spec symbol_eqb symbol_eqb_spec).
-Local Notation eq_dec := (iformula_eq_dec symbol_eqb symbol_eqb_spec).
 
-Lemma pick_perm : forall (A : iformula) l l',
+Lemma pick_perm : forall (A : iformula symbol) l l',
   pick symbol_eqb A l = Some l' -> Permutation l (A :: l').
-Proof. exact (Multiset.remove_one_perm _ eqb_spec). Qed.
+Proof. exact (Multiset.remove_one_perm _ (iformula_eqb_spec symbol_eqb symbol_eqb_spec)). Qed.
 
-Lemma same_perm : forall (l1 l2 : list iformula),
+Lemma same_perm : forall (l1 l2 : list (iformula symbol)),
   same symbol_eqb l1 l2 = true -> Permutation l1 l2.
-Proof. exact (Multiset.same_perm _ eqb_spec). Qed.
+Proof. exact (Multiset.same_perm _ (iformula_eqb_spec symbol_eqb symbol_eqb_spec)). Qed.
 
-Lemma unoc_map : forall (l l' : list iformula),
+Lemma unoc_map : forall (l l' : list (iformula symbol)),
   unoc l = Some l' -> l = map ioc l'.
 Proof.
   induction l as [| A l IH]; cbn; intros l' H.
@@ -378,7 +370,7 @@ Proof.
     injection H as <-. cbn. f_equal. apply IH. reflexivity.
 Qed.
 
-Lemma ieigens_occurs : forall a (A : iformula), In a (ieigens A) <-> ioccurs a A = true.
+Lemma ieigens_occurs : forall a (A : iformula symbol), In a (ieigens A) <-> ioccurs a A = true.
 Proof.
   intros a A. induction A; cbn;
     try (rewrite in_app_iff, orb_true_iff; tauto); try tauto; try (split; [contradiction | discriminate]).
@@ -386,7 +378,7 @@ Proof.
   split; intros [t [Hin Ht]]; exists t; split; try exact Hin; apply teigens_occurs; assumption.
 Qed.
 
-Lemma ioccurs_subst : forall b k u (A : iformula),
+Lemma ioccurs_subst : forall b k u (A : iformula symbol),
   ioccurs b (isubst k u A) = true -> ioccurs b A = true \/ toccurs b u = true.
 Proof.
   intros b k u A. revert k. induction A; cbn; intros k H; try discriminate;
@@ -399,7 +391,7 @@ Proof.
 Qed.
 
 (** An instance is fresh when its body and its term are. *)
-Lemma ioccurs_isubst_false : forall b k u (A : iformula),
+Lemma ioccurs_isubst_false : forall b k u (A : iformula symbol),
   ioccurs b A = false -> toccurs b u = false -> ioccurs b (isubst k u A) = false.
 Proof.
   intros * HA Hu. destruct (ioccurs b (isubst k u A)) eqn:O; [| reflexivity].
@@ -407,13 +399,13 @@ Proof.
 Qed.
 
 (** A term is fresh for [b] when none of its eigenvariables is [b]. *)
-Lemma toccurs_false : forall b (t : term), ~ In b (teigens t) -> toccurs b t = false.
+Lemma toccurs_false : forall b (t : term symbol), ~ In b (teigens t) -> toccurs b t = false.
 Proof.
   intros b t H. destruct (toccurs b t) eqn:O; [| reflexivity].
   exfalso. apply H, teigens_occurs, O.
 Qed.
 
-Lemma ifresh_cons_iff : forall b (A : iformula) l,
+Lemma ifresh_cons_iff : forall b (A : iformula symbol) l,
   ifresh b (A :: l) <-> ioccurs b A = false /\ ifresh b l.
 Proof.
   unfold ifresh; split.
@@ -421,7 +413,7 @@ Proof.
   - intros [HA Hl] X [<- | HX]; [exact HA | apply Hl, HX].
 Qed.
 
-Lemma ifresh_app_iff : forall b (l1 l2 : list iformula),
+Lemma ifresh_app_iff : forall b (l1 l2 : list (iformula symbol)),
   ifresh b (l1 ++ l2) <-> ifresh b l1 /\ ifresh b l2.
 Proof.
   unfold ifresh; split.
@@ -429,14 +421,14 @@ Proof.
   - intros [H1 H2] X HX. apply in_app_or in HX as [HX | HX]; auto.
 Qed.
 
-Lemma ifresh_perm : forall b (l l' : list iformula),
+Lemma ifresh_perm : forall b (l l' : list (iformula symbol)),
   Permutation l' l -> ifresh b l' -> ifresh b l.
 Proof. intros * P H X HX. apply H, (Permutation_in _ (Permutation_sym P) HX). Qed.
 
 Lemma ifresh_nil : forall b, ifresh (symbol := symbol) b [].
 Proof. intros b A []. Qed.
 
-Lemma ifresh_map_ioc : forall b (l : list iformula), ifresh b (map ioc l) -> ifresh b l.
+Lemma ifresh_map_ioc : forall b (l : list (iformula symbol)), ifresh b (map ioc l) -> ifresh b l.
 Proof. intros b l H X HX. apply (H (ioc X)), in_map, HX. Qed.
 
 Lemma not_in_without : forall a b e, b <> a -> ~ In b (without a e) -> ~ In b e.
@@ -457,7 +449,7 @@ Qed.
 (** No eigenvariable of [i] is in the set [e] or in the sequent
     [l ⊢ C]. The rules below a subterm guarantee this for the
     eigenvariables the subterm introduces. *)
-Definition igood (i : list nat) (l : list iformula) (C : iformula) (e : list nat) : Prop :=
+Definition igood (i : list nat) (l : list (iformula symbol)) (C : iformula symbol) (e : list nat) : Prop :=
   forall b, In b i -> ~ In b e /\ ifresh b (C :: l).
 
 Variable R : Intuitionistic.irules.
@@ -468,7 +460,7 @@ Lemma cut_by_sound : forall A l1 C1 l2 C2 l C,
   cut_by symbol_eqb A l1 C1 l2 C2 = Some (l, C) -> ill R l C.
 Proof.
   intros A l1 C1 l2 C2 l C K.
-  exact (TwoSided.cut_by_sound _ eqb_spec (ill R) (ex_ir R) (cut_ir R K) A l1 C1 l2 C2 l C).
+  exact (TwoSided.cut_by_sound _ (iformula_eqb_spec symbol_eqb symbol_eqb_spec) (ill R) (ex_ir R) (cut_ir R K) A l1 C1 l2 C2 l C).
 Qed.
 
 Lemma icut_conclusion_sound : forall A l1 C1 l2 C2 l C,
@@ -476,7 +468,7 @@ Lemma icut_conclusion_sound : forall A l1 C1 l2 C2 l C,
   icut_conclusion symbol_eqb A l1 C1 l2 C2 = Some (l, C) -> ill R l C.
 Proof.
   intros A l1 C1 l2 C2 l C K.
-  exact (TwoSided.icut_conclusion_sound _ eqb_spec (ill R) (ex_ir R) (cut_ir R K)
+  exact (TwoSided.icut_conclusion_sound _ (iformula_eqb_spec symbol_eqb symbol_eqb_spec) (ill R) (ex_ir R) (cut_ir R K)
     A l1 C1 l2 C2 l C).
 Qed.
 
@@ -485,12 +477,12 @@ Qed.
 Lemma cut_by_in : forall A l1 C1 l2 C2 l C X,
   cut_by symbol_eqb A l1 C1 l2 C2 = Some (l, C) ->
   In X (C1 :: l1) \/ In X (C2 :: l2) -> X = A \/ In X (C :: l).
-Proof. exact (TwoSided.cut_by_in _ eqb_spec). Qed.
+Proof. exact (TwoSided.cut_by_in _ (iformula_eqb_spec symbol_eqb symbol_eqb_spec)). Qed.
 
 Lemma icut_conclusion_in : forall A l1 C1 l2 C2 l C X,
   icut_conclusion symbol_eqb A l1 C1 l2 C2 = Some (l, C) ->
   In X (C1 :: l1) \/ In X (C2 :: l2) -> X = A \/ In X (C :: l).
-Proof. exact (TwoSided.icut_conclusion_in _ eqb_spec). Qed.
+Proof. exact (TwoSided.icut_conclusion_in _ (iformula_eqb_spec symbol_eqb symbol_eqb_spec)). Qed.
 
 (** The tactics of [TwoSided], on these formulas. *)
 Local Ltac equalities :=
@@ -684,7 +676,7 @@ Proof.
   destruct (iintroduced p) as [i |] eqn:I; [| discriminate].
   destruct (iderive symbol_eqb R p) as [[[l C'] e] |] eqn:D; [| discriminate].
   apply andb_prop in H as [H HΓ]. apply andb_prop in H as [HI HC].
-  destruct (eqb_spec C' C); [subst | discriminate].
+  destruct ((iformula_eqb_spec symbol_eqb symbol_eqb_spec) C' C); [subst | discriminate].
   apply same_perm in HΓ.
   rewrite forallb_forall in HI.
   assert (G : igood i l C e).

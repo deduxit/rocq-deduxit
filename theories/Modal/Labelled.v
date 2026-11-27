@@ -28,11 +28,10 @@ Definition label : Type := string.
 Section Labelled.
 
 Context {atom : Type}.
-Local Notation formula := (formula atom).
 
 (** What a labelled sequent holds. *)
 Inductive item : Type :=
-| lab : label -> formula -> item   (** [x : A]: [A] is true at [x] *)
+| lab : label -> formula atom -> item   (** [x : A]: [A] is true at [x] *)
 | rel : label -> label -> item.    (** [x R y]: [x] sees [y] *)
 
 Variable world : Type.

@@ -44,45 +44,39 @@ Section Soundness.
 
 Context {symbol : Type} (symbol_eqb : symbol -> symbol -> bool)
   (symbol_eqb_spec : forall f g, reflect (f = g) (symbol_eqb f g)).
-Local Notation term := (term symbol).
-Local Notation formula := (formula symbol).
-Local Notation state := (state symbol).
-Local Notation eqb_spec := (formula_eqb_spec symbol_eqb symbol_eqb_spec).
-Local Notation eq_dec := (formula_eq_dec symbol_eqb symbol_eqb_spec).
-Local Notation count := (count_occ eq_dec).
 
 (** ** The multiset functions, as permutations *)
 
-Lemma remove_one_perm : forall (A : formula) l l',
+Lemma remove_one_perm : forall (A : formula symbol) l l',
   remove_one symbol_eqb A l = Some l' -> Permutation l (A :: l').
-Proof. exact (Multiset.remove_one_perm _ eqb_spec). Qed.
+Proof. exact (Multiset.remove_one_perm _ (formula_eqb_spec symbol_eqb symbol_eqb_spec)). Qed.
 
-Lemma remove_one_absent : forall (A : formula) l,
+Lemma remove_one_absent : forall (A : formula symbol) l,
   remove_one symbol_eqb A l = None -> ~ In A l.
-Proof. exact (Multiset.remove_one_absent _ eqb_spec). Qed.
+Proof. exact (Multiset.remove_one_absent _ (formula_eqb_spec symbol_eqb symbol_eqb_spec)). Qed.
 
-Lemma take_all_perm : forall (l1 l2 l : list formula),
+Lemma take_all_perm : forall (l1 l2 l : list (formula symbol)),
   take_all symbol_eqb l1 l2 = Some l -> Permutation l2 (l1 ++ l).
-Proof. exact (Multiset.take_all_perm _ eqb_spec). Qed.
+Proof. exact (Multiset.take_all_perm _ (formula_eqb_spec symbol_eqb symbol_eqb_spec)). Qed.
 
-Lemma remove_all_perm : forall (A : formula) l,
-  Permutation l (repeat A (count l A) ++ remove_all symbol_eqb A l).
-Proof. exact (Multiset.remove_all_perm _ eqb_spec eq_dec). Qed.
+Lemma remove_all_perm : forall (A : formula symbol) l,
+  Permutation l (repeat A ((count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec)) l A) ++ remove_all symbol_eqb A l).
+Proof. exact (Multiset.remove_all_perm _ (formula_eqb_spec symbol_eqb symbol_eqb_spec) (formula_eq_dec symbol_eqb symbol_eqb_spec)). Qed.
 
-Lemma diff_count : forall (l1 l2 : list formula) x,
-  count (diff symbol_eqb l2 l1) x = count l2 x - count l1 x.
-Proof. exact (Multiset.diff_count _ eqb_spec eq_dec). Qed.
+Lemma diff_count : forall (l1 l2 : list (formula symbol)) x,
+  (count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec)) (diff symbol_eqb l2 l1) x = (count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec)) l2 x - (count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec)) l1 x.
+Proof. exact (Multiset.diff_count _ (formula_eqb_spec symbol_eqb symbol_eqb_spec) (formula_eq_dec symbol_eqb symbol_eqb_spec)). Qed.
 
 (** A formula of [l2] is in [l1], or in what is left of [l2] after
     removing [l1]. *)
-Lemma diff_in : forall (l1 l2 : list formula) x,
+Lemma diff_in : forall (l1 l2 : list (formula symbol)) x,
   In x l2 -> In x l1 \/ In x (diff symbol_eqb l2 l1).
-Proof. exact (Multiset.diff_in _ eqb_spec eq_dec). Qed.
+Proof. exact (Multiset.diff_in _ (formula_eqb_spec symbol_eqb symbol_eqb_spec) (formula_eq_dec symbol_eqb symbol_eqb_spec)). Qed.
 
 (** What is left of [l2] is in [l2]. *)
-Lemma diff_incl : forall (l1 l2 : list formula) x,
+Lemma diff_incl : forall (l1 l2 : list (formula symbol)) x,
   In x (diff symbol_eqb l2 l1) -> In x l2.
-Proof. exact (Multiset.diff_incl _ eqb_spec eq_dec). Qed.
+Proof. exact (Multiset.diff_incl _ (formula_eqb_spec symbol_eqb symbol_eqb_spec) (formula_eq_dec symbol_eqb symbol_eqb_spec)). Qed.
 
 (** Permutations of lists of formulas, decided by counting every
     formula's occurrences on both sides. *)
@@ -90,7 +84,7 @@ Ltac perm := Multiset.perm (formula_eq_dec symbol_eqb symbol_eqb_spec) diff_coun
 
 (** ** Eigenvariables *)
 
-Lemma feigens_occurs : forall a (A : formula), In a (feigens A) <-> occurs a A = true.
+Lemma feigens_occurs : forall a (A : formula symbol), In a (feigens A) <-> occurs a A = true.
 Proof.
   intros a A. induction A; cbn;
     try (rewrite in_app_iff, orb_true_iff; tauto); try tauto; try (split; [contradiction | discriminate]).
@@ -98,7 +92,7 @@ Proof.
     split; intros [t [Hin Ht]]; exists t; split; try exact Hin; apply teigens_occurs; assumption.
 Qed.
 
-Lemma occurs_subst : forall b k u (A : formula),
+Lemma occurs_subst : forall b k u (A : formula symbol),
   occurs b (subst k u A) = true -> occurs b A = true \/ toccurs b u = true.
 Proof.
   intros b k u A. revert k. induction A; cbn; intros k H; try discriminate;
@@ -110,7 +104,7 @@ Proof.
     destruct (toccurs_tsubst _ _ _ _ Ht); [left; exists t; auto | right; assumption].
 Qed.
 
-Lemma occurs_dual : forall b (A : formula), occurs b (dual A) = occurs b A.
+Lemma occurs_dual : forall b (A : formula symbol), occurs b (dual A) = occurs b A.
 Proof. exact FirstOrderFacts.occurs_dual. Qed.
 
 (** ** Freshness *)
@@ -118,7 +112,7 @@ Proof. exact FirstOrderFacts.occurs_dual. Qed.
 Lemma fresh_nil : forall b, fresh (symbol := symbol) b [].
 Proof. intros b A []. Qed.
 
-Lemma fresh_cons_iff : forall b (A : formula) l,
+Lemma fresh_cons_iff : forall b (A : formula symbol) l,
   fresh b (A :: l) <-> occurs b A = false /\ fresh b l.
 Proof.
   unfold fresh; split.
@@ -126,7 +120,7 @@ Proof.
   - intros [HA Hl] X [<- | HX]; [exact HA | apply Hl, HX].
 Qed.
 
-Lemma fresh_app_iff : forall b (l1 l2 : list formula),
+Lemma fresh_app_iff : forall b (l1 l2 : list (formula symbol)),
   fresh b (l1 ++ l2) <-> fresh b l1 /\ fresh b l2.
 Proof.
   unfold fresh; split.
@@ -134,35 +128,35 @@ Proof.
   - intros [H1 H2] X HX. apply in_app_or in HX as [HX | HX]; auto.
 Qed.
 
-Lemma fresh_wn_iff : forall b (l : list formula), fresh b (map wn l) <-> fresh b l.
+Lemma fresh_wn_iff : forall b (l : list (formula symbol)), fresh b (map wn l) <-> fresh b l.
 Proof.
   unfold fresh; split.
   - intros H X HX. apply (H (wn X)), in_map, HX.
   - intros H X HX. apply in_map_iff in HX as [Y [<- HY]]. cbn. apply H, HY.
 Qed.
 
-Lemma fresh_incl : forall b (l l' : list formula),
+Lemma fresh_incl : forall b (l l' : list (formula symbol)),
   (forall X, In X l -> In X l') -> fresh b l' -> fresh b l.
 Proof. unfold fresh; auto. Qed.
 
-Lemma fresh_perm : forall b (l l' : list formula),
+Lemma fresh_perm : forall b (l l' : list (formula symbol)),
   Permutation l' l -> fresh b l' -> fresh b l.
 Proof.
   intros * P H. apply (fresh_incl _ _ l'); [| exact H].
   intros X HX. apply (Permutation_in _ (Permutation_sym P) HX).
 Qed.
 
-Lemma take_in : forall (A : formula) gamma any g X,
+Lemma take_in : forall (A : formula symbol) gamma any g X,
   take symbol_eqb A gamma any = Some g -> In X gamma -> X = A \/ In X g.
 Proof.
   intros * H HX.
-  destruct (Multiset.take_spec _ eqb_spec _ _ _ _ H) as [P | [_ ->]]; [| auto].
+  destruct (Multiset.take_spec _ (formula_eqb_spec symbol_eqb symbol_eqb_spec) _ _ _ _ H) as [P | [_ ->]]; [| auto].
   apply (Permutation_in _ P) in HX as [-> | HX]; auto.
 Qed.
 
 (** A premise's zone is fresh when what the rule left of it and the
     formula it took are fresh. *)
-Lemma fresh_take : forall b (A : formula) gamma any g,
+Lemma fresh_take : forall b (A : formula symbol) gamma any g,
   take symbol_eqb A gamma any = Some g -> occurs b A = false -> fresh b g -> fresh b gamma.
 Proof.
   intros * T HA Hg X HX. destruct (take_in _ _ _ _ _ T HX) as [-> | HX']; auto.
@@ -193,15 +187,15 @@ Ltac fresh_split :=
 Variable R : Calculus.rules.
 
 (** Weakening of a list of [?] formulas. *)
-Lemma wk_list : forall (Θ l : list formula), ll R l -> ll R (map wn Θ ++ l).
+Lemma wk_list : forall (Θ l : list (formula symbol)), ll R l -> ll R (map wn Θ ++ l).
 Proof. induction Θ; cbn; intros; [assumption | apply wk_r; auto]. Qed.
 
-Lemma wn_contract_cons : forall (A : formula) n (l : list formula),
+Lemma wn_contract_cons : forall (A : formula symbol) n (l : list (formula symbol)),
   ll R (wn A :: map wn (repeat A n) ++ l) -> ll R (wn A :: l).
 Proof. induction n; cbn; intros l H; [exact H | apply IHn, co_r, H]. Qed.
 
 (** Any number of copies of [?A], zero included, contract into one. *)
-Lemma wn_contract : forall (A : formula) n (l : list formula),
+Lemma wn_contract : forall (A : formula symbol) n (l : list (formula symbol)),
   ll R (map wn (repeat A n) ++ l) -> ll R (wn A :: l).
 Proof.
   intros A [| n] l H; cbn in H; [apply wk_r, H | apply (wn_contract_cons A n), H].
@@ -212,14 +206,14 @@ Qed.
 (** The sequents a state stands for are derivable: [⊢ gamma, ?theta, Δ]
     when [any] is set, for every [Δ] in which no eigenvariable of [i]
     occurs; for the empty [Δ] otherwise. *)
-Definition sat (i : list nat) (theta gamma : list formula) (any : bool) : Prop :=
+Definition sat (i : list nat) (theta gamma : list (formula symbol)) (any : bool) : Prop :=
   forall Δ, (any = false -> Δ = []) -> (forall b, In b i -> fresh b Δ) ->
   ll R (gamma ++ map wn theta ++ Δ).
 
 (** No eigenvariable of [i] is in the set [s] carries or in the sequent
     [⊢ ?theta, gamma] it proves. The rules below a subterm guarantee
     this for the eigenvariables the subterm introduces. *)
-Definition good (i : list nat) (s : state) : Prop :=
+Definition good (i : list nat) (s : state symbol) : Prop :=
   forall b, In b i -> ~ In b (eigens s) /\ fresh b (gamma s ++ map wn (theta s)).
 
 Lemma good_of : forall i i' s s',
@@ -238,7 +232,7 @@ Qed.
 Lemma take_spec : forall A gamma any gamma',
   take symbol_eqb A gamma any = Some gamma' ->
   Permutation gamma (A :: gamma') \/ (any = true /\ gamma' = gamma).
-Proof. exact (Multiset.take_spec _ eqb_spec). Qed.
+Proof. exact (Multiset.take_spec _ (formula_eqb_spec symbol_eqb symbol_eqb_spec)). Qed.
 
 (** Consuming [A] from a satisfied zone leaves a satisfied zone with
     [A] in front, behind whatever prefix [pre] the rule puts first.
@@ -474,14 +468,14 @@ Proof.
     { apply (good_of _ _ _ _ (fun b H => H) G).
       cbn; intros b _ HE HF; facts.
       split; [assumption | fresh_split; [assumption |]].
-      intros X HX. destruct (eq_dec X A) as [-> | ne]; [assumption |].
+      intros X HX. destruct ((formula_eq_dec symbol_eqb symbol_eqb_spec) X A) as [-> | ne]; [assumption |].
       match goal with HT : fresh _ (remove_all _ _ _) |- _ => apply HT end.
       unfold remove_all. apply filter_In. split; [exact HX |].
-      destruct (eqb_spec A X); [congruence | reflexivity]. }
+      destruct ((formula_eqb_spec symbol_eqb symbol_eqb_spec) A X); [congruence | reflexivity]. }
     specialize (IHq _ _ I eq_refl Gq); cbn in IHq.
-    intros Δ HΔ HD. apply (wn_contract A (count θ A)).
+    intros Δ HΔ HD. apply (wn_contract A ((count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec)) θ A)).
     eapply ex_r; [apply (IHq Δ HΔ HD) |].
-    transitivity (γ ++ map wn (repeat A (count θ A) ++ remove_all symbol_eqb A θ) ++ Δ).
+    transitivity (γ ++ map wn (repeat A ((count_occ (formula_eq_dec symbol_eqb symbol_eqb_spec)) θ A) ++ remove_all symbol_eqb A θ) ++ Δ).
     + apply Permutation_app_head, Permutation_app_tail, Permutation_map, remove_all_perm.
     + perm.
   - (* Copy *)

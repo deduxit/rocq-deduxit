@@ -43,13 +43,11 @@ Import ListNotations.
 Section Refutations.
 
 Context {atom : Type}.
-Local Notation formula := (formula atom).
-Local Notation iformula := (iformula atom).
 
 (** ** The classical reading *)
 
 (** A formula's classical reading under an assignment of the atoms. *)
-Fixpoint eval (v : atom -> bool) (A : formula) : bool :=
+Fixpoint eval (v : atom -> bool) (A : formula atom) : bool :=
   match A with
   | var a => v a
   | covar a => negb (v a)
@@ -69,9 +67,9 @@ Qed.
 
 (** A sequent reads as the disjunction of its formulas, and a
     permutation keeps that reading. *)
-Lemma existsb_perm : forall (f : formula -> bool) l1 l2,
+Lemma existsb_perm : forall (f : formula atom -> bool) l1 l2,
   Permutation l1 l2 -> existsb f l1 = existsb f l2.
-Proof. exact (@Lists.existsb_perm formula). Qed.
+Proof. exact (@Lists.existsb_perm (formula atom)). Qed.
 
 (** Every derivable sequent, in every calculus, reads as a tautology. *)
 Theorem ll_tautology : forall R l, ll R l -> forall v, existsb (eval v) l = true.
@@ -99,7 +97,7 @@ Proof.
 Qed.
 
 (** Whether an assignment makes a sequent's reading false. *)
-Definition falsifies (v : atom -> bool) (l : list formula) : bool :=
+Definition falsifies (v : atom -> bool) (l : list (formula atom)) : bool :=
   negb (existsb (eval v) l).
 
 (** An assignment that makes a sequent's reading false shows that the
@@ -121,18 +119,16 @@ Section Balance.
 Variable atom_eqb : atom -> atom -> bool.
 Variable a : atom.
 
-(** An interval of the excess, [None] when it is unbounded. *)
-Local Notation span := (option (Z * Z)).
-
-(** The interval of a sum. *)
-Definition add (x y : span) : span :=
+(** The interval of a sum. An interval of the excess is
+    [option (Z * Z)], [None] when it is unbounded. *)
+Definition add (x y : option (Z * Z)) : option (Z * Z) :=
   match x, y with
   | Some (l1, h1), Some (l2, h2) => Some ((l1 + l2)%Z, (h1 + h2)%Z)
   | _, _ => None
   end.
 
 (** The hull of two intervals: the excess of either alternative. *)
-Definition hull (x y : span) : span :=
+Definition hull (x y : option (Z * Z)) : option (Z * Z) :=
   match x, y with
   | Some (l1, h1), Some (l2, h2) => Some (Z.min l1 l2, Z.max h1 h2)
   | _, _ => None
@@ -140,7 +136,7 @@ Definition hull (x y : span) : span :=
 
 (** The interval below a [!] or [?]: zero when the interval inside is
     exactly zero, unbounded otherwise, since copies add any number. *)
-Definition bang (x : span) : span :=
+Definition bang (x : option (Z * Z)) : option (Z * Z) :=
   match x with
   | Some (Z0, Z0) => Some (0%Z, 0%Z)
   | _ => None
@@ -150,7 +146,7 @@ Definition bang (x : span) : span :=
     literals in a formula, over its additive alternatives. [None] when
     a [⊤] absorbs, or when the interval below an exponential is not
     exactly zero. *)
-Fixpoint excess (A : formula) : span :=
+Fixpoint excess (A : formula atom) : option (Z * Z) :=
   match A with
   | var b => Some (if atom_eqb a b then (1%Z, 1%Z) else (0%Z, 0%Z))
   | covar b => Some (if atom_eqb a b then ((-1)%Z, (-1)%Z) else (0%Z, 0%Z))
@@ -162,14 +158,14 @@ Fixpoint excess (A : formula) : span :=
   end.
 
 (** The interval of a sequent: the sum over its formulas. *)
-Fixpoint excesses (l : list formula) : span :=
+Fixpoint excesses (l : list (formula atom)) : option (Z * Z) :=
   match l with
   | [] => Some (0%Z, 0%Z)
   | A :: l => add (excess A) (excesses l)
   end.
 
 (** An interval contains zero, or is unbounded. *)
-Definition holds (x : span) : Prop :=
+Definition holds (x : option (Z * Z)) : Prop :=
   match x with
   | Some (lo, hi) => (lo <= 0 <= hi)%Z
   | None => True
@@ -253,7 +249,7 @@ Proof.
 Qed.
 
 (** Whether an interval excludes zero. *)
-Definition excluded (x : span) : bool :=
+Definition excluded (x : option (Z * Z)) : bool :=
   match x with
   | Some (lo, hi) => (0 <? lo)%Z || (hi <? 0)%Z
   | None => false
@@ -262,7 +258,7 @@ Definition excluded (x : span) : bool :=
 (** Whether the balance of the atom refutes a sequent in a calculus:
     the calculus has no weakening and no cut, and the interval excludes
     zero. *)
-Definition unbalanced (R : rules) (l : list formula) : bool :=
+Definition unbalanced (R : rules) (l : list (formula atom)) : bool :=
   negb (weakening R) && negb (cut R) && excluded (excesses l).
 
 (** If [unbalanced] holds, the sequent is not derivable. *)
@@ -281,7 +277,7 @@ End Balance.
 (** ** The count equation *)
 
 (** Whether a formula is multiplicative, with units. *)
-Fixpoint mll (A : formula) : bool :=
+Fixpoint mll (A : formula atom) : bool :=
   match A with
   | var _ | covar _ | one | bot => true
   | tens A B | parr A B => mll A && mll B
@@ -289,7 +285,7 @@ Fixpoint mll (A : formula) : bool :=
   end.
 
 (** [#⊗ − #⅋ − #1 + #⊥] of a formula. *)
-Fixpoint weight (A : formula) : Z :=
+Fixpoint weight (A : formula atom) : Z :=
   match A with
   | one => (-1)%Z
   | bot => 1%Z
@@ -299,7 +295,7 @@ Fixpoint weight (A : formula) : Z :=
   end.
 
 (** The weight of a sequent: the sum over its formulas. *)
-Fixpoint weights (l : list formula) : Z :=
+Fixpoint weights (l : list (formula atom)) : Z :=
   match l with
   | [] => 0%Z
   | A :: l => (weight A + weights l)%Z
@@ -311,12 +307,12 @@ Proof. induction l1 as [|A l1 IH]; intro l2; cbn; [| rewrite IH]; lia. Qed.
 Lemma weights_perm : forall l1 l2, Permutation l1 l2 -> weights l1 = weights l2.
 Proof. intros l1 l2 H. induction H; cbn; lia. Qed.
 
-Lemma forallb_perm : forall (f : formula -> bool) l1 l2,
+Lemma forallb_perm : forall (f : formula atom -> bool) l1 l2,
   Permutation l1 l2 -> forallb f l1 = forallb f l2.
-Proof. exact (@Lists.forallb_perm formula). Qed.
+Proof. exact (@Lists.forallb_perm (formula atom)). Qed.
 
 (** What the count equation says of a sequent in a calculus. *)
-Definition counted (R : rules) (l : list formula) : Prop :=
+Definition counted (R : rules) (l : list (formula atom)) : Prop :=
   if mix R then (weights l + 2 <= Z.of_nat (length l))%Z
   else Z.of_nat (length l) = (weights l + 2)%Z.
 
@@ -362,7 +358,7 @@ Qed.
     calculus has no weakening and no cut, the formulas are
     multiplicative with units, and their number is not what the
     equation asks for (with Mix: fewer). *)
-Definition fails_equation (R : rules) (l : list formula) : bool :=
+Definition fails_equation (R : rules) (l : list (formula atom)) : bool :=
   negb (weakening R) && negb (cut R) && forallb mll l
   && (if mix R then (Z.of_nat (length l) <? weights l + 2)%Z
       else negb (Z.of_nat (length l) =? weights l + 2)%Z).
@@ -383,7 +379,7 @@ Qed.
 
 (** An intuitionistic formula as a one-sided formula: [A ⊸ B] becomes
     [A⊥ ⅋ B]. *)
-Fixpoint itr (A : iformula) : formula :=
+Fixpoint itr (A : iformula atom) : formula atom :=
   match A with
   | ivar a => var a
   | ione => one
@@ -397,7 +393,7 @@ Fixpoint itr (A : iformula) : formula :=
   end.
 
 (** A two-sided sequent [Γ ⊢ C] as the one-sided sequent [⊢ C, Γ⊥]. *)
-Definition one_sided (G : list iformula) (C : iformula) : list formula :=
+Definition one_sided (G : list (iformula atom)) (C : iformula atom) : list (formula atom) :=
   itr C :: map (fun A => dual (itr A)) G.
 
 (** The one-sided calculus for a two-sided one: no Mix, and the same
@@ -406,7 +402,7 @@ Definition lrules (R : irules) : rules :=
   {| mix := false; weakening := iweakening R; cut := icut R |}.
 
 (** The first two formulas exchanged. *)
-Local Lemma swap : forall R (A B : formula) l, ll R (A :: B :: l) -> ll R (B :: A :: l).
+Local Lemma swap : forall R (A B : formula atom) l, ll R (A :: B :: l) -> ll R (B :: A :: l).
 Proof. intros. eapply ex_r; [eassumption | apply perm_swap]. Qed.
 
 (** Every derivation in the two-sided calculus gives a derivation of
@@ -458,7 +454,7 @@ Qed.
 
 (** An intuitionistic formula's classical reading, with [⊸] read as
     implication. *)
-Fixpoint ieval (v : atom -> bool) (A : iformula) : bool :=
+Fixpoint ieval (v : atom -> bool) (A : iformula atom) : bool :=
   match A with
   | ivar a => v a
   | ione | itop => true

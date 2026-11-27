@@ -23,31 +23,28 @@ Import ListNotations Multiset.Bind.
 Section Check.
 
 Context {atom : Type} (atom_eqb : atom -> atom -> bool).
-Local Notation formula := (formula atom).
-Local Notation proof := (proof atom).
-Local Notation eqb := (formula_eqb atom_eqb).
 
 (** ** Multisets, as lists compared through [formula_eqb]
 
     The operations of [Multiset], on formulas. *)
 
 (** Removes one occurrence of [A] from [l], or fails when there is none. *)
-Definition remove_one (A : formula) (l : list formula) : option (list formula) :=
-  Multiset.remove_one eqb A l.
+Definition remove_one (A : formula atom) (l : list (formula atom)) : option (list (formula atom)) :=
+  Multiset.remove_one (formula_eqb atom_eqb) A l.
 
 (** Removes every occurrence of [A] from [l]. *)
-Definition remove_all (A : formula) (l : list formula) : list formula :=
-  Multiset.remove_all eqb A l.
+Definition remove_all (A : formula atom) (l : list (formula atom)) : list (formula atom) :=
+  Multiset.remove_all (formula_eqb atom_eqb) A l.
 
 (** Removes each formula of [l1] from [l2]. Returns what is left of
     [l2] when [l1] is included in it as a multiset, [None] otherwise. *)
-Definition take_all (l1 l2 : list formula) : option (list formula) :=
-  Multiset.take_all eqb l1 l2.
+Definition take_all (l1 l2 : list (formula atom)) : option (list (formula atom)) :=
+  Multiset.take_all (formula_eqb atom_eqb) l1 l2.
 
 (** [l2] less [l1]: each formula of [l1] is removed from [l2] where
     [l2] has it. [l1 ++ diff l2 l1] is the multiset union of the two. *)
-Definition diff (l2 l1 : list formula) : list formula :=
-  Multiset.diff eqb l2 l1.
+Definition diff (l2 l1 : list (formula atom)) : list (formula atom) :=
+  Multiset.diff (formula_eqb atom_eqb) l2 l1.
 
 (** ** States *)
 
@@ -57,23 +54,23 @@ Definition diff (l2 l1 : list formula) : list formula :=
     least unrestricted zone the subterm needs. Weakening and
     contraction on it are implicit, so any larger zone works too. *)
 Record state : Type := State {
-  theta : list formula;  (** the unrestricted zone the subterm needs *)
-  gamma : list formula;  (** the linear zone *)
+  theta : list (formula atom);  (** the unrestricted zone the subterm needs *)
+  gamma : list (formula atom);  (** the linear zone *)
   any : bool;            (** whether a [⊤] above absorbs more *)
 }.
 
 (** Consumes one copy of [A] from a premise's linear zone [gamma]. When
     [gamma] has none, a [⊤] above ([any]) supplies it. *)
-Definition take (A : formula) (gamma : list formula) (any : bool)
-    : option (list formula) :=
-  Multiset.take eqb A gamma any.
+Definition take (A : formula atom) (gamma : list (formula atom)) (any : bool)
+    : option (list (formula atom)) :=
+  Multiset.take (formula_eqb atom_eqb) A gamma any.
 
 (** The conclusion of a [&] rule from its premises, after each has
     consumed its own subformula. Both premises must prove the same
     context. A premise without [any] fixes the context, and one with
     [any] adapts to the other; when both have [any], the conclusion has
     the union of their zones and [any] set. *)
-Definition join_with (A B : formula) (sl sr : state) : option state :=
+Definition join_with (A B : formula atom) (sl sr : state) : option state :=
   let theta := theta sl ++ theta sr in
   match any sl, any sr with
   | false, false =>
@@ -95,7 +92,7 @@ Definition join_with (A B : formula) (sl sr : state) : option state :=
 
 (** Computes what a term proves. Fails at the first node that applies
     its rule wrongly or uses a rule that [R] does not allow. *)
-Fixpoint derive (R : rules) (p : proof) : option state :=
+Fixpoint derive (R : rules) (p : proof atom) : option state :=
   match p with
   | Ax a =>
       Some (State [] [covar a; var a] false)
@@ -165,7 +162,7 @@ Fixpoint derive (R : rules) (p : proof) : option state :=
 (** Whether [p] proves [⊢ sequent] in [R]: its root needs no
     unrestricted zone and proves exactly the sequent's formulas, or a
     part of them when a [⊤] absorbs the rest. *)
-Definition check (R : rules) (p : proof) (sequent : list formula) : bool :=
+Definition check (R : rules) (p : proof atom) (sequent : list (formula atom)) : bool :=
   match derive R p with
   | Some (State [] gamma any) =>
       match take_all gamma sequent with

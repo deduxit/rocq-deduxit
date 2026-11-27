@@ -14,15 +14,14 @@ From Deduxit.Linear Require Import FirstOrderFormulas.
 Section Facts.
 
 Context {symbol : Type}.
-Local Notation formula := (formula symbol).
 
-Lemma dual_dual : forall A : formula, dual (dual A) = A.
+Lemma dual_dual : forall A : formula symbol, dual (dual A) = A.
 Proof. intros A; induction A; cbn; congruence. Qed.
 
-Lemma dual_subst : forall (A : formula) k u, dual (subst k u A) = subst k u (dual A).
+Lemma dual_subst : forall (A : formula symbol) k u, dual (subst k u A) = subst k u (dual A).
 Proof. intros A; induction A; intros k u; cbn; congruence. Qed.
 
-Lemma occurs_dual : forall b (A : formula), occurs b (dual A) = occurs b A.
+Lemma occurs_dual : forall b (A : formula symbol), occurs b (dual A) = occurs b A.
 Proof. intros b A; induction A; cbn; congruence. Qed.
 
 End Facts.

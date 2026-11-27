@@ -43,11 +43,10 @@ Definition minimal : rules := {| explosion := false; cut := false |}.
 Section Calculus.
 
 Context {atom : Type}.
-Local Notation formula := (formula atom).
 
 (** The derivable sequents [Γ ⊢ C], where [R] gives the optional
     rules. *)
-Inductive lj (R : rules) : list formula -> formula -> Prop :=
+Inductive lj (R : rules) : list (formula atom) -> formula atom -> Prop :=
 | ax : forall A,
     lj R [A] A
 | ex : forall l1 l2 C,

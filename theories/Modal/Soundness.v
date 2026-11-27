@@ -29,8 +29,6 @@ Import ListNotations.
 Section Soundness.
 
 Context {atom : Type}.
-Local Notation formula := (formula atom).
-Local Notation item := (item atom).
 
 Section Placing.
 
@@ -54,7 +52,7 @@ Proof.
 Qed.
 
 (** Moving a label changes no item that does not mention it. *)
-Lemma holds_update : forall ρ y v (i : item),
+Lemma holds_update : forall ρ y v (i : item atom),
   ~ mentions y i -> (holds R V (update ρ y v) i <-> holds R V ρ i).
 Proof.
   intros ρ y v [x A | x z] H; unfold holds.
@@ -64,7 +62,7 @@ Proof.
     rewrite (update_other ρ y v x Hx), (update_other ρ y v z Hz). reflexivity.
 Qed.
 
-Lemma sat_update : forall ρ y v (L Rt : list item),
+Lemma sat_update : forall ρ y v (L Rt : list (item atom)),
   fresh y L Rt -> Forall (holds R V ρ) L ->
   Forall (holds R V (update ρ y v)) L.
 Proof.
@@ -73,7 +71,7 @@ Proof.
   exact (proj1 (Forall_forall _ _) HL i Hi).
 Qed.
 
-Lemma unsat_update : forall ρ y v (L Rt : list item),
+Lemma unsat_update : forall ρ y v (L Rt : list (item atom)),
   fresh y L Rt -> Forall (fun i => ~ holds R V ρ i) Rt ->
   Forall (fun i => ~ holds R V (update ρ y v) i) Rt.
 Proof.
@@ -125,7 +123,7 @@ Proof.
 Qed.
 
 (** An old world forces what it forced. *)
-Lemma beside_forces : forall (A : formula) u,
+Lemma beside_forces : forall (A : formula atom) u,
   forces beside_R beside_V (Some u) A <-> forces R V u A.
 Proof.
   induction A as [a | | | A IHA | A IHA B IHB | A IHA B IHB | A IHA B IHB
@@ -143,7 +141,7 @@ Proof.
 Qed.
 
 (** The new world decides every formula: it sees itself alone. *)
-Lemma beside_decided : forall A : formula,
+Lemma beside_decided : forall A : formula atom,
   forces beside_R beside_V None A \/ ~ forces beside_R beside_V None A.
 Proof.
   induction A as [a | | | A IHA | A IHA B IHB | A IHA B IHB | A IHA B IHB
@@ -169,7 +167,7 @@ Qed.
 Definition aside (ρ : label -> world) (y : label) : label -> option world :=
   fun z => if String.eqb z y then None else Some (ρ z).
 
-Lemma holds_aside : forall ρ y (i : item),
+Lemma holds_aside : forall ρ y (i : item atom),
   ~ mentions y i ->
   (holds beside_R beside_V (aside ρ y) i <-> holds R V ρ i).
 Proof.
@@ -185,7 +183,7 @@ End Beside.
 
 (** No placing of the labels makes the left of a derivable sequent true
     and its right false. *)
-Lemma g3_model : forall C (L Rt : list item), g3 C L Rt ->
+Lemma g3_model : forall C (L Rt : list (item atom)), g3 C L Rt ->
   forall world (R : world -> world -> Prop) (V : world -> atom -> Prop),
     frame R C -> stable R V ->
     forall ρ, Forall (holds R V ρ) L -> ~ Forall (fun i => ~ holds R V ρ i) Rt.
@@ -311,14 +309,14 @@ Qed.
 
 (** Every sequent the calculus of a system derives is valid in the
     system's frames. *)
-Theorem g3_sound : forall C (L Rt : list item), g3 C L Rt -> lvalid C L Rt.
+Theorem g3_sound : forall C (L Rt : list (item atom)), g3 C L Rt -> lvalid C L Rt.
 Proof.
   intros C L Rt D world R V HF HS ρ.
   exact (g3_model C L Rt D world R V HF HS ρ).
 Qed.
 
 (** The disjunction of a list of formulas, [⊥] for none. *)
-Fixpoint disjunction (Δ : list formula) : formula :=
+Fixpoint disjunction (Δ : list (formula atom)) : formula atom :=
   match Δ with
   | [] => bot
   | B :: Δ => vee B (disjunction Δ)
@@ -339,7 +337,7 @@ Qed.
 (** A labelled sequent at one label is an ordinary sequent: where it is
     valid, so is the sequent of its formulas. Stable forcing turns "not
     all false" into "one true" here, through the disjunction of [Δ]. *)
-Theorem lvalid_valid : forall C x (Γ Δ : list formula),
+Theorem lvalid_valid : forall C x (Γ Δ : list (formula atom)),
   lvalid C (map (lab x) Γ) (map (lab x) Δ) -> valid C Γ Δ.
 Proof.
   intros C x Γ Δ H world R V HF HS w HG.
@@ -353,7 +351,7 @@ Proof.
 Qed.
 
 (** A derivation of [x : Γ ⊢ x : Δ] shows [Γ ⊢ Δ] valid. *)
-Theorem g3_valid : forall C x (Γ Δ : list formula),
+Theorem g3_valid : forall C x (Γ Δ : list (formula atom)),
   g3 C (map (lab x) Γ) (map (lab x) Δ) -> valid C Γ Δ.
 Proof.
   intros C x Γ Δ D. exact (lvalid_valid C x Γ Δ (g3_sound C _ _ D)).

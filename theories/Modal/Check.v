@@ -21,14 +21,12 @@ Import ListNotations.
 Section Check.
 
 Context {atom : Type}.
-Local Notation formula := (formula atom).
-Local Notation item := (item atom).
 
 Variable atom_eqb : atom -> atom -> bool.
 Hypothesis atom_eqb_spec : forall a b, reflect (a = b) (atom_eqb a b).
 
 (** Whether two formulas are the same. *)
-Fixpoint formula_eqb (A B : formula) : bool :=
+Fixpoint formula_eqb (A B : formula atom) : bool :=
   match A, B with
   | var a, var b => atom_eqb a b
   | top, top => true
@@ -64,7 +62,7 @@ Proof.
 Qed.
 
 (** Whether two items are the same. *)
-Definition item_eqb (i j : item) : bool :=
+Definition item_eqb (i j : item atom) : bool :=
   match i, j with
   | lab x A, lab y B => String.eqb x y && formula_eqb A B
   | rel x y, rel u v => String.eqb x u && String.eqb y v
@@ -80,7 +78,7 @@ Proof.
 Qed.
 
 (** Whether the list [l] holds the item [i]. *)
-Definition mem (i : item) (l : list item) : bool := existsb (item_eqb i) l.
+Definition mem (i : item atom) (l : list (item atom)) : bool := existsb (item_eqb i) l.
 
 Lemma mem_in : forall i l, mem i l = true -> In i l.
 Proof.
@@ -89,14 +87,14 @@ Proof.
 Qed.
 
 (** Whether the item [i] mentions the label [y]. *)
-Definition mentionsb (y : label) (i : item) : bool :=
+Definition mentionsb (y : label) (i : item atom) : bool :=
   match i with
   | lab x _ => String.eqb x y
   | rel x z => String.eqb x y || String.eqb z y
   end.
 
 (** Whether no item of the sequent [L ⊢ Rt] mentions the label [y]. *)
-Definition freshb (y : label) (L Rt : list item) : bool :=
+Definition freshb (y : label) (L Rt : list (item atom)) : bool :=
   forallb (fun i => negb (mentionsb y i)) (L ++ Rt).
 
 Lemma freshb_fresh : forall y L Rt, freshb y L Rt = true -> fresh y L Rt.
@@ -117,29 +115,29 @@ Qed.
     parts, and after them the proofs of the rule's premises in the
     rule's order. *)
 Inductive proof : Type :=
-| Ax : label -> formula -> proof
+| Ax : label -> formula atom -> proof
     (** [x : A] on both sides *)
 | LBot : label -> proof
     (** [x : ⊥] on the left *)
 | RTop : label -> proof
     (** [x : ⊤] on the right *)
-| LNeg : label -> formula -> proof -> proof
-| RNeg : label -> formula -> proof -> proof
-| LAnd : label -> formula -> formula -> proof -> proof
-| RAnd : label -> formula -> formula -> proof -> proof -> proof
-| LOr : label -> formula -> formula -> proof -> proof -> proof
-| ROr : label -> formula -> formula -> proof -> proof
-| LImp : label -> formula -> formula -> proof -> proof -> proof
-| RImp : label -> formula -> formula -> proof -> proof
-| LIff : label -> formula -> formula -> proof -> proof -> proof
-| RIff : label -> formula -> formula -> proof -> proof -> proof
-| LBox : label -> label -> formula -> proof -> proof
+| LNeg : label -> formula atom -> proof -> proof
+| RNeg : label -> formula atom -> proof -> proof
+| LAnd : label -> formula atom -> formula atom -> proof -> proof
+| RAnd : label -> formula atom -> formula atom -> proof -> proof -> proof
+| LOr : label -> formula atom -> formula atom -> proof -> proof -> proof
+| ROr : label -> formula atom -> formula atom -> proof -> proof
+| LImp : label -> formula atom -> formula atom -> proof -> proof -> proof
+| RImp : label -> formula atom -> formula atom -> proof -> proof
+| LIff : label -> formula atom -> formula atom -> proof -> proof -> proof
+| RIff : label -> formula atom -> formula atom -> proof -> proof -> proof
+| LBox : label -> label -> formula atom -> proof -> proof
     (** [x : □A] along the edge [x R y] *)
-| RBox : label -> label -> formula -> proof -> proof
+| RBox : label -> label -> formula atom -> proof -> proof
     (** [x : □A] with the new label [y] *)
-| LDia : label -> label -> formula -> proof -> proof
+| LDia : label -> label -> formula atom -> proof -> proof
     (** [x : ◇A] with the new label [y] *)
-| RDia : label -> label -> formula -> proof -> proof
+| RDia : label -> label -> formula atom -> proof -> proof
     (** [x : ◇A] along the edge [x R y] *)
 | Ref : label -> proof -> proof
     (** adds [x R x] *)
@@ -154,7 +152,7 @@ Inductive proof : Type :=
 
 (** Whether [p] derives the sequent [L ⊢ Rt] in the calculus of the
     system of [C]. *)
-Fixpoint mcheck (C : conditions) (p : proof) (L Rt : list item) {struct p} : bool :=
+Fixpoint mcheck (C : conditions) (p : proof) (L Rt : list (item atom)) {struct p} : bool :=
   match p with
   | Ax x A => mem (lab x A) L && mem (lab x A) Rt
   | LBot x => mem (lab x bot) L
@@ -253,7 +251,7 @@ Qed.
 
 (** A term the checker accepts for a labelled sequent shows the sequent
     valid in the system's frames. *)
-Theorem labelled_soundness : forall C p (L Rt : list item),
+Theorem labelled_soundness : forall C p (L Rt : list (item atom)),
   mcheck C p L Rt = true -> lvalid C L Rt.
 Proof.
   intros C p L Rt H. exact (g3_sound C L Rt (mcheck_sound C p L Rt H)).
@@ -261,7 +259,7 @@ Qed.
 
 (** A term the checker accepts for [x : Γ ⊢ x : Δ] shows [Γ ⊢ Δ] valid
     in the system's frames. *)
-Theorem modal_soundness : forall C x p (Γ Δ : list formula),
+Theorem modal_soundness : forall C x p (Γ Δ : list (formula atom)),
   mcheck C p (map (lab x) Γ) (map (lab x) Δ) = true -> valid C Γ Δ.
 Proof.
   intros C x p Γ Δ H. exact (g3_valid C x Γ Δ (mcheck_sound C p _ _ H)).

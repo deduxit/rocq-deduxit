@@ -25,7 +25,6 @@ Import ListNotations.
 Section Kripke.
 
 Context {atom : Type}.
-Local Notation formula := (formula atom).
 
 Variable world : Type.
 Variable le : world -> world -> Prop.
@@ -42,7 +41,7 @@ Record model (R : rules) : Prop := {
 }.
 
 (** The world [w] forces the formula [A]. *)
-Fixpoint forces (w : world) (A : formula) : Prop :=
+Fixpoint forces (w : world) (A : formula atom) : Prop :=
   match A with
   | var a => val w a
   | bot => absurd w
@@ -111,11 +110,10 @@ Arguments forces {atom world} le val absurd w A.
 Section Classical.
 
 Context {atom : Type}.
-Local Notation formula := (formula atom).
 
 (** The truth value of a formula under an assignment [v] of the atoms,
     [⊥] false. *)
-Fixpoint eval (v : atom -> bool) (A : formula) : bool :=
+Fixpoint eval (v : atom -> bool) (A : formula atom) : bool :=
   match A with
   | var a => v a
   | bot => false

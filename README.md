@@ -318,8 +318,9 @@ a first-order sequent, and an exhaustive search.
 Nor does it cover the ordered (cyclic) calculus, whose sequents keep
 their order. It proves no cut elimination: balance and the counts are
 stated for the calculi without cut, which are the ones deduxit refutes
-in. On Rocq 9.2 and 9.3 it compiles with deprecation warnings
-(`Notation` for an abbreviation, whose replacement 9.0 and 9.1 lack).
+in. On Rocq 9.2 and 9.3 it compiles with one warning, `register-all`
+(the terms are nested in lists, and the scheme 9.2 asks for does not
+exist on 9.0 and 9.1).
 
 ## The certificates' interface
 
@@ -372,7 +373,7 @@ Soundness.` becomes `From Deduxit.Linear Require Import Soundness.`.
   never copied.
 
 `nix flake check` builds the library with every Rocq it admits, each
-default warning an error but two of Rocq 9.2 that 9.0 and 9.1 cannot
+default warning an error but one of Rocq 9.2 that 9.0 and 9.1 cannot
 meet, compiles every certificate under `tests/`,
 README's examples and the bridges, and requires every theorem's
 assumptions to be closed under the global context. deduxit's own flake

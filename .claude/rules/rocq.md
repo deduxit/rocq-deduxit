@@ -35,10 +35,12 @@ them against this library, taken as a pinned input. Paths of the form
   9.2.0) are tested by the opam job alone. `modules/rocq-deduxit.nix`
   checks each admitted version through nixpkgs' `rocqPackages_9_N`, and a
   new Rocq is a line of `admitted`, a raised bound and an entry of
-  `.github/workflows/opam.yml`'s matrix together. On 9.2
-  and 9.3 the theories compile with the deprecation of `Notation` for an
-  abbreviation; its replacement `Abbreviation` exists only from 9.2, so
-  it waits until 9.0 and 9.1 are dropped. `scripts/opam-install.sh`
+  `.github/workflows/opam.yml`'s matrix together. No file declares an
+  abbreviation: `Notation NAME := …` for one is deprecated from 9.2, and
+  its replacement `Abbreviation` does not exist on 9.0 and 9.1, so each
+  is written out where it was used (a section's `Let` would not do: it is
+  discharged as a `let` in front of every statement that uses it).
+  `scripts/opam-install.sh`
   installs the package as opam users do, into a fresh switch per
   version, outside the flake's checks since it needs the network;
   `opam.yml` runs it on GitHub's runners for CI and the release.
@@ -49,12 +51,10 @@ them against this library, taken as a pinned input. Paths of the form
   package keeps Rocq's defaults, since an opam user's `make` with a
   later Rocq may warn where the admitted ones do not. The selector
   cannot go into `_RocqProject`: `rocq makefile` splits an `-arg` value
-  at its spaces. Two warnings of 9.2 stay plain warnings, by name, since
-  what they ask for does not exist on 9.0 and 9.1:
-  `notation-for-abbreviation` (the abbreviations, above) and
-  `register-all` (`Terms.v`'s `term` is nested in `list`, for which 9.2
-  wants `Scheme All`); each leaves the list when 9.0 and 9.1 are
-  dropped, or the abbreviations are written out. Rocq ignores an
+  at its spaces. One warning of 9.2 stays a plain warning, by name,
+  since what it asks for does not exist on 9.0 and 9.1: `register-all`
+  (`Terms.v`'s `term` is nested in `list`, for which 9.2 wants `Scheme
+  All`); it leaves the list when 9.0 and 9.1 are dropped. Rocq ignores an
   unknown warning name in `-w` silently, so a name there is checked by
   a planted warning, not by the build.
 - **The certificates' interface** is `tests/Interface/`, a file per
