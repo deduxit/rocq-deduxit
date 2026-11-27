@@ -57,6 +57,17 @@ them against this library, taken as a pinned input. Paths of the form
   All`); it leaves the list when 9.0 and 9.1 are dropped. Rocq ignores an
   unknown warning name in `-w` silently, so a name there is checked by
   a planted warning, not by the build.
+- **The structural equalities keep `&&`**, though `vm_compute`
+  evaluates both sides (unlike `allb`, `anyb` in
+  `FirstOrderClassical.v`): on 2026-11-27 a variant with `if … then …
+  else false` compiled deduxit's 71 snapshot certificates and
+  `tests/FromCommand.v` in the same time (18.75 s against 18.81 s), and
+  won only on a synthetic `take_all` over 200 formulas sharing a large
+  second operand (4.65 s against 0.49 s). A certificate of that shape is
+  the reason to revisit it. A certificate's term restates each `⊗`
+  node's formulas, so its text grows quadratically with nesting
+  (`!A ⊢ A^⊗256`: 570 KB, 4.8 s; with the formulas bound by `let` inside
+  the term, 27 KB, 1.3 s); binding them is deduxit's exporter's change.
 - **Proofs name what they introduce** (`-mangle-names M_` in the
   check's build: Rocq renames every name it generates, so a proof that
   uses one fails). An `induction` or `destruct` on a statement's

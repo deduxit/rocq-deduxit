@@ -87,7 +87,7 @@
           };
           propagatedBuildInputs = [ rocqPackages.stdlib ];
           meta = {
-            description = "The Rocq library of deduxit: linear logic, proof terms, their checker and its soundness, Kripke models of intuitionistic logic, and the labelled calculus of modal logic";
+            description = "The Rocq library of deduxit: intuitionistic, minimal and classical logic with their models, linear logic with its proof terms and checkers, and modal logic with its labelled calculus";
             homepage = "https://github.com/deduxit/rocq-deduxit";
             license = lib.licenses.eupl12;
           };

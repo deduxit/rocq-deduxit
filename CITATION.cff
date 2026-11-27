@@ -6,24 +6,24 @@ message: "If you use rocq-deduxit in your work, please cite it as below."
 type: software
 title: rocq-deduxit
 abstract: >-
-  The Rocq library of deduxit, a collection of logic suites: the
-  one-sided sequent
-  calculus of linear logic with Mix, weakening and cut as parameters, the
-  two-sided calculus of intuitionistic linear logic and its affine
-  variant, and their first-order versions, and the calculi of
-  intuitionistic and minimal logic, as inductives; deduxit's proof
-  terms as datatypes, their checkers as functions and the theorems that a
-  term a checker accepts proves its sequent, against which the
-  certificates deduxit writes are checked; the invariants every
-  derivation keeps, which give certificates that a sequent is not
-  derivable; Kripke models of intuitionistic and minimal logic, with a
-  checker of finite countermodels that proves a sequent underivable;
-  first-order intuitionistic, minimal and classical logic, with LJ's and
-  LM's soundness for Kripke models with growing domains, LK's for finite
-  structures, and checkers of both kinds of countermodel; the
-  labelled sequent calculus of the modal systems from K to S5, its
-  soundness for Kripke models, and checkers of labelled proofs and of
-  finite countermodels; and the reduction of Mix to ?(⊥⊗⊥). Its definitions,
+  The Rocq library of deduxit, a collection of logic suites, against
+  which the certificates deduxit writes are checked. For ordinary logic:
+  the calculi of intuitionistic and minimal logic as inductives, their
+  Kripke models and a checker of finite countermodels that proves a
+  sequent underivable; and first-order intuitionistic, minimal and
+  classical logic, with LJ's and LM's soundness for Kripke models with
+  growing domains, LK's for finite structures, and checkers of both
+  kinds of countermodel. For linear logic: the one-sided sequent
+  calculus with Mix, weakening and cut as parameters, the two-sided
+  calculus of intuitionistic linear logic and its affine variant, and
+  their first-order versions, as inductives; deduxit's proof terms as
+  datatypes, their checkers as functions and the theorems that a term a
+  checker accepts proves its sequent; the invariants every derivation
+  keeps, which give certificates that a sequent is not derivable; and
+  the reduction of Mix to ?(⊥⊗⊥). For modal logic: the labelled sequent
+  calculus of the systems from K to S5, its soundness for Kripke
+  models, and checkers of labelled proofs and of finite countermodels.
+  Its definitions,
   proofs, tests and documentation were written with substantial AI
   assistance, by Anthropic's Claude models in Claude Code, in steps the
   author planned, directed and accepted, and the author is responsible
@@ -52,11 +52,11 @@ references:
     repository-code: "https://github.com/deduxit/deduxit"
     doi: 10.5281/zenodo.23448588
 keywords:
+  - intuitionistic logic
+  - first-order logic
+  - Kripke semantics
   - linear logic
   - intuitionistic linear logic
-  - intuitionistic logic
-  - Kripke semantics
-  - first-order logic
   - modal logic
   - sequent calculus
   - Rocq

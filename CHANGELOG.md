@@ -38,6 +38,9 @@ against 0.4.0. There is no 0.7.0: deduxit 0.7.0's compile against 0.6.0.
 
 ### Changed
 
+- README, the opam description, `CITATION.cff` and the Nix package's
+  description name the suites in the order ordinary logic, linear logic,
+  modal logic, and the opam description names modal logic too.
 - What the checkers share is proved once, in the modules above. Every
   name the library had keeps its statement: `Check.remove_one`,
   `IntuitionisticCheck.pick`, `KripkeCheck.mem`, `Soundness.diff_count`,

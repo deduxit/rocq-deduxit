@@ -6,23 +6,23 @@
 
 `rocq-deduxit` is the Rocq library that checks the certificates
 [deduxit](https://github.com/deduxit/deduxit) writes. deduxit proves
-and refutes sequents of linear, intuitionistic, classical and modal
-logic. A certificate is a Rocq file: a lemma that states that a sequent
+and refutes sequents of ordinary logic (classical, intuitionistic and
+minimal), of linear logic and of modal logic. A certificate is a Rocq file: a lemma that states that a sequent
 is derivable, or that it is not, with a proof by computation. Compile it
 against this library, and Rocq has checked deduxit's answer.
 
-You can also use the library on its own: it defines the sequent
-calculi of linear logic, those of intuitionistic and minimal logic
-with their Kripke models, LJ, LM and LK at first order with Kripke
-models with growing domains and finite structures, and the labelled
-calculus of the modal
-systems K to S5, as inductive types, so you can state and prove your
-own theorems about derivability.
+You can also use the library on its own. It defines as inductive
+types the sequent calculi of intuitionistic and minimal logic with
+their Kripke models, and LJ, LM and LK at first order with Kripke
+models with growing domains and finite structures; the calculi of
+linear logic; and the labelled calculus of the modal systems K to S5.
+So you can state and prove your own theorems about derivability.
 
 It needs Rocq 9.0, 9.1, 9.2 or 9.3 and its standard library, nothing
 else. Its logical root is `Deduxit`, with a namespace per calculus:
-linear logic is `Deduxit.Linear`, intuitionistic and minimal logic
-`Deduxit.Intuitionistic`, modal logic `Deduxit.Modal`.
+ordinary logic is `Deduxit.Intuitionistic` (classical logic at first
+order included), linear logic `Deduxit.Linear`, modal logic
+`Deduxit.Modal`.
 
 ## Install
 
@@ -89,28 +89,32 @@ The lemma says that the sequent `⊢ A⊥, B⊥, A, B` is derivable in linear
 logic with Mix. The proof gives deduxit's proof term, `Mix (Ax "A") (Ax
 "B")`, to a soundness theorem, which turns it into a derivation once
 `vm_compute` has run the library's checker on it. deduxit writes such
-certificates for Mix, affine and intuitionistic logic and for sequents
-with quantifiers; for classical linear logic, add `--kernel deduxit`
-(its default there is NanoYalla). For a sequent that is not derivable,
-the lemma states `~ ll …` and the proof applies a refutation theorem
-instead.
+certificates for Mix, affine and intuitionistic linear logic and for
+sequents with quantifiers; for classical linear logic, add `--kernel
+deduxit` (its default there is NanoYalla). For a sequent that is not
+derivable, the lemma states `~ ll …` and the proof applies a refutation
+theorem instead. It writes them in the same form for a countermodel of
+ordinary logic and for a proof or a countermodel of modal logic.
 
 To trust a certificate, read its statement against the files it rests
 on. The checker and its proof appear only in the proof, so you need
 not read them:
 
-- `Formulas.v` and `Calculus.v` for a one-sided sequent;
-- `Intuitionistic.v` for a two-sided one;
-- `Terms.v`, `FirstOrderFormulas.v`, `FirstOrderCalculus.v` and
-  `Calculus.v` (for its `rules`) for a first-order one-sided sequent;
-- `Terms.v`, `FirstOrderIntuitionistic.v` and `Intuitionistic.v` (for
-  its `irules`) for a first-order two-sided one;
 - `Intuitionistic/Formulas.v` and `Intuitionistic/Calculus.v` for a
   sequent of intuitionistic or minimal logic;
-- `Terms.v`, `Intuitionistic/FirstOrderFormulas.v`,
+- `Linear/Terms.v`, `Intuitionistic/FirstOrderFormulas.v`,
   `Intuitionistic/FirstOrderCalculus.v` and `Intuitionistic/Calculus.v`
   (for its `rules`) for a first-order sequent of intuitionistic, minimal
   or classical logic;
+- `Linear/Formulas.v` and `Linear/Calculus.v` for a one-sided sequent of
+  linear logic;
+- `Linear/Intuitionistic.v` for a two-sided one;
+- `Linear/Terms.v`, `Linear/FirstOrderFormulas.v`,
+  `Linear/FirstOrderCalculus.v` and `Linear/Calculus.v` (for its
+  `rules`) for a first-order one-sided sequent;
+- `Linear/Terms.v`, `Linear/FirstOrderIntuitionistic.v` and
+  `Linear/Intuitionistic.v` (for its `irules`) for a first-order
+  two-sided one;
 - `Modal/Formulas.v` and `Modal/Kripke.v` for a sequent of modal logic,
   and `Modal/Labelled.v` too for a labelled one.
 
@@ -120,48 +124,6 @@ checks with its virtual machine, so a certificate trusts that machine as
 well as the kernel.
 
 ## Prove with the library
-
-`From Deduxit.Linear Require Import Soundness.` gives the one-sided
-calculus `ll`, its rules, the proof terms and the checker. Prove a
-sequent by its rules, or let the checker do it:
-
-```coq
-From Stdlib Require Import List String Permutation.
-From Deduxit.Linear Require Import Soundness Refutations.
-Import ListNotations.
-Open Scope string_scope.
-
-(* By the rules of the calculus. *)
-Lemma excluded_middle : ll (atom := string) classical [parr (var "A") (covar "A")].
-Proof. apply parr_r. eapply ex_r; [apply ax_r | apply perm_swap]. Qed.
-
-(* By the checker, from a proof term. *)
-Lemma excluded_middle' : ll classical [parr (var "A") (covar "A")].
-Proof.
-  apply (soundness_classical String.eqb String.eqb_spec
-    (Par (var "A") (covar "A") (Ax "A"))).
-  vm_compute. reflexivity.
-Qed.
-
-(* Not derivable: one more A than ~A. *)
-Lemma no_contraction : ~ ll (atom := string) classical [covar "A"; tens (var "A") (var "A")].
-Proof. apply (unbalanced_refutation String.eqb "A" _). vm_compute. reflexivity. Qed.
-```
-
-The modules of `Deduxit.Linear`:
-
-- `Soundness`: the one-sided calculus with Mix, weakening and cut as
-  options, its checker and `soundness`;
-- `IntuitionisticCheck`: the two-sided calculus of intuitionistic linear
-  logic and its affine variant, its checker and `soundness_ill`;
-- `FirstOrderSoundness` and `FirstOrderIntuitionisticCheck`: the same
-  with quantifiers. They reuse the propositional names, so import one
-  development and qualify the other's names;
-- `Refutations`, `Weights` and `FirstOrderWeights`: theorems that a
-  sequent is not derivable, from the classical reading, an atom's
-  balance, the count equation and weighted counts;
-- `Mix`: a derivation with Mix becomes one of the same sequent with
-  `?(⊥ ⊗ ⊥)` added, without Mix.
 
 `From Deduxit.Intuitionistic Require Import KripkeCheck.` gives the
 calculus `lj` of intuitionistic logic (LJ, `intuitionistic`) and of
@@ -234,6 +196,48 @@ Proof.
 Qed.
 ```
 
+`From Deduxit.Linear Require Import Soundness.` gives the one-sided
+calculus `ll`, its rules, the proof terms and the checker. Prove a
+sequent by its rules, or let the checker do it:
+
+```coq
+From Stdlib Require Import List String Permutation.
+From Deduxit.Linear Require Import Soundness Refutations.
+Import ListNotations.
+Open Scope string_scope.
+
+(* By the rules of the calculus. *)
+Lemma excluded_middle : ll (atom := string) classical [parr (var "A") (covar "A")].
+Proof. apply parr_r. eapply ex_r; [apply ax_r | apply perm_swap]. Qed.
+
+(* By the checker, from a proof term. *)
+Lemma excluded_middle' : ll classical [parr (var "A") (covar "A")].
+Proof.
+  apply (soundness_classical String.eqb String.eqb_spec
+    (Par (var "A") (covar "A") (Ax "A"))).
+  vm_compute. reflexivity.
+Qed.
+
+(* Not derivable: one more A than ~A. *)
+Lemma no_contraction : ~ ll (atom := string) classical [covar "A"; tens (var "A") (var "A")].
+Proof. apply (unbalanced_refutation String.eqb "A" _). vm_compute. reflexivity. Qed.
+```
+
+The modules of `Deduxit.Linear`:
+
+- `Soundness`: the one-sided calculus with Mix, weakening and cut as
+  options, its checker and `soundness`;
+- `IntuitionisticCheck`: the two-sided calculus of intuitionistic linear
+  logic and its affine variant, its checker and `soundness_ill`;
+- `FirstOrderSoundness` and `FirstOrderIntuitionisticCheck`: the same
+  with quantifiers. They reuse the propositional names, so import one
+  development and qualify the other's names;
+- `Refutations`, `Weights` and `FirstOrderWeights`: theorems that a
+  sequent is not derivable, from the classical reading, an atom's
+  balance, the count equation and weighted counts;
+- `Mix`: a derivation with Mix becomes one of the same sequent with
+  `?(⊥ ⊗ ⊥)` added, without Mix.
+
 `From Deduxit.Modal Require Import Check Countermodel.` gives modal
 logic: the systems from K to S5 (`System.K`, `System.S4`, …, each a set
 of conditions on the frames), validity in a system's Kripke models
@@ -297,19 +301,19 @@ The documentation of every module is at
 
 ## What it covers
 
-Every certificate deduxit 0.8.0 writes for `--kernel deduxit`, for a
-countermodel and for modal logic, compiles against this library. That covers
-proofs in classical, Mix, affine and
-intuitionistic linear logic and its affine variant, with or without cut,
-propositional and first-order. It also covers refutations by the
+Every certificate deduxit 0.8.0 writes for a countermodel, for
+`--kernel deduxit` and for modal logic compiles against this library.
+In ordinary logic that covers Kripke countermodels of intuitionistic
+and minimal logic, and at first order finite structures in classical
+logic and finite Kripke models with growing domains in intuitionistic
+and minimal logic. In linear logic it covers proofs in classical, Mix,
+affine and intuitionistic linear logic and its affine variant, with or
+without cut, propositional and first-order, and refutations by the
 classical reading, an atom's balance, the count equation and weighted
-counts (a count of one sign under an exponential, a Horn program's state
-equation), one-sided and two-sided; weighted counts also for
-first-order sequents; Kripke countermodels of intuitionistic and
-minimal logic; first-order countermodels, finite structures in
-classical logic and finite Kripke models with growing domains in
-intuitionistic and minimal logic; and, in the modal systems K to S5,
-labelled proofs and finite countermodels.
+counts (a count of one sign under an exponential, a Horn program's
+state equation), one-sided and two-sided, weighted counts also for
+first-order sequents. In the modal systems K to S5 it covers labelled
+proofs and finite countermodels.
 
 The library has no theorem for deduxit's other refutations, so deduxit
 writes no certificate for them: a saturated set of the inverse method,
@@ -332,14 +336,14 @@ at the type a certificate needs, and the flake's check compiles it.
 
 | prelude imports | theorems | what the statement and term are written in |
 |---|---|---|
+| `Deduxit.Intuitionistic.KripkeCheck` | `kripke_refutation` | `lj`, `intuitionistic`, `minimal`, the formulas `var`, `bot`, `wedge`, `vee`, `imp`, `top`, `neg`, `equiv`, the record `{\| later; atoms; absurd \|}` |
+| `Deduxit.Intuitionistic.FirstOrderCheck` | `fo_classical_refutation`, `fo_kripke_refutation` | `lj`, `lk`, `{\| Calculus.explosion; Calculus.cut \|}`, `bound`, `tapp`, the formulas of the row above with `fall` and `fex`, `{\| size; functions; predicates \|}`, `{\| later; sizes; tables; facts; absurd \|}` |
 | `Deduxit.Linear.Soundness` | `soundness`, `soundness_classical`, `soundness_mix`, `soundness_affine` | `ll`, `classical`, the record `{\| mix; weakening; cut \|}`, the formulas `var` to `wn`, the proof terms `Ax` to `Cut` with `Left` and `Right` |
 | `Deduxit.Linear.IntuitionisticCheck` | `soundness_ill` | `ill`, `intuitionistic`, `affine`, `{\| iweakening; icut \|}`, the formulas `ivar` to `ioc`, the terms `IAx` to `ICut` |
 | `Deduxit.Linear.FirstOrderSoundness`, with `Calculus` required | `soundness`, `soundness_classical`, `soundness_mix`, `soundness_affine` | `ll`, `Calculus.classical`, `{\| Calculus.mix; Calculus.weakening; Calculus.cut \|}`, `bound`, `eigen`, `tapp`, the formulas with `fall` and `fex`, the terms with `Forall` and `Exists` |
 | `Deduxit.Linear.FirstOrderIntuitionisticCheck`, with `Intuitionistic` required | `soundness_ill` | `ill`, `Intuitionistic.intuitionistic`, `Intuitionistic.affine`, `{\| Intuitionistic.iweakening; Intuitionistic.icut \|}`, `bound`, `eigen`, `tapp`, the formulas with `iall` and `iex`, the terms with `IAllR`, `IExL`, `IExR`, `IAllL` |
-| `Deduxit.Linear.Weights` | `classical_refutation`, `unbalanced_refutation`, `equation_refutation`, `weighted_refutation`, `affine_refutation`, and each with `i` for two-sided sequents | `weight_of` and the names of the first two rows |
+| `Deduxit.Linear.Weights` | `classical_refutation`, `unbalanced_refutation`, `equation_refutation`, `weighted_refutation`, `affine_refutation`, and each with `i` for two-sided sequents | `weight_of` and the names of the first two rows of linear logic |
 | `Deduxit.Linear.FirstOrderCalculus`, `FirstOrderIntuitionistic` and `FirstOrderWeights`, with `Calculus`, `Intuitionistic` and `TermsCheck` required | `FirstOrderWeights.weighted_refutation`, `FirstOrderWeights.iweighted_refutation` | `TermsCheck.terms_eqb` and the first-order names above |
-| `Deduxit.Intuitionistic.KripkeCheck` | `kripke_refutation` | `lj`, `intuitionistic`, `minimal`, the formulas `var`, `bot`, `wedge`, `vee`, `imp`, `top`, `neg`, `equiv`, the record `{\| later; atoms; absurd \|}` |
-| `Deduxit.Intuitionistic.FirstOrderCheck` | `fo_classical_refutation`, `fo_kripke_refutation` | `lj`, `lk`, `{\| Calculus.explosion; Calculus.cut \|}`, `bound`, `tapp`, the formulas of the row above with `fall` and `fex`, `{\| size; functions; predicates \|}`, `{\| later; sizes; tables; facts; absurd \|}` |
 | `Deduxit.Modal.Check` | `modal_soundness`, `labelled_soundness` | `valid`, `lvalid`, `lab`, `rel`, the record `{\| serial; reflexive; symmetric; transitive; euclidean \|}`, the formulas `var` to `dia`, the terms `Ax` to `Eucl` |
 | `Deduxit.Modal.Countermodel` | `modal_refutation` | `valid`, the conditions' record, the formulas, `{\| arrows; atoms \|}` |
 
@@ -359,13 +363,14 @@ Soundness.` becomes `From Deduxit.Linear Require Import Soundness.`.
 
 ## The repository
 
-- `theories/Linear/`, `theories/Intuitionistic/` and `theories/Modal/`:
-  the library, `Deduxit.Linear`, `Deduxit.Intuitionistic` and
+- `theories/Intuitionistic/`, `theories/Linear/` and `theories/Modal/`:
+  the library, `Deduxit.Intuitionistic`, `Deduxit.Linear` and
   `Deduxit.Modal`, and `theories/Base/`, `Deduxit.Base`, what two of them
   share.
 - `tests/`: certificates compiled against the installed library
-  (`Deduxit.Linear.Tests`, `Deduxit.Intuitionistic.Tests` for
-  `tests/Intuitionistic/` and `Deduxit.Modal.Tests` for `tests/Modal/`),
+  (`Deduxit.Intuitionistic.Tests` for `tests/Intuitionistic/`,
+  `Deduxit.Linear.Tests` for the others at the top and
+  `Deduxit.Modal.Tests` for `tests/Modal/`),
   and the certificates' interface (`tests/Interface/`).
 - `bridges/`: proofs that the calculi derive the same sequents as
   NanoYalla's `nanoll.v` and Yalla's `nanoill.v`

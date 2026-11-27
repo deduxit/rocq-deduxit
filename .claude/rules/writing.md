@@ -59,6 +59,12 @@ It does not apply to `.claude/` and CLAUDE.md (notes for sessions).
      - `explicit-instruction-sequence-builder`: the order of a lesson;
      - `ai-feedback-design-principles`: the hints and messages the
        page gives.
+   - **No suite is the main one** (the author, 2026-11-26). Text names
+     the suites evenly and gives none more room or a place of honour.
+     Where an order is needed, use deduxit's page's: ordinary logic
+     (`Deduxit.Intuitionistic`), linear logic (`Deduxit.Linear`), modal
+     logic (`Deduxit.Modal`). That linear logic came first belongs to the
+     changelog.
    - **API changes go to the author.** If changing the library's API,
      the command or the page would let people get what they want more
      easily, without real harm to other uses, don't make the change.
