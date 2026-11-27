@@ -31,7 +31,7 @@ Import ListNotations.
     [e], and [None] is failure. Local to this file. *)
 Local Notation "'let*' x ':=' e 'in' k" :=
   (match e with Some x => k | None => None end)
-  (at level 200, x pattern, e at level 100, k at level 200, right associativity).
+  (at level 10, x pattern, e at level 100, k at level 200).
 
 Section Equality.
 
