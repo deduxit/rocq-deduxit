@@ -42,9 +42,6 @@ Record finite_model : Type := FiniteModel {
 Variable atom_eqb : atom -> atom -> bool.
 Variable M : finite_model.
 
-(** [v] is in [l]. *)
-Definition mem (v : nat) (l : list nat) : bool := Lists.mem v l.
-
 (** The number of worlds. *)
 Definition size : nat := length (later M).
 
@@ -61,7 +58,7 @@ Definition atoms_at (w : nat) : list atom := nth w (atoms M) [].
 Definition forces_atom (w : nat) (a : atom) : bool := existsb (atom_eqb a) (atoms_at w).
 
 (** [w] forces [⊥]. *)
-Definition absurd_at (w : nat) : bool := mem w (absurd M).
+Definition absurd_at (w : nat) : bool := Lists.mem w (absurd M).
 
 (** The model is one of the logic of [R]: the relation is transitive
     and names worlds only, a later world forces every atom and every
@@ -70,7 +67,7 @@ Definition well_formed (R : rules) : bool :=
   forallb (fun w =>
     forallb (fun v =>
       (v <? size)
-      && forallb (fun u => mem u (ups w)) (ups v)
+      && forallb (fun u => Lists.mem u (ups w)) (ups v)
       && forallb (forces_atom v) (atoms_at w)
       && implb (absurd_at w) (absurd_at v))
     (ups w))
@@ -103,15 +100,11 @@ Definition refutes (R : rules) (w : nat) (G : list (formula atom)) (C : formula 
 (** The model read as a Kripke model over the natural numbers: a number
     past the worlds is later only than itself and forces no atom.
     [le w v]: [v] is later than [w]. *)
-Local Definition le (w v : nat) : Prop := mem v (ups w) = true.
+Local Definition le (w v : nat) : Prop := Lists.mem v (ups w) = true.
 (** [w] forces the atom [a]. *)
 Local Definition val (w : nat) (a : atom) : Prop := forces_atom w a = true.
 (** [w] forces [⊥]. *)
 Local Definition abs (w : nat) : Prop := absurd_at w = true.
-
-(** [mem] tests membership. *)
-Lemma mem_iff : forall v l, mem v l = true <-> In v l.
-Proof. exact Lists.mem_iff. Qed.
 
 (** A number past the worlds has itself alone above it. *)
 Lemma ups_past : forall w, size <= w -> ups w = [w].
@@ -143,7 +136,7 @@ Proof.
   repeat rewrite andb_true_iff in H. destruct H as [[[Hsize Htrans] Hatoms] Habs].
   repeat split.
   - apply Nat.ltb_lt. exact Hsize.
-  - intros u Hu. rewrite forallb_forall in Htrans. apply mem_iff. exact (Htrans u Hu).
+  - intros u Hu. rewrite forallb_forall in Htrans. apply Lists.mem_iff. exact (Htrans u Hu).
   - intros a Ha. rewrite forallb_forall in Hatoms. exact (Hatoms a Ha).
   - intros Hw''. rewrite Hw'' in Habs. exact Habs.
 Qed.
@@ -152,7 +145,7 @@ Qed.
 Lemma le_past : forall w v, size <= w -> le w v -> v = w.
 Proof.
   intros w v Hw H. unfold le in H. rewrite ups_past in H by exact Hw.
-  apply mem_iff in H. destruct H as [E | []]. symmetry. exact E.
+  apply Lists.mem_iff in H. destruct H as [E | []]. symmetry. exact E.
 Qed.
 
 Hypothesis atom_eqb_spec : forall a b, reflect (a = b) (atom_eqb a b).
@@ -161,22 +154,22 @@ Hypothesis atom_eqb_spec : forall a b, reflect (a = b) (atom_eqb a b).
 Lemma well_formed_model : forall R, well_formed R = true -> model nat le val abs R.
 Proof.
   intros R H. split.
-  - intros w. unfold le, ups. apply mem_iff. left. reflexivity.
+  - intros w. unfold le, ups. apply Lists.mem_iff. left. reflexivity.
   - intros u v w Huv Hvw. destruct (Nat.lt_ge_cases u size) as [Hu | Hu].
-    + unfold le in *. apply mem_iff in Huv, Hvw. apply mem_iff.
+    + unfold le in *. apply Lists.mem_iff in Huv, Hvw. apply Lists.mem_iff.
       exact (proj1 (proj2 (well_formed_at R H u v Hu Huv)) w Hvw).
     + apply le_past in Huv; [subst; exact Hvw | exact Hu].
   - intros w v a Hle Ha. destruct (Nat.lt_ge_cases w size) as [Hw | Hw].
-    + unfold le, val, forces_atom in *. apply mem_iff in Hle.
+    + unfold le, val, forces_atom in *. apply Lists.mem_iff in Hle.
       apply existsb_exists in Ha as [b [Hb E]].
       destruct (atom_eqb_spec a b); [subst | discriminate].
       exact (proj1 (proj2 (proj2 (well_formed_at R H w v Hw Hle))) b Hb).
     + apply le_past in Hle; [subst; exact Ha | exact Hw].
   - intros w v Hle Ha. destruct (Nat.lt_ge_cases w size) as [Hw | Hw].
-    + unfold le, abs in *. apply mem_iff in Hle.
+    + unfold le, abs in *. apply Lists.mem_iff in Hle.
       exact (proj2 (proj2 (proj2 (well_formed_at R H w v Hw Hle))) Ha).
     + apply le_past in Hle; [subst; exact Ha | exact Hw].
-  - intros Hexp w Hw. unfold abs, absurd_at, mem, Lists.mem in Hw.
+  - intros Hexp w Hw. unfold abs, absurd_at, Lists.mem in Hw.
     apply andb_true_iff in H as [_ H]. rewrite Hexp in H. cbn in H.
     apply Nat.eqb_eq, length_zero_iff_nil in H. rewrite H in Hw. discriminate.
 Qed.
@@ -192,13 +185,13 @@ Proof.
   - rewrite andb_true_iff, IHA, IHB by exact Hw. reflexivity.
   - rewrite orb_true_iff, IHA, IHB by exact Hw. reflexivity.
   - rewrite forallb_forall. split.
-    + intros Himp v Hle HA. unfold le in Hle. apply mem_iff in Hle.
+    + intros Himp v Hle HA. unfold le in Hle. apply Lists.mem_iff in Hle.
       pose proof (proj1 (well_formed_at R H w v Hw Hle)) as Hv.
       specialize (Himp v Hle). apply IHB; [exact Hv |].
       apply IHA in HA; [| exact Hv]. rewrite HA in Himp. exact Himp.
     + intros Himp v Hv. pose proof (proj1 (well_formed_at R H w v Hw Hv)) as Hs.
       destruct (nth v (forced A) false) eqn:E; [| reflexivity]. cbn.
-      apply IHB; [exact Hs |]. apply Himp; [unfold le; apply mem_iff; exact Hv |].
+      apply IHB; [exact Hs |]. apply Himp; [unfold le; apply Lists.mem_iff; exact Hv |].
       apply IHA; [exact Hs | exact E].
 Qed.
 

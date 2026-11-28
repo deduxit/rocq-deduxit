@@ -41,16 +41,18 @@ against 0.4.0. There is no 0.7.0: deduxit 0.7.0's compile against 0.6.0.
 - **Renamed: one name and shape per notion in every namespace.** A
   Boolean equality test `X_eqb` has `X_eqb_spec : reflect (a = b) (X_eqb
   a b)`, as `Linear.Formulas.formula_eqb_spec` had; a membership test
-  `m` has `m_iff : m v l = true <-> In v l`; LK's cut is LJ's name with
-  a `k`, as its other rules are. No certificate uses any of these names,
+  `m` has `m_iff : m v l = true <-> In v l`; membership of a number is
+  `Base.Lists.mem` everywhere, with its one lemma; no lemma hides a
+  standard library name; LK's cut is LJ's name with a `k`, as its other
+  rules are. No certificate uses any of these names,
   so the certificates' interface is unchanged. A proof that names one of
   them changes:
 
   | before | now |
   |---|---|
   | `Base.Lists.mem_In` | `Base.Lists.mem_iff` |
-  | `Intuitionistic.KripkeCheck.mem_In` | `Intuitionistic.KripkeCheck.mem_iff` |
-  | `Intuitionistic.FirstOrderCheck.kmem_In` | `Intuitionistic.FirstOrderCheck.kmem_iff` |
+  | `Intuitionistic.KripkeCheck.mem` and `mem_In` | `Base.Lists.mem` and `Base.Lists.mem_iff` |
+  | `Intuitionistic.FirstOrderCheck.kmem` and `kmem_In` | `Base.Lists.mem` and `Base.Lists.mem_iff` |
   | `Intuitionistic.FirstOrderCheck.nats_eqb_eq` (an iff) | `Intuitionistic.FirstOrderCheck.nats_eqb_spec` (`reflect`) |
   | `Intuitionistic.FirstOrderClassical.existsb_false_in` | `Intuitionistic.FirstOrderClassical.existsb_false` |
   | `Intuitionistic.FirstOrderCalculus.kcut` (a rule of `lk`) | `Intuitionistic.FirstOrderCalculus.kcut_r` |
@@ -58,7 +60,9 @@ against 0.4.0. There is no 0.7.0: deduxit 0.7.0's compile against 0.6.0.
   | `Modal.Check.formula_eqb_eq` (one way) | `Modal.Check.formula_eqb_spec` (`reflect`) |
   | `Modal.Check.item_eqb_eq` (one way) | `Modal.Check.item_eqb_spec` (`reflect`) |
   | `Modal.Check.mem_in` (one way) | `Modal.Check.mem_iff` |
-  | `Modal.Countermodel.among_in` (one way) | `Modal.Countermodel.among_iff` |
+  | `Modal.Countermodel.among` and `among_in` (one way) | `Base.Lists.mem` and `Base.Lists.mem_iff` |
+  | `Modal.Countermodel.reflect_iff` (hid `Bool.reflect_iff`) | `Modal.Countermodel.iff_of_eqb` |
+  | `Linear.TermsCheck.term_eqb_iff` | `Linear.TermsCheck.term_eqb_spec` (`reflect`) |
 
 - README, the opam description, `CITATION.cff` and the Nix package's
   description name the suites in the order ordinary logic, linear logic,

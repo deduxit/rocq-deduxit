@@ -3,11 +3,10 @@
 
 (** * Lists, as the checkers of several calculi use them
 
-    Membership of a number, and facts of [forallb] and [existsb], which
-    the countermodel checkers of intuitionistic and of modal logic and
-    the refutations of linear logic share. [KripkeCheck.mem],
-    [FirstOrderCheck.kmem], [Countermodel.among] and the like are
-    instances of these. *)
+    Membership of a number, and facts of [forallb] and [existsb]. The
+    countermodel checkers of intuitionistic and of modal logic and the
+    refutations of linear logic share them, and call [mem] and
+    [mem_iff] by these names. *)
 
 From Stdlib Require Import Bool List Permutation Arith.
 

@@ -508,7 +508,7 @@ them against this library, taken as a pinned input. Paths of the form
   `TermsCheck.tsubst_closed` the one of terms; `Base/Lists.v`
   (`Deduxit.Base.Lists`) has `mem` and the facts of `forallb` and
   `existsb` that the countermodel checkers of two namespaces and the
-  refutations share (`kmem`, `among`, `existsb_false`, … are its
+  refutations share (`mem` itself, `existsb_false`, … are its
   instances). The soundness proofs set `Local Arguments … : simpl never`
   on the instances (`Soundness.v`, `FirstOrderSoundness.v`, the two-sided
   files): without it `cbn` unfolded `diff` to `Multiset.diff` and
@@ -549,20 +549,27 @@ them against this library, taken as a pinned input. Paths of the form
   would otherwise lose from the standard library. Its file names repeat
   `Deduxit.Linear`'s (`Formulas`, `Calculus`) without ambiguity, since
   every `Require` names its namespace with `From`.
-- **One name and shape per notion** in every namespace: a Boolean
-  equality test `X_eqb` has `X_eqb_spec : reflect (a = b) (X_eqb a b)`
-  (`Linear.Formulas`, `TermsCheck`, `Modal.Check`, `FirstOrderCheck`'s
-  `nats_eqb`), and a one-way corollary, where a proof wants one, is
-  `reflect_iff` or a `destruct` of it, not a lemma of its own; a
-  membership test `m` has `m_iff : m v l = true <-> In v l` (`Base.Lists.mem_iff`
-  and its instances `KripkeCheck.mem_iff`, `kmem_iff`, `among_iff`,
-  `Modal.Check.mem_iff`, and `FirstOrderCheck.holds_iff` for a fact); an instance of a `Deduxit.Base` lemma keeps
-  the base's name. A rule is named by its connective and side; the cut,
-  which has no side, is `cut_r` in `ll` and `lj` (the field `cut` of
-  both `rules` records takes the bare name, and certificates write that
-  field), `cut_ir` in `ill` (Yalla's name), and `kcut_r` in `lk`, whose
-  every rule is `lj`'s name with a `k`. The changelog lists every
-  renaming.
+- **One name and shape per notion** in every namespace:
+  - A Boolean equality test `X_eqb` has `X_eqb_spec : reflect (a = b)
+    (X_eqb a b)` and no other lemma (`Linear.Formulas`, `TermsCheck`,
+    `Modal.Check`, `FirstOrderCheck`'s `nats_eqb`); a proof that wants
+    one direction takes it from `Bool.reflect_iff` or a `destruct`.
+  - A membership test `m` has `m_iff : m v l = true <-> In v l`:
+    `Base.Lists.mem_iff` for numbers, which `KripkeCheck`,
+    `FirstOrderCheck` and `Countermodel` call by that name (each had an
+    alias of `mem` with a lemma of its own until 87r5), `Modal.Check.mem_iff`
+    for items and `FirstOrderCheck.holds_iff` for facts.
+  - A lemma of the same statement as one of `Deduxit.Base`, kept in a
+    namespace for its readers, has the base's name (`existsb_false`).
+  - No lemma takes a standard library name with another statement
+    (`Countermodel.iff_of_eqb` was `reflect_iff`, which hid
+    `Bool.reflect_iff` from any file that imports it).
+  - A rule is named by its connective and side. The cut, which has no
+    side, is `cut_r` in `ll` and `lj` (the field `cut` of both `rules`
+    records has the bare name, and certificates write that field),
+    `cut_ir` in `ill` (Yalla's name), and `kcut_r` in `lk`, whose every
+    rule is `lj`'s name with a `k`.
+  - The changelog lists every renaming.
 - **`lj` is G1i with shared contexts**: the axiom on any formula,
   weakening and contraction, every two-premise rule sharing its context,
   one conclusion always (an empty succedent is `⊥`, so G1i's weakening

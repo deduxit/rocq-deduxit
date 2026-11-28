@@ -42,9 +42,6 @@ Definition sees (w : nat) : list nat := nth w (arrows m) [].
 (** Every world. *)
 Definition worlds : list nat := seq 0 size.
 
-(** Whether the list [l] holds the world [w]. *)
-Definition among (w : nat) (l : list nat) : bool := Lists.mem w l.
-
 (** Whether the world [w] is marked in the table [l]. *)
 Definition forced_at (l : list bool) (w : nat) : bool := nth w l false.
 
@@ -94,16 +91,16 @@ Definition meets (C : conditions) : bool :=
        (forallb (fun w => match sees w with [] => false | _ :: _ => true end)
           worlds)
   && implb (reflexive C)
-       (forallb (fun w => among w (sees w)) worlds)
+       (forallb (fun w => Lists.mem w (sees w)) worlds)
   && implb (symmetric C)
-       (forallb (fun w => forallb (fun v => among w (sees v)) (sees w)) worlds)
+       (forallb (fun w => forallb (fun v => Lists.mem w (sees v)) (sees w)) worlds)
   && implb (transitive C)
        (forallb (fun w =>
-          forallb (fun v => forallb (fun u => among u (sees w)) (sees v))
+          forallb (fun v => forallb (fun u => Lists.mem u (sees w)) (sees v))
             (sees w)) worlds)
   && implb (euclidean C)
        (forallb (fun w =>
-          forallb (fun v => forallb (fun u => among u (sees v)) (sees w))
+          forallb (fun v => forallb (fun u => Lists.mem u (sees v)) (sees w))
             (sees w)) worlds).
 
 (** Whether the model is one of the system of [C] whose world [w]
@@ -126,9 +123,6 @@ Lemma in_worlds : forall w, w < size -> In w worlds.
 Proof.
   intros w H. apply in_seq. lia.
 Qed.
-
-Lemma among_iff : forall w l, among w l = true <-> In w l.
-Proof. exact Lists.mem_iff. Qed.
 
 Lemma sees_bounded : bounded = true ->
   forall w v, In v (sees w) -> v < size.
@@ -177,15 +171,15 @@ Proof.
     assert (Hv : v < size).
     { apply (sees_bounded Hb (proj1_sig x)). rewrite E. left. reflexivity. }
     exists (exist _ v Hv). unfold R. cbn [proj1_sig]. rewrite E. left. reflexivity.
-  - intros x. exact (proj1 (among_iff _ _) (at_world _ x Hall)).
+  - intros x. exact (proj1 (Lists.mem_iff _ _) (at_world _ x Hall)).
   - intros x y Hxy. pose proof (at_world _ x Hall) as Hx. cbn beta in Hx.
-    exact (proj1 (among_iff _ _) (proj1 (forallb_forall _ _) Hx _ Hxy)).
+    exact (proj1 (Lists.mem_iff _ _) (proj1 (forallb_forall _ _) Hx _ Hxy)).
   - intros x y z Hxy Hyz. pose proof (at_world _ x Hall) as Hx. cbn beta in Hx.
     pose proof (proj1 (forallb_forall _ _) Hx _ Hxy) as Hy. cbn beta in Hy.
-    exact (proj1 (among_iff _ _) (proj1 (forallb_forall _ _) Hy _ Hyz)).
+    exact (proj1 (Lists.mem_iff _ _) (proj1 (forallb_forall _ _) Hy _ Hyz)).
   - intros x y z Hxy Hxz. pose proof (at_world _ x Hall) as Hx. cbn beta in Hx.
     pose proof (proj1 (forallb_forall _ _) Hx _ Hxy) as Hy. cbn beta in Hy.
-    exact (proj1 (among_iff _ _) (proj1 (forallb_forall _ _) Hy _ Hxz)).
+    exact (proj1 (Lists.mem_iff _ _) (proj1 (forallb_forall _ _) Hy _ Hxz)).
 Qed.
 
 Lemma reflect_neg : forall b P, (b = true <-> P) -> (negb b = true <-> ~ P).
@@ -196,7 +190,7 @@ Proof.
   - reflexivity.
 Qed.
 
-Lemma reflect_iff : forall b c P Q, (b = true <-> P) -> (c = true <-> Q) ->
+Lemma iff_of_eqb : forall b c P Q, (b = true <-> P) -> (c = true <-> Q) ->
   (Bool.eqb b c = true <-> (P <-> Q)).
 Proof.
   intros [|] [|] P Q [H1 H2] [H3 H4]; cbn; split; intro H; try reflexivity;
@@ -230,7 +224,7 @@ Proof.
   - rewrite implb_true_iff. split; intros H HA.
     + exact (proj1 (IHB x) (H (proj2 (IHA x) HA))).
     + exact (proj2 (IHB x) (H (proj1 (IHA x) HA))).
-  - exact (reflect_iff _ _ _ _ (IHA x) (IHB x)).
+  - exact (iff_of_eqb _ _ _ _ (IHA x) (IHB x)).
   - split.
     + intros H v Hv.
       exact (proj1 (IHA v) (proj1 (forallb_forall _ _) H _ Hv)).

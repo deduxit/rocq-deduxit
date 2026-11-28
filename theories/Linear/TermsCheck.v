@@ -54,9 +54,10 @@ Qed.
 (** [symbol_eqb] decides equality. *)
 Hypothesis symbol_eqb_spec : forall f g, reflect (f = g) (symbol_eqb f g).
 
-Lemma term_eqb_iff : forall t u, term_eqb t u = true <-> t = u.
+Lemma term_eqb_spec : forall t u, reflect (t = u) (term_eqb t u).
 Proof.
-  intros t; induction t as [n | a | f l IH] using term_ind'; intros u; destruct u as [m | b | g k]; cbn;
+  intros t u. apply iff_reflect. apply iff_sym. revert u.
+  induction t as [n | a | f l IH] using term_ind'; intros u; destruct u as [m | b | g k]; cbn;
     try (split; [discriminate | congruence]).
   - rewrite PeanoNat.Nat.eqb_eq. split; congruence.
   - rewrite PeanoNat.Nat.eqb_eq. split; congruence.
@@ -68,9 +69,6 @@ Proof.
     + intros [-> E]. injection E as ->. reflexivity.
     + intros E. injection E as -> ->. split; reflexivity.
 Qed.
-
-Lemma term_eqb_spec : forall t u, reflect (t = u) (term_eqb t u).
-Proof. intros t u. apply iff_reflect. symmetry. apply term_eqb_iff. Qed.
 
 Lemma terms_eqb_spec : forall l k, reflect (l = k) (terms_eqb l k).
 Proof.
