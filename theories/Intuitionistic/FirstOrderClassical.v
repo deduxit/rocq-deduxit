@@ -186,7 +186,7 @@ Proof.
 Qed.
 
 (** An existential list fails on each member. *)
-Lemma existsb_false_in : forall {X} (f : X -> bool) l x, existsb f l = false -> In x l -> f x = false.
+Lemma existsb_false : forall {X} (f : X -> bool) l x, existsb f l = false -> In x l -> f x = false.
 Proof. exact @Lists.existsb_false. Qed.
 
 (** The value of an eigenvariable that does not occur in [t] does not
@@ -198,7 +198,7 @@ Proof.
   - reflexivity.
   - unfold cupdate. rewrite Nat.eqb_sym, H. reflexivity.
   - f_equal. apply map_ext_in. intros x Hx. rewrite Forall_forall in IH.
-    apply IH; [exact Hx | exact (existsb_false_in _ _ _ H Hx)].
+    apply IH; [exact Hx | exact (existsb_false _ _ _ H Hx)].
 Qed.
 
 (** The value of an eigenvariable that does not occur in [A] does not
@@ -208,7 +208,7 @@ Lemma eval_update : forall a d A eta rho, occurs a A = false ->
 Proof.
   intros a d A. induction A as [p l | | A IHA B IHB | A IHA B IHB | A IHA B IHB | A IHA | A IHA];
     intros eta rho H; cbn in *.
-  - f_equal. apply map_ext_in. intros t Ht. exact (value_update _ _ _ _ _ (existsb_false_in _ _ _ H Ht)).
+  - f_equal. apply map_ext_in. intros t Ht. exact (value_update _ _ _ _ _ (existsb_false _ _ _ H Ht)).
   - reflexivity.
   - apply orb_false_iff in H as [HA HB]. rewrite IHA, IHB by assumption. reflexivity.
   - apply orb_false_iff in H as [HA HB]. rewrite IHA, IHB by assumption. reflexivity.

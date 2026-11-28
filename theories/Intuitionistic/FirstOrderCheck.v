@@ -88,9 +88,10 @@ Definition bounded (size : nat) (tables : list table) : bool :=
   forallb (fun '(_, _, values) => forallb (fun x => x <? size) values) tables.
 
 (** [nats_eqb] decides equality. *)
-Lemma nats_eqb_eq : forall l k, nats_eqb l k = true <-> l = k.
+Lemma nats_eqb_spec : forall l k, reflect (l = k) (nats_eqb l k).
 Proof.
-  intros l; induction l as [| x l IH]; intros [| y k]; cbn; try (split; congruence).
+  intros l k. apply iff_reflect. apply iff_sym. revert k.
+  induction l as [| x l IH]; intros [| y k]; cbn; try (split; congruence).
   rewrite andb_true_iff, Nat.eqb_eq, IH. split; [intros [-> ->]; reflexivity | intros E; injection E; auto].
 Qed.
 
@@ -131,20 +132,16 @@ Proof.
   destruct (symbol_eqb_spec g f); [subst g | discriminate]. apply Nat.eqb_eq in Hj. subst j. exact Hin.
 Qed.
 
-(** A fact found is a member. *)
-Lemma holds_in : forall facts p l, holds facts p l = true -> In (p, l) facts.
+(** A fact holds exactly when the facts list it. *)
+Lemma holds_iff : forall facts p l, holds facts p l = true <-> In (p, l) facts.
 Proof.
-  intros facts p l H. unfold holds in H. apply existsb_exists in H as [[q k] [Hin Hm]].
-  apply andb_true_iff in Hm as [Hq Hk]. destruct (symbol_eqb_spec q p); [subst q | discriminate].
-  apply nats_eqb_eq in Hk. subst k. exact Hin.
-Qed.
-
-(** A member is a fact. *)
-Lemma in_holds : forall facts p l, In (p, l) facts -> holds facts p l = true.
-Proof.
-  intros facts p l H. apply existsb_exists. exists (p, l). split; [exact H |].
-  apply andb_true_iff. split; [destruct (symbol_eqb_spec p p); [reflexivity | contradiction] |].
-  apply nats_eqb_eq. reflexivity.
+  intros facts p l. split; intros H.
+  - unfold holds in H. apply existsb_exists in H as [[q k] [Hin Hm]].
+    apply andb_true_iff in Hm as [Hq Hk]. destruct (symbol_eqb_spec q p); [subst q | discriminate].
+    destruct (nats_eqb_spec k l) as [-> | _]; [exact Hin | discriminate Hk].
+  - apply existsb_exists. exists (p, l). split; [exact H |].
+    apply andb_true_iff. split; [destruct (symbol_eqb_spec p p); [reflexivity | contradiction] |].
+    destruct (nats_eqb_spec l l) as [_ | N]; [reflexivity | contradiction].
 Qed.
 
 End Tables.
@@ -317,8 +314,8 @@ Local Definition kpred (w : nat) (p : symbol) (l : list nat) : Prop := holds sym
 Local Definition kabs (w : nat) : Prop := absurd_at w = true.
 
 (** [kmem] tests membership. *)
-Lemma kmem_In : forall v l, kmem v l = true <-> In v l.
-Proof. exact Lists.mem_In. Qed.
+Lemma kmem_iff : forall v l, kmem v l = true <-> In v l.
+Proof. exact Lists.mem_iff. Qed.
 
 (** [kforces] computes forcing, at every world. *)
 Lemma kforces_forces : forall A w rho,
@@ -331,15 +328,15 @@ Proof.
   - rewrite andb_true_iff, IHA, IHB. reflexivity.
   - rewrite orb_true_iff, IHA, IHB. reflexivity.
   - rewrite forallb_forall. split.
-    + intros H v Hle HA. apply kmem_In in Hle. specialize (H v Hle).
+    + intros H v Hle HA. apply kmem_iff in Hle. specialize (H v Hle).
       apply IHB. apply IHA in HA. rewrite HA in H. exact H.
     + intros H v Hv. destruct (kforces v rho A) eqn:E; [| reflexivity]. cbn.
-      apply IHB. apply H; [apply kmem_In; exact Hv | apply IHA; exact E].
+      apply IHB. apply H; [apply kmem_iff; exact Hv | apply IHA; exact E].
   - rewrite forallb_forall. split.
-    + intros H v Hle d Hd. apply kmem_In in Hle. specialize (H v Hle).
+    + intros H v Hle d Hd. apply kmem_iff in Hle. specialize (H v Hle).
       rewrite forallb_forall in H. apply IHA. apply H. apply in_seq. lia.
     + intros H v Hv. apply forallb_forall. intros d Hd. apply in_seq in Hd.
-      apply IHA. apply H; [apply kmem_In; exact Hv | lia].
+      apply IHA. apply H; [apply kmem_iff; exact Hv | lia].
   - rewrite existsb_exists. split.
     + intros [d [Hd H]]. apply in_seq in Hd. exists d. split; [lia | apply IHA; exact H].
     + intros [d [Hd H]]. exists d. split; [apply in_seq; lia | apply IHA; exact H].
@@ -355,7 +352,7 @@ Qed.
 Lemma kle_past : forall w v, nworlds <= w -> kle w v -> v = w.
 Proof.
   intros w v Hw H. unfold kle in H. rewrite kups_past in H by exact Hw.
-  apply kmem_In in H. destruct H as [E | []]. symmetry. exact E.
+  apply kmem_iff in H. destruct H as [E | []]. symmetry. exact E.
 Qed.
 
 Hypothesis symbol_eqb_spec : forall f g, reflect (f = g) (symbol_eqb f g).
@@ -394,7 +391,7 @@ Proof.
   unfold above_ok in H. repeat rewrite andb_true_iff in H.
   destruct H as [[[[[Hn Ht] Hs] Hp] Ha] Hg]. repeat split.
   - apply Nat.ltb_lt. exact Hn.
-  - intros u Hu. rewrite forallb_forall in Ht. apply kmem_In. exact (Ht u Hu).
+  - intros u Hu. rewrite forallb_forall in Ht. apply kmem_iff. exact (Ht u Hu).
   - apply Nat.leb_le. exact Hs.
   - intros p l Hpl. rewrite forallb_forall in Hp. exact (Hp (p, l) Hpl).
   - intros E. rewrite E in Ha. exact Ha.
@@ -437,29 +434,29 @@ Qed.
 Lemma kwell_formed_model : model nat kle nat 0 kdom fn_at kpred kabs R.
 Proof.
   split.
-  - intros w. unfold kle, kups. apply kmem_In. left. reflexivity.
+  - intros w. unfold kle, kups. apply kmem_iff. left. reflexivity.
   - intros u v w Huv Hvw. destruct (Nat.lt_ge_cases u nworlds) as [Hu | Hu].
-    + unfold kle in *. apply kmem_In in Huv, Hvw. apply kmem_In.
+    + unfold kle in *. apply kmem_iff in Huv, Hvw. apply kmem_iff.
       exact (proj1 (proj2 (wf_above u v Hu Huv)) w Hvw).
     + apply kle_past in Huv; [subst; exact Hvw | exact Hu].
   - intros w v d Hle Hd. unfold kdom in *. destruct (Nat.lt_ge_cases w nworlds) as [Hw | Hw].
-    + unfold kle in Hle. apply kmem_In in Hle.
+    + unfold kle in Hle. apply kmem_iff in Hle.
       pose proof (proj1 (proj2 (proj2 (wf_above w v Hw Hle)))). lia.
     + apply kle_past in Hle; [subst; exact Hd | exact Hw].
   - intros w. unfold kdom. exact (proj1 (wf_tables w)).
   - intros w f l _. unfold kdom, fn_at.
     exact (value_of_bounded symbol_eqb _ _ f l (proj1 (wf_tables w)) (proj2 (wf_tables w))).
   - intros w v f l Hle Hl. destruct (Nat.lt_ge_cases w nworlds) as [Hw | Hw].
-    + unfold kle in Hle. apply kmem_In in Hle.
+    + unfold kle in Hle. apply kmem_iff in Hle.
       exact (agree_fn w v f l (proj2 (proj2 (proj2 (proj2 (proj2 (wf_above w v Hw Hle)))))) Hl).
     + apply kle_past in Hle; [subst; reflexivity | exact Hw].
   - intros w v p l Hle H. unfold kpred in *. destruct (Nat.lt_ge_cases w nworlds) as [Hw | Hw].
-    + unfold kle in Hle. apply kmem_In in Hle.
+    + unfold kle in Hle. apply kmem_iff in Hle.
       apply (proj1 (proj2 (proj2 (proj2 (wf_above w v Hw Hle))))).
-      exact (holds_in symbol_eqb symbol_eqb_spec _ _ _ H).
+      exact (proj1 (holds_iff symbol_eqb symbol_eqb_spec _ _ _) H).
     + apply kle_past in Hle; [subst; exact H | exact Hw].
   - intros w v Hle H. unfold kabs in *. destruct (Nat.lt_ge_cases w nworlds) as [Hw | Hw].
-    + unfold kle in Hle. apply kmem_In in Hle.
+    + unfold kle in Hle. apply kmem_iff in Hle.
       exact (proj1 (proj2 (proj2 (proj2 (proj2 (wf_above w v Hw Hle))))) H).
     + apply kle_past in Hle; [subst; exact H | exact Hw].
   - intros Hexp w H. unfold kabs, absurd_at, kmem, Lists.mem in H.

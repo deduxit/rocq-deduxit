@@ -105,7 +105,7 @@ Inductive lk (c : bool) : list (formula symbol) -> list (formula symbol) -> Prop
     lk c (A :: l) (B :: d) -> lk c l (imp A B :: d)
 | kimp_l : forall A B l d,
     lk c l (A :: d) -> lk c (B :: l) d -> lk c (imp A B :: l) d
-| kcut : c = true -> forall A l d,
+| kcut_r : c = true -> forall A l d,
     lk c l (A :: d) -> lk c (A :: l) d -> lk c l d
 | kfall_r : forall A a l d,
     fresh a (fall A :: l ++ d) -> lk c l (subst 0 (eigen a) A :: d) -> lk c l (fall A :: d)

@@ -41,24 +41,30 @@ Fixpoint formula_eqb (A B : formula atom) : bool :=
   | _, _ => false
   end.
 
-Lemma formula_eqb_eq : forall A B, formula_eqb A B = true -> A = B.
+(** [formula_eqb] decides the equality of formulas. *)
+Lemma formula_eqb_spec : forall A B, reflect (A = B) (formula_eqb A B).
 Proof.
-  intros A; induction A as [a | | | A IHA | A1 IH1 A2 IH2 | A1 IH1 A2 IH2
-    | A1 IH1 A2 IH2 | A1 IH1 A2 IH2 | A IHA | A IHA];
-    intros [b | | | B | B1 B2 | B1 B2 | B1 B2 | B1 B2 | B | B];
-    cbn [formula_eqb]; try discriminate; intro H; try reflexivity.
-  - destruct (atom_eqb_spec a b) as [-> | _]; [reflexivity | discriminate H].
-  - f_equal. exact (IHA B H).
-  - apply andb_true_iff in H as [H1 H2].
-    f_equal; [exact (IH1 B1 H1) | exact (IH2 B2 H2)].
-  - apply andb_true_iff in H as [H1 H2].
-    f_equal; [exact (IH1 B1 H1) | exact (IH2 B2 H2)].
-  - apply andb_true_iff in H as [H1 H2].
-    f_equal; [exact (IH1 B1 H1) | exact (IH2 B2 H2)].
-  - apply andb_true_iff in H as [H1 H2].
-    f_equal; [exact (IH1 B1 H1) | exact (IH2 B2 H2)].
-  - f_equal. exact (IHA B H).
-  - f_equal. exact (IHA B H).
+  intros A B. apply iff_reflect. split.
+  - intros <-. induction A as [a | | | A IHA | A1 IH1 A2 IH2 | A1 IH1 A2 IH2
+      | A1 IH1 A2 IH2 | A1 IH1 A2 IH2 | A IHA | A IHA];
+      cbn [formula_eqb]; try reflexivity; try exact IHA; try (rewrite IH1, IH2; reflexivity).
+    destruct (atom_eqb_spec a a) as [_ | N]; [reflexivity | contradiction].
+  - revert B. induction A as [a | | | A IHA | A1 IH1 A2 IH2 | A1 IH1 A2 IH2
+      | A1 IH1 A2 IH2 | A1 IH1 A2 IH2 | A IHA | A IHA];
+      intros [b | | | B | B1 B2 | B1 B2 | B1 B2 | B1 B2 | B | B];
+      cbn [formula_eqb]; try discriminate; intro H; try reflexivity.
+    + destruct (atom_eqb_spec a b) as [-> | _]; [reflexivity | discriminate H].
+    + f_equal. exact (IHA B H).
+    + apply andb_true_iff in H as [H1 H2].
+      f_equal; [exact (IH1 B1 H1) | exact (IH2 B2 H2)].
+    + apply andb_true_iff in H as [H1 H2].
+      f_equal; [exact (IH1 B1 H1) | exact (IH2 B2 H2)].
+    + apply andb_true_iff in H as [H1 H2].
+      f_equal; [exact (IH1 B1 H1) | exact (IH2 B2 H2)].
+    + apply andb_true_iff in H as [H1 H2].
+      f_equal; [exact (IH1 B1 H1) | exact (IH2 B2 H2)].
+    + f_equal. exact (IHA B H).
+    + f_equal. exact (IHA B H).
 Qed.
 
 (** Whether two items are the same. *)
@@ -69,21 +75,29 @@ Definition item_eqb (i j : item atom) : bool :=
   | _, _ => false
   end.
 
-Lemma item_eqb_eq : forall i j, item_eqb i j = true -> i = j.
+(** [item_eqb] decides the equality of items. *)
+Lemma item_eqb_spec : forall i j, reflect (i = j) (item_eqb i j).
 Proof.
-  intros [x A | x y] [u B | u v]; cbn [item_eqb]; try discriminate;
-    intro H; apply andb_true_iff in H as [H1 H2].
-  - apply String.eqb_eq in H1. apply formula_eqb_eq in H2. subst. reflexivity.
-  - apply String.eqb_eq in H1. apply String.eqb_eq in H2. subst. reflexivity.
+  intros i j. apply iff_reflect. split.
+  - intros <-. destruct i as [x A | x y]; cbn [item_eqb]; rewrite String.eqb_refl.
+    + destruct (formula_eqb_spec A A) as [_ | N]; [reflexivity | contradiction].
+    + rewrite String.eqb_refl. reflexivity.
+  - destruct i as [x A | x y], j as [u B | u v]; cbn [item_eqb]; try discriminate;
+      intro H; apply andb_true_iff in H as [H1 H2].
+    + apply String.eqb_eq in H1.
+      destruct (formula_eqb_spec A B) as [-> | _]; [| discriminate H2]. subst. reflexivity.
+    + apply String.eqb_eq in H1. apply String.eqb_eq in H2. subst. reflexivity.
 Qed.
 
 (** Whether the list [l] holds the item [i]. *)
 Definition mem (i : item atom) (l : list (item atom)) : bool := existsb (item_eqb i) l.
 
-Lemma mem_in : forall i l, mem i l = true -> In i l.
+Lemma mem_iff : forall i l, mem i l = true <-> In i l.
 Proof.
-  intros i l H. apply existsb_exists in H as [j [Hj E]].
-  apply item_eqb_eq in E. subst. exact Hj.
+  intros i l. unfold mem. rewrite existsb_exists. split.
+  - intros [j [Hj E]]. destruct (item_eqb_spec i j) as [-> | _]; [exact Hj | discriminate E].
+  - intros H. exists i. split; [exact H |].
+    destruct (item_eqb_spec i i) as [_ | N]; [reflexivity | contradiction].
 Qed.
 
 (** Whether the item [i] mentions the label [y]. *)
@@ -222,7 +236,7 @@ Proof.
     | E : _ && _ = true |- _ => apply andb_true_iff in E; destruct E
     end;
     repeat match goal with
-    | E : mem _ _ = true |- _ => apply mem_in in E
+    | E : mem _ _ = true |- _ => apply mem_iff in E
     | E : freshb _ _ _ = true |- _ => apply freshb_fresh in E
     end.
   - exact (ax C x A L Rt ltac:(assumption) ltac:(assumption)).

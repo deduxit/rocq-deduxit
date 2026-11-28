@@ -127,8 +127,8 @@ Proof.
   intros w H. apply in_seq. lia.
 Qed.
 
-Lemma among_in : forall w l, among w l = true -> In w l.
-Proof. intros w l. apply Lists.mem_In. Qed.
+Lemma among_iff : forall w l, among w l = true <-> In w l.
+Proof. exact Lists.mem_iff. Qed.
 
 Lemma sees_bounded : bounded = true ->
   forall w v, In v (sees w) -> v < size.
@@ -177,15 +177,15 @@ Proof.
     assert (Hv : v < size).
     { apply (sees_bounded Hb (proj1_sig x)). rewrite E. left. reflexivity. }
     exists (exist _ v Hv). unfold R. cbn [proj1_sig]. rewrite E. left. reflexivity.
-  - intros x. exact (among_in _ _ (at_world _ x Hall)).
+  - intros x. exact (proj1 (among_iff _ _) (at_world _ x Hall)).
   - intros x y Hxy. pose proof (at_world _ x Hall) as Hx. cbn beta in Hx.
-    exact (among_in _ _ (proj1 (forallb_forall _ _) Hx _ Hxy)).
+    exact (proj1 (among_iff _ _) (proj1 (forallb_forall _ _) Hx _ Hxy)).
   - intros x y z Hxy Hyz. pose proof (at_world _ x Hall) as Hx. cbn beta in Hx.
     pose proof (proj1 (forallb_forall _ _) Hx _ Hxy) as Hy. cbn beta in Hy.
-    exact (among_in _ _ (proj1 (forallb_forall _ _) Hy _ Hyz)).
+    exact (proj1 (among_iff _ _) (proj1 (forallb_forall _ _) Hy _ Hyz)).
   - intros x y z Hxy Hxz. pose proof (at_world _ x Hall) as Hx. cbn beta in Hx.
     pose proof (proj1 (forallb_forall _ _) Hx _ Hxy) as Hy. cbn beta in Hy.
-    exact (among_in _ _ (proj1 (forallb_forall _ _) Hy _ Hxz)).
+    exact (proj1 (among_iff _ _) (proj1 (forallb_forall _ _) Hy _ Hxz)).
 Qed.
 
 Lemma reflect_neg : forall b P, (b = true <-> P) -> (negb b = true <-> ~ P).

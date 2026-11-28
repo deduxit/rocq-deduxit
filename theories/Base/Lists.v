@@ -14,7 +14,7 @@ From Stdlib Require Import Bool List Permutation Arith.
 (** Whether the number [v] is in [l]. *)
 Definition mem (v : nat) (l : list nat) : bool := existsb (Nat.eqb v) l.
 
-Lemma mem_In : forall v l, mem v l = true <-> In v l.
+Lemma mem_iff : forall v l, mem v l = true <-> In v l.
 Proof.
   intros v l. unfold mem. rewrite existsb_exists. split.
   - intros [x [Hx E]]. apply Nat.eqb_eq in E. subst. exact Hx.

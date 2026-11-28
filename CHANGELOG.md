@@ -38,6 +38,28 @@ against 0.4.0. There is no 0.7.0: deduxit 0.7.0's compile against 0.6.0.
 
 ### Changed
 
+- **Renamed: one name and shape per notion in every namespace.** A
+  Boolean equality test `X_eqb` has `X_eqb_spec : reflect (a = b) (X_eqb
+  a b)`, as `Linear.Formulas.formula_eqb_spec` had; a membership test
+  `m` has `m_iff : m v l = true <-> In v l`; LK's cut is LJ's name with
+  a `k`, as its other rules are. No certificate uses any of these names,
+  so the certificates' interface is unchanged. A proof that names one of
+  them changes:
+
+  | before | now |
+  |---|---|
+  | `Base.Lists.mem_In` | `Base.Lists.mem_iff` |
+  | `Intuitionistic.KripkeCheck.mem_In` | `Intuitionistic.KripkeCheck.mem_iff` |
+  | `Intuitionistic.FirstOrderCheck.kmem_In` | `Intuitionistic.FirstOrderCheck.kmem_iff` |
+  | `Intuitionistic.FirstOrderCheck.nats_eqb_eq` (an iff) | `Intuitionistic.FirstOrderCheck.nats_eqb_spec` (`reflect`) |
+  | `Intuitionistic.FirstOrderClassical.existsb_false_in` | `Intuitionistic.FirstOrderClassical.existsb_false` |
+  | `Intuitionistic.FirstOrderCalculus.kcut` (a rule of `lk`) | `Intuitionistic.FirstOrderCalculus.kcut_r` |
+  | `Intuitionistic.FirstOrderCheck.holds_in` and `in_holds` (one way each) | `Intuitionistic.FirstOrderCheck.holds_iff` |
+  | `Modal.Check.formula_eqb_eq` (one way) | `Modal.Check.formula_eqb_spec` (`reflect`) |
+  | `Modal.Check.item_eqb_eq` (one way) | `Modal.Check.item_eqb_spec` (`reflect`) |
+  | `Modal.Check.mem_in` (one way) | `Modal.Check.mem_iff` |
+  | `Modal.Countermodel.among_in` (one way) | `Modal.Countermodel.among_iff` |
+
 - README, the opam description, `CITATION.cff` and the Nix package's
   description name the suites in the order ordinary logic, linear logic,
   modal logic, and the opam description names modal logic too.
